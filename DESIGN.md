@@ -2,7 +2,7 @@
 
 Trimming an aircraft is the small correction that holds a course. The app does that with a day's eating, and the weekly review does it with the targets.
 
-The live reference is `app/design.tsx`, on the Developer tab. **If this file and that page disagree, the page is wrong.** The thesis and the rings are settled. The colours, the typeface and the scale are a first proposal, until they have been read on an iPhone.
+The live reference is `app/design.tsx`, on the Developer tab. **If this file and that page disagree, the page is wrong.** The thesis, the rings, the colours and the typeface are settled, read on an iPhone in dark. The scale is provisional, and light has been read only on an emulator.
 
 ## Thesis
 
@@ -21,15 +21,15 @@ The reading condition: a kitchen, one hand, a few seconds, about ten times a day
 
 **Grounds** are neutral and a little warm: `ground`, `surface` (a card), `surface-lift` (a thing on a card), `line`. **Inks** are `ink`, `ink-mid`, and `ink-dim` for a stated absence.
 
-**The hues are a ladder**: `within` (teal), `slightly-over` (amber), `over` (red). Teal rather than green, because green beside red is a judgement, and the pair most often confused. **Colour is never the only signal**: every verdict is also words.
+**The hues are a ladder**: `within` (teal), `slightly-over` (amber), `over` (red). In dark the red is clearly darker than the other two, so *over* is seen without its hue; teal and amber are not told apart that way, and have their words. Teal rather than green, because green beside red is a judgement, and the pair most often confused. **Colour is never the only signal**: every verdict is also words.
 
 Both appearances are in `design-tokens.js`, and every pair is held to WCAG in both.
 
 ## Signature: the rings
 
-**The full circle is the target.** The day is two arcs: calories outside and thick, protein inside and thin. They are told apart by place, width and name, never by hue. The goal is one arc. The arc takes the hue of where it stands; its track is `line`. An empty day is an empty track, not a missing ring.
+**The full circle is the target.** The day is two arcs: calories outside and thick, protein inside and thin. They are told apart by place, width and name, never by hue. The goal is one arc. The arc takes the hue of where it stands; its track is `line`. Its ends are round, and flat once the gap left is too small for round ones, which would meet and read as a fault. An empty day is an empty track, not a missing ring.
 
-The figure in the centre is `ink` whatever the verdict. It has to be read before it is judged.
+The figure in the centre is `ink` while the day is within its budget, `slightly-over` past it and `over` past the tolerance: the arc and the figure say one thing. It is the one figure that takes a hue, because it is the day's standing and not a food's. The goal's is always `ink`.
 
 ## Figures
 
@@ -47,6 +47,8 @@ The figure in the centre is `ink` whatever the verdict. It has to be read before
 **B612**, drawn for cockpit displays. Its digits are one width, so a changing figure does not move. It is tall: **a line height is at least 1.2 times its size for a figure and 1.5 for text, 1.6 in bold**, or descenders clip at the largest text size. React Native picks a face by family name, so each face is its own token.
 
 Figure sizes never scale with the user's text size; everything else scales to double ([`0007`](./docs/adr/0007-figures-are-fixed-size-and-text-scales-to-double.md)).
+
+**A row reflows.** Name and figure stand side by side while both fit, and the figure drops below the name when they do not. Nothing holding text has a fixed height, and nothing that matters ends in an ellipsis. The worst case is text at double on a screen 320 points wide.
 
 ## Controls
 

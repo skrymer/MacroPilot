@@ -29,6 +29,6 @@ module.exports = {
     ink: '#F1EFEA',
     within: '#5CC4CE',
     'slightly-over': '#E5A84B',
-    over: '#FF8A80',
+    over: '#FF5A4F',
   },
 };

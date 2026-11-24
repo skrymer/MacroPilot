@@ -5,15 +5,16 @@ import { B612_700Bold } from '@expo-google-fonts/b612/700Bold';
 import { useFonts } from 'expo-font';
 import { cssInterop } from 'nativewind';
 import type { ReactNode } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Appearance, Pressable, ScrollView, useColorScheme, View } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle } from 'react-native-svg';
 
 import { Text } from '@/components/Text';
 
 /**
  * Trim, the living design reference. Every token and treatment in DESIGN.md renders here; if the
- * two disagree, this page is wrong. It follows the phone's appearance, so read it in both.
+ * two disagree, this page is wrong. Read it in both appearances: the switch changes the whole app's,
+ * until it is next launched.
  *
  * The faces are loaded here while they are being judged. Once settled they load in the root layout.
  */
@@ -43,6 +44,8 @@ const SIZE = 200;
 
 const ArcTrack = ({ radius, width, filled, stroke }: Arc) => {
   const around = 2 * Math.PI * radius;
+  // Rounded ends that would meet across a small gap read as a fault in the drawing.
+  const nearlyClosed = around * (1 - filled) < 2 * width;
   const shape = { cx: SIZE / 2, cy: SIZE / 2, r: radius, strokeWidth: width, fill: 'none' };
   return (
     <>
@@ -51,8 +54,8 @@ const ArcTrack = ({ radius, width, filled, stroke }: Arc) => {
         <Circle
           {...shape}
           className={stroke}
-          strokeLinecap="round"
-          strokeDasharray={`${around * Math.min(filled, 1)} ${around}`}
+          strokeLinecap={nearlyClosed ? 'butt' : 'round'}
+          strokeDasharray={filled < 1 ? `${around * filled} ${around}` : undefined}
           rotation={-90}
           origin={`${SIZE / 2}, ${SIZE / 2}`}
         />
@@ -80,6 +83,8 @@ type Day = {
   protein: number;
   stroke: string;
   text: string;
+  /** Ink until the day is past its budget, then the verdict's own hue. */
+  figure?: string;
 };
 
 const DAYS: Day[] = [
@@ -118,6 +123,7 @@ const DAYS: Day[] = [
     protein: 1,
     stroke: 'stroke-slightly-over',
     text: 'text-slightly-over',
+    figure: 'text-slightly-over',
   },
   {
     state: 'Over budget',
@@ -127,10 +133,20 @@ const DAYS: Day[] = [
     protein: 0.8,
     stroke: 'stroke-over',
     text: 'text-over',
+    figure: 'text-over',
   },
 ];
 
-const DayRing = ({ state, centre, unit, calories, protein, stroke, text }: Day) => (
+const DayRing = ({
+  state,
+  centre,
+  unit,
+  calories,
+  protein,
+  stroke,
+  text,
+  figure = 'text-ink',
+}: Day) => (
   <Card>
     <Ring
       label={`${state}, ${centre} ${unit}`}
@@ -139,24 +155,23 @@ const DayRing = ({ state, centre, unit, calories, protein, stroke, text }: Day) 
         { radius: 70, width: 8, filled: protein, stroke: 'stroke-within' },
       ]}
     >
-      <Text className="font-weighed text-figure text-ink">{centre}</Text>
+      <Text className={`font-weighed text-figure ${figure}`}>{centre}</Text>
       <Text className="font-language text-label text-ink-mid">{unit}</Text>
     </Ring>
     <Text className={`mt-3 text-center font-language-bold text-body ${text}`}>{state}</Text>
   </Card>
 );
 
-const Entry = ({
-  name,
-  detail,
-  children,
-}: {
-  name: string;
-  detail: string;
-  children: ReactNode;
-}) => (
-  <View className="min-h-target flex-row items-center justify-between gap-4 border-b border-line py-2">
-    <View className="flex-1">
+type EntrySpecimen = { name: string; detail: string; first?: boolean; children: ReactNode };
+
+/** The figure stands beside the name while both fit, and drops below it when they do not. */
+const Entry = ({ name, detail, first = false, children }: EntrySpecimen) => (
+  <View
+    className={`min-h-target flex-row flex-wrap items-center justify-between gap-x-4 border-line py-3 ${
+      first ? '' : 'border-t'
+    }`}
+  >
+    <View className="shrink grow basis-40">
       <Text className="font-language text-body text-ink">{name}</Text>
       <Text className="font-language text-label text-ink-mid">{detail}</Text>
     </View>
@@ -177,6 +192,37 @@ const Action = ({ label, solid = false }: { label: string; solid?: boolean }) =>
   </Pressable>
 );
 
+const APPEARANCES = [
+  ['Light', 'light'],
+  ['Dark', 'dark'],
+] as const;
+
+/** Shows the appearance in force, and switches the whole app's until it is next launched. */
+const AppearanceSwitch = () => {
+  const inForce = useColorScheme();
+  return (
+    <View className="mt-6 flex-row flex-wrap gap-2">
+      {APPEARANCES.map(([label, value]) => (
+        <Pressable
+          key={value}
+          accessibilityRole="button"
+          accessibilityState={{ selected: inForce === value }}
+          onPress={() => Appearance.setColorScheme(value)}
+          className={`min-h-target min-w-target grow items-center justify-center rounded-full border border-ink px-4 ${
+            inForce === value ? 'bg-ink' : ''
+          }`}
+        >
+          <Text
+            className={`font-language-bold text-label ${inForce === value ? 'text-ground' : 'text-ink'}`}
+          >
+            {label}
+          </Text>
+        </Pressable>
+      ))}
+    </View>
+  );
+};
+
 const GROUNDS = [
   ['ground', 'bg-ground'],
   ['surface', 'bg-surface'],
@@ -185,16 +231,22 @@ const GROUNDS = [
 
 export default function Design() {
   const [loaded, failed] = useFonts({ B612_400Regular, B612_400Regular_Italic, B612_700Bold });
+  const { bottom } = useSafeAreaInsets();
   if (!loaded && !failed) return null;
   return (
-    <SafeAreaView className="flex-1 bg-ground">
-      <ScrollView contentContainerClassName="px-4 pb-16 pt-4">
+    <SafeAreaView className="flex-1 bg-ground" edges={['top']}>
+      <ScrollView
+        contentContainerClassName="px-4 pt-4"
+        // Content scrolls under the home indicator, and stops clear of it.
+        contentContainerStyle={{ paddingBottom: bottom + 64 }}
+      >
         <Text accessibilityRole="header" className="font-language-bold text-figure text-ink">
           Trim
         </Text>
         <Text className="mt-2 font-language text-body text-ink-mid">
           Food has no colour. Colour is only where your day stands against its targets.
         </Text>
+        <AppearanceSwitch />
 
         <Section
           title="The day ring"
@@ -221,12 +273,12 @@ export default function Design() {
           title="Figures"
           note="Weighed is solid. Estimated is lighter, and says so. An unknown is words. A known zero is a figure."
         >
-          <Card>
-            <Entry name="Chicken thigh, roasted" detail="180 g, 46 g protein">
-              <Text className="font-weighed text-body text-ink">376 kcal</Text>
+          <View className="mb-3 rounded-2xl bg-surface px-4 py-1">
+            <Entry first name="Chicken thigh, roasted" detail="180 g, 46 g protein">
+              <Text className="font-weighed text-body text-ink">{'376\u00A0kcal'}</Text>
             </Entry>
             <Entry name="Lunch at the canteen" detail="Estimate, protein not stated">
-              <Text className="font-estimated text-body text-ink-mid">about 650 kcal</Text>
+              <Text className="font-estimated text-body text-ink-mid">{'about 650\u00A0kcal'}</Text>
             </Entry>
             <Entry name="Black coffee" detail="250 g, 0 g protein">
               <Text className="font-weighed text-body text-ink">{'0\u00A0kcal'}</Text>
@@ -234,7 +286,7 @@ export default function Design() {
             <Entry name="Fibre" detail="Rye bread, per 100 g">
               <Text className="font-absence text-body text-ink-dim">not stated</Text>
             </Entry>
-          </Card>
+          </View>
         </Section>
 
         <Section title="Actions" note="Ink, never a hue: a button expresses no verdict.">
