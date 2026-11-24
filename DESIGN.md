@@ -78,7 +78,7 @@ A target is at least 44pt on iOS and 48dp on Android, each platform's own floor,
 
 **No toasts.** iOS has none, and a message on a timer is gone before someone slow to look has read it.
 
-**The keyboard never hides** the field being typed in or the button that commits it: a form that scrolls makes room for it.
+**The keyboard never hides** the field being typed in or the button that commits it: a form that scrolls makes room for it, with its button and what it says above the button outside what scrolls.
 
 **Focus:** a form of one field takes focus as it opens. A longer one does not, so the whole of it is seen first.
 

@@ -1,18 +1,35 @@
 import { z } from 'zod';
 
-import { isFoodName, isMacro } from '@/domain/food';
+import { alcoholPer100g, isAbv, MAX_ABV } from '@/domain/abv';
+import { isFoodName, isMacro, type NewFood } from '@/domain/food';
 
 import { optionalFigure } from './figureText';
 
-const macro = (name: string) =>
-  optionalFigure
-    .pipe(z.number(`Enter ${name.toLowerCase()} per 100 g`))
-    .refine(isMacro, `${name} can’t be negative`);
+const optionalMacro = (name: string) =>
+  optionalFigure.refine((figure) => figure === undefined || isMacro(figure), {
+    error: `${name} can’t be negative`,
+    abort: true,
+  });
 
-/** A food as it is typed, in grams per 100 g. */
+const macro = (name: string) =>
+  optionalMacro(name).pipe(z.number(`Enter ${name.toLowerCase()} per 100 g`));
+
+/** A food as it is typed: grams per 100 g, with alcohol in percent by volume as a label gives it. */
 export const foodForm = z.object({
   name: z.string().refine(isFoodName, 'Enter a name'),
   protein: macro('Protein'),
   carbohydrate: macro('Carbohydrate'),
   fat: macro('Fat'),
+  fibre: optionalMacro('Fibre'),
+  abv: optionalMacro('Alcohol').refine(
+    (abv) => abv === undefined || isAbv(abv),
+    `Alcohol can’t be over ${MAX_ABV}%`,
+  ),
 });
+
+/** The food a form said. Its figures are named one by one, so that no percent is kept as grams. */
+export function foodOf(said: z.output<typeof foodForm>): NewFood {
+  const { name, protein, carbohydrate, fat, fibre, abv } = said;
+  const alcohol = abv === undefined ? undefined : alcoholPer100g(abv);
+  return { name, macros: { protein, carbohydrate, fat, fibre, alcohol } };
+}

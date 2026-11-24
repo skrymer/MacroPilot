@@ -20,6 +20,25 @@ describe('SqliteFoodStore', () => {
     ]);
   });
 
+  it('keeps a figure not stated apart from a zero', async () => {
+    // Given a food that states neither fibre nor alcohol, one that has none of either, and one with both
+    const store = new SqliteFoodStore(new BetterSqliteDatabase());
+    const stated = { protein: 1, carbohydrate: 2, fat: 3 };
+    await store.add({ name: 'a', macros: stated });
+    await store.add({ name: 'b', macros: { ...stated, fibre: 0, alcohol: 0 } });
+    await store.add({ name: 'c', macros: { ...stated, fibre: 16.8, alcohol: 10.257 } });
+
+    // When they are listed
+    const foods = await store.list();
+
+    // Then each is as it was added
+    expect(foods.map(({ macros }) => macros)).toStrictEqual([
+      { ...stated, fibre: undefined, alcohol: undefined },
+      { ...stated, fibre: 0, alcohol: 0 },
+      { ...stated, fibre: 16.8, alcohol: 10.257 },
+    ]);
+  });
+
   it('lists foods in order of name, whatever their case', async () => {
     // Given foods added in no order
     const store = new SqliteFoodStore(new BetterSqliteDatabase());
