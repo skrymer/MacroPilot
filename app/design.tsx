@@ -234,6 +234,15 @@ const AppearanceSwitch = () => {
   );
 };
 
+const TABS = ['Today', 'Log', 'Review', 'Foods', 'Profile'];
+
+const ASKING = [
+  ['Grams, an estimate', 'The system\u2019s sheet'],
+  ['A food', 'A full-height page, with Cancel'],
+  ['Deleting, or discarding a food', 'The system\u2019s own question'],
+  ['It worked, and the page shows it', 'Nothing is said'],
+] as const;
+
 const GROUNDS = [
   ['ground', 'bg-ground'],
   ['surface', 'bg-surface'],
@@ -300,9 +309,70 @@ export default function Design() {
           </View>
         </Section>
 
+        <Section
+          title="A day's totals"
+          note="One weighed entry makes the calories solid. Protein says when it is only part of the answer."
+        >
+          <Card>
+            <Text className="font-weighed text-title text-ink">{'1425\u00A0kcal'}</Text>
+            <Text className="font-language text-label text-ink-mid">
+              {'at least 66\u00A0g protein'}
+            </Text>
+          </Card>
+          <Card>
+            <Text className="font-estimated text-title text-ink-mid">{'about 850\u00A0kcal'}</Text>
+            <Text className="font-absence text-label text-ink-dim">protein not stated</Text>
+          </Card>
+          <Card>
+            <Text className="font-weighed text-title text-ink">{'0\u00A0kcal'}</Text>
+            <Text className="mb-3 font-language text-label text-ink-mid">
+              {'0\u00A0g protein. Nothing logged yet'}
+            </Text>
+            <Action solid label="Log" />
+          </Card>
+        </Section>
+
         <Section title="Actions" note="Ink, never a hue: a button expresses no verdict.">
           <Action solid label={'Log 180\u00A0g'} />
           <Action label="Log an estimate instead" />
+        </Section>
+
+        <Section
+          title="Navigation"
+          note="The system's bar. A tab goes to a page. There is no More."
+        >
+          <Card>
+            {TABS.map((tab) => (
+              <Text key={tab} className="py-1 font-language text-body text-ink">
+                {tab}
+              </Text>
+            ))}
+          </Card>
+        </Section>
+
+        <Section
+          title="Asking and telling"
+          note="No toasts. What worked on another page is said here, and stays. A failure takes no hue."
+        >
+          <Card>
+            <Text className="font-language-bold text-body text-ink">Logged: Rolled oats</Text>
+            <Text className="font-language text-label text-ink-mid">
+              {'80\u00A0g, 294\u00A0kcal, 10\u00A0g protein'}
+            </Text>
+          </Card>
+          <Card>
+            <Text className="mb-3 font-language-bold text-body text-ink">
+              Not saved. Your figures are still here.
+            </Text>
+            <Action solid label="Log entry" />
+          </Card>
+          <View className="rounded-2xl bg-surface px-4 py-1">
+            {ASKING.map(([when, what], index) => (
+              <Entry key={when} first={index === 0} name={when} detail={what}>
+                {null}
+              </Entry>
+            ))}
+          </View>
         </Section>
 
         <Section title="Type" note="B612, drawn for cockpit displays. Every digit is one width.">
