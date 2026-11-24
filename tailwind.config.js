@@ -23,14 +23,23 @@ module.exports = {
     extend: {
       // Every size here needs a cap in `src/components/fontScaleCaps.ts` (ADR 0007).
       fontSize: {
-        eyebrow: ['11px', { lineHeight: '14px' }],
-        label: ['13px', { lineHeight: '18px' }],
+        eyebrow: ['11px', { lineHeight: '17px' }],
+        label: ['13px', { lineHeight: '20px' }],
         body: ['16px', { lineHeight: '24px' }],
-        title: ['22px', { lineHeight: '28px' }],
-        figure: ['44px', { lineHeight: '48px' }],
-        'figure-lg': ['72px', { lineHeight: '76px' }],
+        title: ['22px', { lineHeight: '36px' }],
+        figure: ['44px', { lineHeight: '54px' }],
+        'figure-lg': ['72px', { lineHeight: '88px' }],
         // Beside a figure: `title`'s size, held fixed like the figure it belongs to.
-        unit: ['22px', { lineHeight: '28px' }],
+        unit: ['22px', { lineHeight: '36px' }],
+      },
+      // React Native picks a face by family name, not by weight, so each face is its own token. A
+      // weighed figure is set solid and an estimated one lighter; B612's digits are tabular.
+      fontFamily: {
+        language: ['B612_400Regular'],
+        'language-bold': ['B612_700Bold'],
+        weighed: ['B612_700Bold'],
+        estimated: ['B612_400Regular'],
+        absence: ['B612_400Regular_Italic'],
       },
       // The 44pt touch target, in px on purpose. The numeric scale is rem-based and NativeWind's
       // native rem is 14, so `h-11` is 38.5pt on an iPhone. `a11y/touch-target` requires both

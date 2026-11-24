@@ -1,6 +1,6 @@
 # Figures are fixed-size, and text scales to double
 
-React Native multiplies every font size by the user's chosen scale, up to about 3.1 at iOS's largest accessibility size. A figure sized to its place, such as a day's calories in a ring, clips when it grows, and a clipped figure is less legible than an unscaled one. The sizes are provisional until the design system is defined.
+React Native multiplies every font size by the user's chosen scale, up to about 3.1 at iOS's largest accessibility size. A figure sized to its place, such as a day's calories in a ring, clips when it grows, and a clipped figure is less legible than an unscaled one. The sizes are provisional until they have been read on a phone.
 
 ## The decision
 

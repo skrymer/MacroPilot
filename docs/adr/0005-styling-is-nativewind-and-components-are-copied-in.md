@@ -1,6 +1,6 @@
 # Styling is NativeWind, and components are copied in rather than depended on
 
-MacroPilot has a design system of its own, with a light and a dark appearance, still to be defined. A component library with opinions about colour and shape is fought on every screen, by one person, for as long as the project lasts.
+MacroPilot has a design system of its own, Trim ([`DESIGN.md`](../../DESIGN.md)), with a light and a dark appearance. A component library with opinions about colour and shape is fought on every screen, by one person, for as long as the project lasts.
 
 ## The decision
 
@@ -8,7 +8,7 @@ MacroPilot has a design system of its own, with a light and a dark appearance, s
 
 **Colours live in `design-tokens.js`, once per appearance**, and `tailwind.config.js` turns each into a CSS variable that the system's appearance switches. So a token class is right in light and dark, and **no component writes `dark:`**: that would be a second palette nothing checks, and `design/no-dark-variant` refuses it. `tests/tokenContrast.test.ts` holds both appearances to WCAG.
 
-**`DESIGN.md` is the prose and `app/design.tsx` the live reference.** If the two disagree, the screen is wrong. A missing token is added to DESIGN.md first. The values in the tokens today are neutral placeholders, not a design.
+**`DESIGN.md` is the prose and `app/design.tsx` the live reference.** If the two disagree, the screen is wrong. A missing token is added to DESIGN.md first.
 
 **The platform's own component comes first**: tab bar, sheet, picker, haptics. Each platform draws its own, with the semantics its users know, and a look-alike has to imitate and then maintain them. What is not native is copied into `src/components/` and is ours to restyle, not depended on.
 
