@@ -59,9 +59,9 @@ The rules are the `agent-device` skill's. They are here because the first tester
 | Network | `ad settings airplane on`, `off`. Metro comes over adb, so it is not cut |
 | Time zone | `adb shell settings put global auto_time_zone 0`, `adb shell cmd alarm set-timezone Pacific/Auckland` |
 | Clock | `adb root`, `adb shell settings put global auto_time 0`, `adb shell date 112423592026.00` (MMDDhhmmYYYY.ss, local), `adb shell am broadcast -a android.intent.action.TIME_SET`. `adb root` drops the port: run `emulator.sh` again |
-| The real keyboard (*unproven*) | `--no-test-ime`. The tool types through a headless one, so nothing is ever covered by it otherwise |
+| The real keyboard | `adb shell ime set com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME` after `ad open`, then `adb shell dumpsys input_method` says `mCurId=…LatinIME`. `--no-test-ime` left the headless one on, with `mInputShown=true`. Back: `adb shell ime set com.callstack.agentdevice.imehelper/.TestInputMethodService` |
 | Animations (*unproven*) | `ad settings animations off` for a walk-through, `on` for a charter about motion |
-| Typing (*unproven*) | `ad fill 'label="Grams"' "180" --settle`; `ad type "1,5"` for keystrokes |
+| Typing | `ad fill 'role=text-field label="Grams"' "180" --settle`. `label=` alone matches the visible label too, and types nothing |
 | Permission (*unproven*) | `ad settings permission deny camera --app com.skrymer.macropilot`; a dialog already up is `ad alert` |
 | A release bundle | Proxy Metro's manifest with `dev=true` rewritten to `dev=false&minify=true`, and load the proxy's port. Still the dev client's red box |
 
