@@ -40,6 +40,10 @@ The figure in the centre is `ink` while the day is within its budget, `slightly-
 | **Unknown** | Words, in italic `ink-dim`: *not stated*, *not logged*. Never a zero, never a dash |
 | **Zero, and known** | A figure like any other |
 
+**A total takes the surest kind in it.** One weighed entry makes the day's calories solid; a day of estimates alone is set as one, and says *about*. A protein total that some entry does not state says *at least*, and one that no entry states is *not stated*. **An empty day is 0 kcal and 0 g**, which are known, with *Nothing logged yet* and a way to log.
+
+**An entry's row** has its calories at the right and its grams and protein under its name.
+
 **A figure and its unit are joined by a no-break space.** Android can break the line at an ordinary one and clip the second half: "0 kcal" was drawn as "0".
 
 ## Type
@@ -52,6 +56,28 @@ Figure sizes never scale with the user's text size; everything else scales to do
 
 ## Controls
 
-A primary action is `ink` filled, a secondary one is outlined. No hue. The platform's own component comes first ([`0005`](./docs/adr/0005-styling-is-nativewind-and-components-are-copied-in.md)).
+A primary action is `ink` filled, a secondary one is outlined. No hue. The platform's own component comes first ([`0005`](./docs/adr/0005-styling-is-nativewind-and-components-are-copied-in.md)). A button names what it does: *Log entry*, *Save food*, *Delete*, never *OK* or *Done*.
 
-An absence is never a modal.
+A target is at least 44pt on iOS and 48dp on Android, each platform's own floor, in one token: `min-h-target min-w-target`.
+
+## Navigation
+
+**Five tabs: Today, Log, Review, Foods, Profile**, in the system's own bar, and no *More*. Five is the most either platform takes, and a More tab hides what it holds. A tab goes to a page and never performs an action. A tab arrives with its content: there is no empty one.
+
+## Asking and telling
+
+| When | What | Not |
+| --- | --- | --- |
+| A form of up to three fields (grams, an estimate) | The system's sheet, over the page it came from | A page of its own |
+| A longer form (a food) | A full-height modal page with *Cancel* | A sheet |
+| Deleting | The system's own question, naming what goes, answered *Delete* or *Cancel*: an action sheet on iOS, a dialog on Android | A question drawn by us |
+| Leaving a full-height form with something typed | The same question, answered *Discard* or *Cancel*, on every way out. A sheet does not ask, and neither does a form left as it opened | A silent loss of six fields |
+| It worked, and the page shows it (a row goes, a row appears) | Nothing | A message repeating it |
+| It worked, and the result is on another page (an entry logged) | A line at the top of the page, announced by a screen reader. It stays until the next replaces it or the page is left | A toast, a timer, a haptic |
+| It failed | Words above the button, the form still open and filled, and the button tries again | A message that goes away |
+
+**No toasts.** iOS has none, and a message on a timer is gone before someone slow to look has read it.
+
+**Focus:** a form of one field takes focus as it opens. A longer one does not, so the whole of it is seen first.
+
+**A failure takes no hue.** Red is a day over its budget. An absence is never a modal.

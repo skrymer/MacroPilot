@@ -53,7 +53,9 @@ Test-first is enforced: probity judges every Write or Edit to the files in `prob
 | Storage translations | `src/storage/**/*.test.ts` over better-sqlite3 ([`0008`](../../../docs/adr/0008-sql-is-tested-against-better-sqlite3-behind-a-narrow-port.md)) | `tdd` |
 | Screens and components | co-located `*.test.tsx` | `component-testing-best-practices` |
 
-**Every test is given / when / then**, each marked with a one-line comment; lint enforces it. **Assert the unknowns**, and give every absent-versus-zero guard an explicit zero test.
+**Push a test down to the cheapest layer that can observe the behaviour**: a boundary value in the domain, the wiring through the screen.
+
+**Every test is given / when / then**, each marked with a one-line comment; lint enforces it. A *when* with two actions asserts two things, and is split. **Assert the unknowns**, and give every absent-versus-zero guard an explicit zero test.
 
 ## Commands
 
