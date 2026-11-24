@@ -1,8 +1,3 @@
-// One face at a time, from the per-face entry point: the package root ships every weight.
-import { B612_400Regular } from '@expo-google-fonts/b612/400Regular';
-import { B612_400Regular_Italic } from '@expo-google-fonts/b612/400Regular_Italic';
-import { B612_700Bold } from '@expo-google-fonts/b612/700Bold';
-import { useFonts } from 'expo-font';
 import { cssInterop } from 'nativewind';
 import type { ReactNode } from 'react';
 import { Appearance, Pressable, ScrollView, useColorScheme, View } from 'react-native';
@@ -15,8 +10,6 @@ import { Text } from '@/components/Text';
  * Trim, the living design reference. Every token and treatment in DESIGN.md renders here; if the
  * two disagree, this page is wrong. Read it in both appearances: the switch changes the whole app's,
  * until it is next launched.
- *
- * The faces are loaded here while they are being judged. Once settled they load in the root layout.
  */
 
 // A token reaches a circle's stroke through its class, as it reaches a View's background.
@@ -250,9 +243,7 @@ const GROUNDS = [
 ] as const;
 
 export default function Design() {
-  const [loaded, failed] = useFonts({ B612_400Regular, B612_400Regular_Italic, B612_700Bold });
   const { bottom } = useSafeAreaInsets();
-  if (!loaded && !failed) return null;
   return (
     <SafeAreaView className="flex-1 bg-ground" edges={['top']}>
       <ScrollView

@@ -8,7 +8,7 @@ MacroPilot is a personal macro and calorie tracker for **iOS and Android**. Ever
 
 ## Status
 
-**Scaffold only.** Every gate is wired and green. Two tabs, Today (a placeholder) and Developer (development builds only). No domain code, no storage. The EAS project is `@skrymer/macropilot`; its first iOS development build is being made.
+**Epic 1 is being built.** Every gate is wired and green. Three tabs: Today (a placeholder), Foods (a list, and Add food) and Developer (development builds only). The EAS project is `@skrymer/macropilot`; its first iOS development build is being made.
 
 ## Communication
 
@@ -27,7 +27,7 @@ Documents and comments here stand alone: they do not refer to other repositories
 
 ```
 src/domain/      pure TypeScript: no react, react-native or expo, no ports
-src/storage/     expo-sqlite adapters behind narrow ports, and their in-memory fakes (none yet)
+src/storage/     expo-sqlite adapters behind narrow ports, and their in-memory fakes
 src/lifecycle/   the Clock port: SystemClock and ScriptedClock
 src/components/  shared UI: presents values, judges nothing
 app/             Expo Router screens: present values, judge nothing
@@ -59,7 +59,7 @@ Then commit on a feature branch, push, open a PR, and merge when CI is green, wi
 
 ## Stack
 
-Expo with a dev build (never Expo Go), Expo Router, TypeScript strict, NativeWind 4, expo-sqlite behind a port, React Hook Form with Zod ([`0009`](./docs/adr/0009-forms-are-react-hook-form-with-zod-and-the-domain-still-judges.md), not installed yet), Jest via jest-expo, RNTL, StrykerJS, probity. EAS Build for iOS, because the development machine runs Linux; Android builds locally.
+Expo with a dev build (never Expo Go), Expo Router, TypeScript strict, NativeWind 4, expo-sqlite behind a port, React Hook Form with Zod ([`0009`](./docs/adr/0009-forms-are-react-hook-form-with-zod-and-the-domain-still-judges.md)), Jest via jest-expo, RNTL, StrykerJS, probity. EAS Build for iOS, because the development machine runs Linux; Android builds locally.
 
 ## Agent skills
 
