@@ -15,7 +15,7 @@ ad="npx --yes agent-device@0.21.36"      # pinned here, and only here
 | --- | --- |
 | Load this checkout's bundle in the dev client | `adb shell am start -W -a android.intent.action.VIEW -d "'macropilot://expo-development-client/?url=http%3A%2F%2Flocalhost%3A8081'" com.skrymer.macropilot` (its port) |
 | Start a session | `$ad open com.skrymer.macropilot --platform android --serial <serial> --foreground` |
-| A screen by deep link | `$ad open macropilot://<route> --platform android` |
+| A screen by deep link | `$ad open macropilot://<route> --platform android`, with the bundle already loaded: from a killed app it lands in the dev client's launcher |
 | From a fresh install | `$ad settings clear-app-state com.skrymer.macropilot`, then load the bundle again. The dev menu's intro comes back: `press 'label="Continue"'`, then `'label="Close"'` |
 | Finish | `$ad close` |
 
@@ -35,9 +35,11 @@ ad="npx --yes agent-device@0.21.36"      # pinned here, and only here
 | --- | --- |
 | Kill | `adb shell am force-stop com.skrymer.macropilot` |
 | Home, and back to the app | `adb shell input keyevent HOME`, then `adb shell am start -n com.skrymer.macropilot/.MainActivity` |
-| Double press (*unproven*) | `$ad press 'label="Log"' --count 2 --interval-ms 60` |
+| Double press | `$ad press 'label="Log"' --count 2 --interval-ms 60` |
 | Appearance | `$ad settings appearance dark`, `light` |
-| Text size | `adb shell settings put system font_scale 2.0` (Android's own ladder ends there; agent-device's goes to 3.2). It recreates the activity, so open the screen again |
+| Text size | `adb shell settings put system font_scale 2.0` (Android's own ladder ends there; agent-device's goes to 3.2). It recreates the activity and leaves the red badge, so force-stop and load the bundle again |
+| Display size | `adb shell wm density 540` (320dp wide on this AVD), `adb shell wm density reset` |
+| A release bundle | Proxy Metro's manifest with `dev=true` rewritten to `dev=false&minify=true`, and load the proxy's port in the dev client. Not a release build: the red box is still the dev client's |
 | Network | `$ad settings airplane on`, `off` |
 | Time zone | `adb shell settings put global auto_time_zone 0`, then `adb shell cmd alarm set-timezone Pacific/Auckland` |
 | Clock | `adb root`, `adb shell settings put global auto_time 0`, then `adb shell date 112423592026.00` (MMDDhhmmYYYY.ss, local) and `adb shell am broadcast -a android.intent.action.TIME_SET`. `adb root` drops the port: run `emulator.sh` again |
@@ -48,7 +50,7 @@ Not proven here: rotation (the app is portrait), a slow network, an incoming cal
 ## Put it back
 
 ```bash
-adb shell settings put system font_scale 1.0; $ad settings appearance light; $ad settings airplane off
+adb shell settings put system font_scale 1.0; adb shell wm density reset; $ad settings appearance light; $ad settings airplane off
 adb shell settings put global auto_time 1; adb shell settings put global auto_time_zone 1
 adb shell cmd alarm set-timezone Australia/Brisbane
 ```
@@ -56,5 +58,5 @@ adb shell cmd alarm set-timezone Australia/Brisbane
 ## Evidence
 
 - A screenshot per result, in the directory `charters.mjs head` printed, named by its key.
-- Metro's log, for an `ERROR` since the last probe: one makes the result a `fail` even when the screen looks right. A red badge at the bottom left is the same thing, and it hides what is under it: `$ad react-native dismiss-overlay` (*unproven*).
-- "configured linking in multiple places" after a text-size change is the recreated activity in a development build, not the change under test.
+- Metro's log, for an `ERROR` since the last probe: one makes the result a `fail` even when the screen looks right. A red badge at the bottom left is the same thing, and its white bar hides the tab bar: a press there opens the error log. `$ad react-native dismiss-overlay` does not see it; force-stop the app and load the bundle again.
+- "configured linking in multiple places" and "multiple navigation containers" after a text-size change are the recreated activity in a development build, not the change under test.

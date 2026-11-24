@@ -6,15 +6,7 @@
 //   charters.mjs record <key> pass|fail|blocked [--screenshot <file>] --note <text>
 //   charters.mjs check <issue>              exits 1 on no charter, or on one with no result
 import { execFileSync } from 'node:child_process';
-import {
-  copyFileSync,
-  existsSync,
-  mkdirSync,
-  mkdtempSync,
-  readFileSync,
-  rmSync,
-  writeFileSync,
-} from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { parseArgs } from 'node:util';
@@ -27,14 +19,16 @@ class Stop extends Error {}
 const git = (args, env = process.env) =>
   execFileSync('git', args, { encoding: 'utf8', env, stdio: ['ignore', 'pipe', 'pipe'] }).trim();
 
-/** The tree of the working copy as it stands, untracked files included, without touching its index. */
+/**
+ * The tree of the working copy as it stands, untracked files included, without touching its index.
+ * From an empty index, so every file is read: a copy of the real one carries its cached timestamps
+ * under a newer timestamp of its own, and git then takes a same-size edit made within the second for
+ * no edit at all.
+ */
 function codeNow() {
   const dir = mkdtempSync(path.join(tmpdir(), 'code-'));
   try {
-    const index = path.join(dir, 'index');
-    const real = git(['rev-parse', '--git-path', 'index']);
-    if (existsSync(real)) copyFileSync(real, index);
-    const env = { ...process.env, GIT_INDEX_FILE: index };
+    const env = { ...process.env, GIT_INDEX_FILE: path.join(dir, 'index') };
     execFileSync('git', ['add', '-A', ':/'], { env, stdio: 'ignore' });
     return git(['write-tree'], env);
   } finally {
