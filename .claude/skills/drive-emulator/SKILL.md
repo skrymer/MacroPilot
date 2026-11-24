@@ -58,8 +58,8 @@ The rules are the `agent-device` skill's. They are here because the first tester
 | Double press | `ad press <target> --count 2 --interval-ms 60` |
 | Network | `ad settings airplane on`, `off`. Metro comes over adb, so it is not cut |
 | Time zone | `adb shell settings put global auto_time_zone 0`, `adb shell cmd alarm set-timezone Pacific/Auckland` |
-| Clock | `adb root`, `adb shell settings put global auto_time 0`, `adb shell date 112423592026.00` (MMDDhhmmYYYY.ss, local), `adb shell am broadcast -a android.intent.action.TIME_SET`. `adb root` drops the port: run `emulator.sh` again |
-| The real keyboard | `adb shell ime set com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME` after `ad open`, then `adb shell dumpsys input_method` says `mCurId=…LatinIME`. `--no-test-ime` left the headless one on, with `mInputShown=true`. Back: `adb shell ime set com.callstack.agentdevice.imehelper/.TestInputMethodService` |
+| Clock | `adb root`, `adb shell settings put global auto_time 0`, `adb shell date 112423592026.00` (MMDDhhmmYYYY.ss, local), `adb shell am broadcast -a android.intent.action.TIME_SET`. `adb root` and `adb unroot` each drop the port: run `emulator.sh` again, or the app opens on the launcher |
+| The real keyboard | `adb shell ime set com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME` after the last `ad press`, `ad fill` or `ad open`, each of which puts the headless one back, and press with `adb shell input tap` from there; then `adb shell dumpsys input_method` says `mCurId=…LatinIME`. `--no-test-ime` left the headless one on, with `mInputShown=true`. Back: `adb shell ime set com.callstack.agentdevice.imehelper/.TestInputMethodService` |
 | Animations (*unproven*) | `ad settings animations off` for a walk-through, `on` for a charter about motion |
 | Typing | `ad fill 'role=text-field label="Grams"' "180" --settle`. `label=` alone matches the visible label too, and types nothing |
 | Permission (*unproven*) | `ad settings permission deny camera --app com.skrymer.macropilot`; a dialog already up is `ad alert` |
@@ -71,7 +71,7 @@ The rules are the `agent-device` skill's. They are here because the first tester
 .claude/skills/drive-emulator/scripts/sizes.sh <out-dir> / design
 ```
 
-Photographs each route, top to bottom, at the five sizes ADR 0007 fixes. About five minutes a long route, so run it in the background. While a screen or the script is being worked on, `SIZES=worst` first, and look before running the rest. `/verify` owes all five. **Look at every photo**: a unit lost, a word broken, text clipped or touching, a control out of reach.
+Photographs each route, top to bottom, at the five sizes ADR 0007 fixes. About five minutes a long route, so run it in the background. While a screen or the script is being worked on, `SIZES=worst` first, and look before running the rest. `/verify` owes all five. **The sizes hold a form's width and scale, and not its content**: one that takes a name or shows a fault is photographed with a name of 64 characters, each fault showing and the real keyboard up, and *holds* is said of what was photographed alone. **Look at every photo**: a unit lost, a word broken, text clipped or touching, a control out of reach.
 
 ## Traps
 
