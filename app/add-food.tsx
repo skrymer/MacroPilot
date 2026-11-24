@@ -9,6 +9,7 @@ import { Button } from '@/components/Button';
 import { foodForm, foodOf } from '@/components/foodForm';
 import { FormField } from '@/components/FormField';
 import { Text } from '@/components/Text';
+import { useSave } from '@/components/useSave';
 import { useFoodStore } from '@/storage/FoodStoreContext';
 
 const FIELDS = [
@@ -41,11 +42,7 @@ export default function AddFood() {
     const first = FIELDS.find(([name]) => name in faults);
     if (first) form.current?.scrollTo({ y: tops.current[first[0]] });
   };
-  // Held through a save that worked, since the page can still be pressed while it goes.
-  const saving = useRef(false);
-  const save = async () => {
-    if (saving.current) return;
-    saving.current = true;
+  const save = useSave(async () => {
     let saved = false;
     await handleSubmit(async (said) => {
       try {
@@ -58,8 +55,8 @@ export default function AddFood() {
       // The user may have left while it was written, and is not taken from where they went.
       if (navigation.isFocused()) leave();
     }, showFirstFault)();
-    saving.current = saved;
-  };
+    return saved;
+  });
   // Beside the field as well, where it can be out of view.
   const refused = Object.keys(errors).some((name) => name !== 'root');
   const notSaved = refused ? 'Not saved. A field above needs changing.' : errors.root?.message;

@@ -1,6 +1,8 @@
 import { screen } from '@testing-library/react-native';
 import { renderRouter } from 'expo-router/testing-library';
 
+import { TestProviders } from '@/components/TestProviders';
+
 import Developer from './developer';
 import Today from './index';
 
@@ -29,7 +31,7 @@ describe('Developer', () => {
     // When the app opens on the Developer page, as a deep link would
     await renderRouter(
       { '(tabs)/index': Today, '(tabs)/developer': Developer },
-      { initialUrl: '/developer' },
+      { initialUrl: '/developer', wrapper: TestProviders },
     );
 
     // Then Today is showing, and the way in to the design reference is not

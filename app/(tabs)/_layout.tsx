@@ -14,6 +14,10 @@ export default function TabsLayout() {
         <NativeTabs.Trigger.Label>Today</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf="house" md="home" />
       </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="log">
+        <NativeTabs.Trigger.Label>Log</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf="plus.circle" md="add_circle" />
+      </NativeTabs.Trigger>
       <NativeTabs.Trigger name="foods">
         <NativeTabs.Trigger.Label>Foods</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf="fork.knife" md="restaurant" />

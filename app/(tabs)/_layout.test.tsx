@@ -1,8 +1,11 @@
 import { screen } from '@testing-library/react-native';
 import { renderRouter } from 'expo-router/testing-library';
 
+import { TestProviders } from '@/components/TestProviders';
+
 import TabsLayout from './_layout';
 import Developer from './developer';
+import Foods from './foods';
 import Today from './index';
 
 describe('TabsLayout', () => {
@@ -11,8 +14,13 @@ describe('TabsLayout', () => {
 
     // When the app opens on the Developer tab
     await renderRouter(
-      { '(tabs)/_layout': TabsLayout, '(tabs)/index': Today, '(tabs)/developer': Developer },
-      { initialUrl: '/developer' },
+      {
+        '(tabs)/_layout': TabsLayout,
+        '(tabs)/index': Today,
+        '(tabs)/foods': Foods,
+        '(tabs)/developer': Developer,
+      },
+      { initialUrl: '/developer', wrapper: TestProviders },
     );
 
     // Then the way in to the design reference is showing
