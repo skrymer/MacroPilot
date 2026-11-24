@@ -1,4 +1,4 @@
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -69,5 +69,18 @@ describe('survivors.mjs', () => {
 
     // Then the last line counts them
     expect(output.trim().split('\n').at(-1)).toBe('Killed 2, Survived 1, Timeout 1');
+  });
+
+  it('fails on a report with no mutants, since nothing was proved', () => {
+    // Given a scope Stryker found nothing to mutate in
+    const file = report([]);
+
+    // When the survivors are listed
+    const { status, stdout } = spawnSync('node', [SCRIPT, file], { encoding: 'utf8' });
+
+    // Then it is not a pass, and says what to do instead
+    expect(status).toBe(1);
+    expect(stdout).toContain('0 mutants');
+    expect(stdout).toContain('by hand');
   });
 });

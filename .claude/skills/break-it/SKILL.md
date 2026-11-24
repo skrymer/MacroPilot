@@ -1,6 +1,6 @@
 ---
 name: break-it
-description: Sends a fresh break-it tester at a change on the Android emulator, to explore beyond its acceptance criteria through charters derived from the diff, each recorded with a result and a screenshot. Use as part two of verify on an issue, again on an epic's whole diff, or when the user says "break it", "try to break this", "explore this", or "exploratory test".
+description: Sends a fresh break-it tester at a change on the Android emulator, to explore beyond its acceptance criteria through charters derived from the diff, each recorded with a result and its evidence. Use as part two of verify on an issue, again on an epic's whole diff, or when the user says "break it", "try to break this", "explore this", or "exploratory test".
 ---
 
 # Break it
@@ -12,9 +12,9 @@ Run `s=.claude/skills/break-it/scripts` and `e=.claude/skills/drive-emulator/scr
 | Command | Does |
 | --- | --- |
 | `$e/emulator.sh` | Boots the emulator if none runs, checks the app is installed and Metro answers, and prints the serial. Stops, saying what is missing, rather than carry on |
-| `node $s/charters.mjs head <issue>` | Stamps the code, drops rows recorded on other code, prints the results and screenshot directory |
+| `node $s/charters.mjs head <issue>` | Stamps the code, drops rows recorded on other code, prints the results and evidence directory |
 | `node $s/charters.mjs charter <issue> "<charter>"` | Registers a charter, prints its key |
-| `node $s/charters.mjs record <key> <status> --screenshot <file> --note "<text>"` | Records a result. Refused once the code has changed |
+| `node $s/charters.mjs record <key> <status> --snapshot <file> --note "<text>"` | Records a result. `--screenshot <file>` too, or instead, where the pixels decide ([`0004`](../../../docs/adr/0004-an-issue-is-verified-on-the-emulator-and-an-epic-on-the-iphone.md)). Refused once the code has changed |
 | `node $s/charters.mjs check <issue>` | Fails on no charter, or on one with no result |
 
 ## Workflow
@@ -28,13 +28,14 @@ Run `s=.claude/skills/break-it/scripts` and `e=.claude/skills/drive-emulator/scr
    What it does: <one or two sentences in the code's own terms; description, never assessment>
    The issue: gh issue view <n> --comments
    Charters: node <absolute path to charters.mjs>; run from the repo root
-   Screenshots: <the directory head printed>
+   Evidence: <the directory head printed>
+   Already filed: <each open bug near the change, number and one line, so it is not charted again>
    Emulator: <serial>
    Driving: <absolute paths to the agent-device and drive-emulator SKILL.md>
    Heuristics: <absolute path to references/heuristics.md>; inputs: <absolute path to references/inputs.md>
    ```
 
-   Its contract is in its definition. Add nothing that says what passed.
+   Its contract is in its definition. Add nothing that says what passed, and no time limit. If it is slow, read its charters and send it where the risk is.
 3. **Check:** `node $s/charters.mjs check <issue>`. When it fails, send the tester back to what it names.
 4. **Report** each charter's result as `check` printed it, then the tester's findings in its own words.
 

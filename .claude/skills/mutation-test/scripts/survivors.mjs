@@ -25,6 +25,10 @@ for (const [file, { source, mutants }] of Object.entries(report.files)) {
     );
   }
 }
+if (counts.size === 0) {
+  console.log('0 mutants: nothing was proved. Mutate the changed lines by hand and run the suite.');
+  process.exit(1);
+}
 console.log(
   [...counts]
     .sort(([a], [b]) => a.localeCompare(b))

@@ -3,10 +3,18 @@
 //
 //   charters.mjs head <issue>               stamps the code; rows recorded on other code are dropped
 //   charters.mjs charter <issue> <charter>  registers "explore … with … to discover …", prints its key
-//   charters.mjs record <key> pass|fail|blocked [--screenshot <file>] --note <text>
+//   charters.mjs record <key> pass|fail|blocked [--snapshot <file>] [--screenshot <file>] --note <text>
 //   charters.mjs check <issue>              exits 1 on no charter, or on one with no result
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { parseArgs } from 'node:util';
@@ -81,19 +89,29 @@ function charter(issue, text) {
   console.log(key);
 }
 
-function record(key, status, { screenshot, note }) {
+/** The files a result rests on, each refused when it shows nothing: a failed `ad snapshot > file` leaves it empty. */
+function evidence({ snapshot, screenshot }) {
+  return [snapshot, screenshot].filter(Boolean).map((file) => {
+    if (!existsSync(file)) throw new Stop(`the evidence ${file} does not exist`);
+    if (statSync(file).size === 0) throw new Stop(`the evidence ${file} is empty`);
+    return path.resolve(file);
+  });
+}
+
+function record(key, status, { note, ...files }) {
   const issue = /^EX-(\d+)\.\d+$/.exec(key ?? '')?.[1];
   if (!issue) throw new Stop(`"${key}" is not a charter key such as EX-8.1`);
   if (!STATUSES.includes(status)) throw new Stop(`the status is one of ${STATUSES.join(', ')}`);
   if (!note?.trim())
     throw new Stop('a result needs a --note naming what was tried, values included');
-  if (status !== 'blocked' && !(screenshot && existsSync(screenshot))) {
-    throw new Stop(`a ${status} needs a --screenshot that exists`);
+  const shown = evidence(files);
+  if (status !== 'blocked' && shown.length === 0) {
+    throw new Stop(`a ${status} needs a --snapshot, or a --screenshot where the pixels decide`);
   }
   const state = loadOnThisCode(issue);
   const found = state.charters.find((each) => each.key === key);
   if (!found) throw new Stop(`there is no charter ${key}: register it first`);
-  found.result = { status, note: note.trim(), screenshot: screenshot && path.resolve(screenshot) };
+  found.result = { status, note: note.trim(), evidence: shown };
   save(issue, state);
 }
 
@@ -101,8 +119,7 @@ function check(issue) {
   const { charters } = loadOnThisCode(issue);
   for (const { key, text, result } of charters) {
     console.log(`${key} ${result?.status ?? 'missing'}: ${text}`);
-    if (result)
-      console.log(`  ${result.note}${result.screenshot ? ` (${result.screenshot})` : ''}`);
+    if (result) console.log(`  ${[result.note, ...result.evidence].join('\n  ')}`);
   }
   const missing = charters.filter(({ result }) => !result).length;
   if (charters.length === 0) throw new Stop('INCOMPLETE: no charter was explored');
@@ -113,7 +130,11 @@ function check(issue) {
 try {
   const { positionals, values } = parseArgs({
     allowPositionals: true,
-    options: { screenshot: { type: 'string' }, note: { type: 'string' } },
+    options: {
+      snapshot: { type: 'string' },
+      screenshot: { type: 'string' },
+      note: { type: 'string' },
+    },
   });
   const [command, first, second] = positionals;
   if (command === 'head') head(issueOf(first));

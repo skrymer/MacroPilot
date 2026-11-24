@@ -23,12 +23,14 @@ The app ships on iOS and Android. The development machine runs Linux: it has no 
 
 **It is per change, not a regression suite.** Jest is the regression net, and a break found becomes a failing Jest test before it is fixed.
 
-**Every claim carries a screenshot, and every probe starts from its own stated state.** Screenshots are evidence, never compared against approved ones. Probes select by accessibility label: a control that cannot be found by label is an accessibility gap, and the fix is the label.
+**Every claim carries evidence, and every probe starts from its own stated state.** The evidence is the accessibility snapshot of the screen, saved to a file. It settles which screen is showing, what it says, what is selected and where back goes, and it is text, so a command can assert on it. **Where the pixels decide, the evidence is a screenshot that has been looked at**: colour, the appearance, clipping, text and display sizes, the photos `sizes.sh` takes, and a figure, because the tree has read "0 kcal" while the screen showed "0". A tab bar drawn in the wrong appearance has a perfect snapshot. Screenshots are never compared against approved ones. Probes select by accessibility label: a control that cannot be found by label is an accessibility gap, and the fix is the label.
 
 ## Alternatives rejected
 
 - **The iPhone on every issue.** It finds iOS faults sooner, and makes a person the gate on every merge.
 - **The iPhone never.** A field that flickers as its user types, or a *Save* that needs two taps because the keyboard took the first, is a fault only one platform's text field produces. The emulator passes both.
+- **A screenshot for every claim.** Where the claim is about navigation it proves nothing a snapshot does not, and it has to be looked at, where a snapshot is text a command can assert on.
+- **A snapshot for every claim.** It cannot see colour, clipping or a figure the screen draws differently from the tree.
 - **One agent for both parts.** It explores where it already looked.
 - **The break-it tester on the epic alone.** Cheaper, but its findings arrive after the code has merged.
 

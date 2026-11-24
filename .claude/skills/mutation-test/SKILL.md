@@ -52,6 +52,7 @@ The consequence: [`0001`](../../../docs/adr/0001-a-unit-owes-its-own-test-when-i
 
 - **No truthiness mutator.** `x == null ? a : b` scoring 100% says nothing about whether `x ? b : a` would be caught, and those differ for `0`, `''` and `NaN`. That matters here more than most codebases: absence is a first-class value and an unknown must never render as a zero, so every guard distinguishing absent from zero needs an explicit zero case the score will never ask for.
 - **Configuration is not mutable code.** Any tuning figure that moves into a config file is outside the mutable path by construction, and needs a test asserting the figure the rule produces at its boundary.
+- **A JSX attribute makes no mutants**, so a scope of nothing else has none. `survivors.mjs` then fails: mutate the lines by hand and run the suite.
 - **A `timeout` verdict is not a survivor.** It usually means the mutant produced an infinite loop, and counts as killed.
 
 ## Gotchas
