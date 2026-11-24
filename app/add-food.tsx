@@ -37,7 +37,8 @@ export default function AddFood() {
   // The system keeps the focused field in view, and not the label and the fault above it.
   const showFirstFault = (faults: object) => {
     const first = FIELDS.find(([name]) => name in faults);
-    if (first) scroll.current?.scrollTo({ y: tops.current[first[0]] });
+    // At once: one still moving is cut off by the system's own, to the field alone.
+    if (first) scroll.current?.scrollTo({ y: tops.current[first[0]], animated: false });
   };
   const save = useSave({
     form: { handleSubmit, setError },

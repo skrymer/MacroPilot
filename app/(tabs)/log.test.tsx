@@ -245,6 +245,26 @@ describe('Log', () => {
     expect(screen.getByLabelText('Weight (g)')).toHaveDisplayValue('');
   });
 
+  it('clears what it said was logged when Log is left from a food’s form', async () => {
+    // Given an entry logged and said so, and a form over Log left by a link to another tab
+    await openLog(await storesOf(OATS, COFFEE));
+    const user = userEvent.setup();
+    await weigh(user, /^Rolled oats/, '80');
+    await user.press(screen.getByRole('button', { name: 'Log entry' }));
+    await screen.findByText('Logged: Rolled oats');
+    await user.press(await screen.findByRole('button', { name: /^Coffee/ }));
+    await screen.findByRole('header', { name: 'Log Coffee' });
+    await act(() => router.navigate('/foods'));
+    await screen.findByRole('header', { name: 'Foods' });
+
+    // When the user comes back to Log
+    await act(() => router.navigate('/log'));
+
+    // Then it says nothing was logged
+    expect(await screen.findByRole('header', { name: 'Log' })).toBeOnTheScreen();
+    expect(screen.queryByText('Logged: Rolled oats')).not.toBeOnTheScreen();
+  });
+
   it('cancels back to Log from a food that is not kept', async () => {
     // Given a link to the form of a food that is not among the user's
     await openLog(await storesOf(OATS));
