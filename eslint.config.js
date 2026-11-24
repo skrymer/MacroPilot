@@ -103,8 +103,8 @@ const DESIGN = {
 };
 
 /**
- * The accessibility floor DESIGN.md calls "unannounced": every target 44pt,
- * every control named for what it is, every piece of text free to grow.
+ * The accessibility floor: every target at its platform's own, every control named for what it
+ * is, every piece of text free to grow.
  */
 const a11yPlugin = {
   rules: {

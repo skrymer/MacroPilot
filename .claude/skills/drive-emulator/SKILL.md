@@ -42,7 +42,7 @@ The rules are the `agent-device` skill's. They are here because the first tester
 - A tree that looks stale: one screenshot and one fresh snapshot, never a loop.
 - **Look at the pixels where they decide**: colour, appearance, clipping, size, a figure. `ad screenshot <file> --normalize-status-bar`, `--crop-on 'text="0 kcal"'` for one element. The tree has read "0 kcal" while the screen showed "0".
 - **A colour is measured with `.claude/skills/drive-emulator/scripts/pixels.mjs bar=60,2320 ground=540,1200`**, which refuses while a warning overlay is in front. The points are in pixels, on this AVD.
-- `ad audit` on a screen the change touched: targets under 48dp, controls with no name, covered controls. It reads what is in front, so clear a warning overlay first. The 44dp floor it reports on every target of ours is #22.
+- `ad audit` on a screen the change touched: targets under 48dp, controls with no name, covered controls. It reads what is in front, so clear a warning overlay first.
 - An `ERROR` in Metro's log since the last probe fails it. So does a red badge at the bottom left.
 - The round gear is the dev client's, not the app's.
 

@@ -38,7 +38,7 @@ In `eslint-rules/`, wired in `eslint.config.js`. A `PostToolUse` hook lints each
 
 ## Links and library text
 
-A link is a 44pt view, not a text span, so it cannot sit inside a sentence: put it beside the text. A library component that draws its own text skips the cap; it gets a wrapper in `src/components/` and an entry in `a11y/capped-text`.
+A link is a view at the target floor, not a text span, so it cannot sit inside a sentence: put it beside the text. A library component that draws its own text skips the cap; it gets a wrapper in `src/components/` and an entry in `a11y/capped-text`.
 
 ## Adding a rule
 

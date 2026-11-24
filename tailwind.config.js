@@ -1,8 +1,12 @@
+const { platformSelect } = require('nativewind/theme');
 const plugin = require('tailwindcss/plugin');
 const tokens = require('./design-tokens');
 
 /** `#RRGGBB` as the channels `rgb(… / <alpha-value>)` takes, so `bg-ground/50` works. */
 const channels = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(' ');
+
+/** Each platform's own floor for a target: Apple's 44pt, Material's 48dp. */
+const target = platformSelect({ ios: '44px', android: '48px' });
 
 const variables = (palette) =>
   Object.fromEntries(
@@ -41,13 +45,13 @@ module.exports = {
         estimated: ['B612_400Regular'],
         absence: ['B612_400Regular_Italic'],
       },
-      // The 44pt touch target, in px on purpose. The numeric scale is rem-based and NativeWind's
+      // The touch target, in px on purpose. The numeric scale is rem-based and NativeWind's
       // native rem is 14, so `h-11` is 38.5pt on an iPhone. `a11y/touch-target` requires both
       // floors on every Pressable.
-      minHeight: { target: '44px' },
+      minHeight: { target },
       // `name` is the least a name keeps beside its figure: the longest word of one, at double. With
       // less, the figure drops below it. A basis does not do this: Yoga shrinks past it.
-      minWidth: { target: '44px', name: '150px' },
+      minWidth: { target, name: '150px' },
       colors: Object.fromEntries(
         Object.keys(tokens.light).map((name) => [
           name,
