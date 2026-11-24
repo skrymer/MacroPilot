@@ -45,7 +45,7 @@ The same workflow, with the PRD's number for `<issue>`, on `main`. The change is
 
 ## What a finding is
 
-A `fail` is not yours to dismiss. Each one is a bug in the diff, or behaviour nothing defines. A bug becomes a failing Jest test before it is fixed, and the fix goes back through the gates it touches. Undefined behaviour is settled against what the app this is built from does, when the user has named one; otherwise it becomes an issue and goes to the user with the epic, not in the middle of the issue. On an epic, findings are settled before the user's test on iOS.
+A `fail` is not yours to dismiss. Each one is a bug in the diff, or behaviour nothing defines. A bug becomes a failing Jest test before it is fixed, or a measured fault when only the pixels can show it ([`0001`](../../../docs/adr/0001-a-unit-owes-its-own-test-when-it-owns-something.md)), and the fix goes back through the gates it touches. Undefined behaviour is settled against what the app this is built from does, when the user has named one; otherwise it becomes an issue and goes to the user with the epic, not in the middle of the issue. On an epic, findings are settled before the user's test on iOS.
 
 *Needs a phone* items go on the epic's list for the user's test.
 

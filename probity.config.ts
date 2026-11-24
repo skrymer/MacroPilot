@@ -70,8 +70,31 @@ const OBSERVED_FAILURE_RULE = {
     a reason to block adding one.`,
 };
 
-export function scopeObservedFailureToProductionWrites(defaults: string) {
+function scopeObservedFailureToProductionWrites(defaults: string) {
   return defaults.replace(OBSERVED_FAILURE_RULE.loose, OBSERVED_FAILURE_RULE.scoped);
+}
+
+/**
+ * Jest sees no pixels and lint refuses asserting styles, so a change to them has no failing test to
+ * show (ADR 0001). The limits keep that narrow.
+ */
+const PIXELS_RULE = `### A change only the pixels can show
+
+This takes precedence over the red and green rules above, for a production write of which all of
+these hold. It then needs no failing test:
+
+  - Its only effect is what is drawn: a colour, a decoration, an appearance, a platform component's
+    own drawing, or a render or remount made only to draw it again.
+  - It leaves alone a value, a word, a role, a label, navigation, state or a computation, and
+    a size, a touch target, what is shown or what can be pressed.
+  - The session shows, before the write, the fault on the emulator, as
+    a pixel measurement in a command's output.
+  - It is the least that could repair that fault, and the tests of the file pass.
+
+Anything else in the same write is judged by the rules above.`;
+
+function testFirstRules(defaults: string) {
+  return `${scopeObservedFailureToProductionWrites(defaults)}\n\n${PIXELS_RULE}`;
 }
 
 export default defineConfig({
@@ -84,7 +107,7 @@ export default defineConfig({
         'eslint.config.js',
         '!app/design.tsx',
       ],
-      rules: [enforceTdd({ maxEvents: 20, instructions: scopeObservedFailureToProductionWrites })],
+      rules: [enforceTdd({ maxEvents: 20, instructions: testFirstRules })],
     },
   ],
 });
