@@ -71,7 +71,7 @@ describe('Log', () => {
     const stores = await storesOf(OATS, COFFEE);
     await openLog(stores);
     const user = userEvent.setup();
-    await weigh(user, /^Rolled oats/, '80');
+    await weigh(user, /^Log Rolled oats/, '80');
 
     // When the user logs it
     await user.press(screen.getByRole('button', { name: 'Log entry' }));
@@ -90,11 +90,26 @@ describe('Log', () => {
     await openLog(await storesOf(OATS, COFFEE));
 
     // When the user presses one
-    await userEvent.press(await screen.findByRole('button', { name: /^Coffee/ }));
+    await userEvent.press(await screen.findByRole('button', { name: /^Log Coffee/ }));
 
     // Then its form names it, and its grams are blank rather than a figure
     expect(await screen.findByRole('header', { name: 'Log Coffee' })).toBeOnTheScreen();
     expect(screen.getByLabelText('Weight (g)')).toHaveDisplayValue('');
+  });
+
+  it('names a food’s row by what pressing it does, and by its figures', async () => {
+    // Given a food kept
+    const stores = await storesOf(OATS);
+
+    // When the user opens Log
+    await openLog(stores);
+
+    // Then its row is a button that says so, with all that is seen on it
+    expect(
+      await screen.findByRole('button', {
+        name: 'Log Rolled oats, 294 calories, 13 grams of protein per 100 grams',
+      }),
+    ).toBeOnTheScreen();
   });
 
   it.each([
@@ -106,7 +121,7 @@ describe('Log', () => {
     const stores = await storesOf(OATS);
     await openLog(stores);
     const user = userEvent.setup();
-    await user.press(await screen.findByRole('button', { name: /^Rolled oats/ }));
+    await user.press(await screen.findByRole('button', { name: /^Log Rolled oats/ }));
     const field = await screen.findByLabelText('Weight (g)');
     if (typed) await user.type(field, typed);
 
@@ -125,7 +140,7 @@ describe('Log', () => {
     const written = stores.entries.holdWrites();
     await openLog(stores);
     const user = userEvent.setup();
-    await weigh(user, /^Rolled oats/, '80');
+    await weigh(user, /^Log Rolled oats/, '80');
     const button = screen.getByRole('button', { name: 'Log entry' });
     await user.press(button);
 
@@ -144,10 +159,10 @@ describe('Log', () => {
     const written = stores.entries.holdWrites();
     await openLog(stores);
     const user = userEvent.setup();
-    await weigh(user, /^Rolled oats/, '80');
+    await weigh(user, /^Log Rolled oats/, '80');
     await user.press(screen.getByRole('button', { name: 'Log entry' }));
     await act(() => router.back());
-    await weigh(user, /^Coffee/, '250');
+    await weigh(user, /^Log Coffee/, '250');
 
     // When it is written
     await act(async () => written());
@@ -164,7 +179,7 @@ describe('Log', () => {
     const stores = await storesOf(OATS);
     await openLog(stores, clock);
     const user = userEvent.setup();
-    await weigh(user, /^Rolled oats/, '80');
+    await weigh(user, /^Log Rolled oats/, '80');
     await act(async () => clock.advance(2 * 60_000));
 
     // When the user logs it
@@ -180,13 +195,13 @@ describe('Log', () => {
     // Given an entry logged and said so, and a second food's form opened and left
     await openLog(await storesOf(OATS, COFFEE));
     const user = userEvent.setup();
-    await weigh(user, /^Rolled oats/, '80');
+    await weigh(user, /^Log Rolled oats/, '80');
     await user.press(screen.getByRole('button', { name: 'Log entry' }));
     await screen.findByText('Logged: Rolled oats');
-    await weigh(user, /^Coffee/, '250');
+    await weigh(user, /^Log Coffee/, '250');
     await act(() => router.back());
     expect(screen.getByText('Logged: Rolled oats')).toBeOnTheScreen();
-    await weigh(user, /^Coffee/, '250');
+    await weigh(user, /^Log Coffee/, '250');
 
     // When the second food is logged
     await user.press(screen.getByRole('button', { name: 'Log entry' }));
@@ -204,7 +219,7 @@ describe('Log', () => {
     // Given a food's grams typed, over a thousand
     await openLog(await storesOf(OATS));
     const user = userEvent.setup();
-    await weigh(user, /^Rolled oats/, '1500');
+    await weigh(user, /^Log Rolled oats/, '1500');
 
     // When it is logged
     await user.press(screen.getByRole('button', { name: 'Log entry' }));
@@ -217,12 +232,12 @@ describe('Log', () => {
     // Given a food pressed that could not be read for its form, and now can be
     const stores = await storesOf(OATS);
     await openLog(stores);
-    const food = await screen.findByRole('button', { name: /^Rolled oats/ });
+    const food = await screen.findByRole('button', { name: /^Log Rolled oats/ });
     stores.foods.unreadable = true;
     const user = userEvent.setup();
     await user.press(food);
-    const tryAgain = await screen.findByRole('button', { name: 'Try again' });
-    expect(screen.getByText('Your foods could not be read')).toBeOnTheScreen();
+    const tryAgain = await screen.findByRole('button', { name: 'Retry' });
+    expect(screen.getByText('Couldn’t load your foods')).toBeOnTheScreen();
     stores.foods.unreadable = false;
 
     // When the user tries again
@@ -235,7 +250,7 @@ describe('Log', () => {
   it('asks for another food’s grams anew, when a link opens it over the first', async () => {
     // Given 80 g typed for one food
     await openLog(await storesOf(OATS, COFFEE));
-    await weigh(userEvent.setup(), /^Rolled oats/, '80');
+    await weigh(userEvent.setup(), /^Log Rolled oats/, '80');
 
     // When a link opens the other's form
     await act(() => router.navigate({ pathname: '/log-food', params: { id: 2 } }));
@@ -249,10 +264,10 @@ describe('Log', () => {
     // Given an entry logged and said so, and a form over Log left by a link to another tab
     await openLog(await storesOf(OATS, COFFEE));
     const user = userEvent.setup();
-    await weigh(user, /^Rolled oats/, '80');
+    await weigh(user, /^Log Rolled oats/, '80');
     await user.press(screen.getByRole('button', { name: 'Log entry' }));
     await screen.findByText('Logged: Rolled oats');
-    await user.press(await screen.findByRole('button', { name: /^Coffee/ }));
+    await user.press(await screen.findByRole('button', { name: /^Log Coffee/ }));
     await screen.findByRole('header', { name: 'Log Coffee' });
     await act(() => router.navigate('/foods'));
     await screen.findByRole('header', { name: 'Foods' });
@@ -268,11 +283,11 @@ describe('Log', () => {
   it('cancels back to Log from a food that is not kept', async () => {
     // Given a link to the form of a food that is not among the user's
     await openLog(await storesOf(OATS));
-    await screen.findByRole('button', { name: /^Rolled oats/ });
+    await screen.findByRole('button', { name: /^Log Rolled oats/ });
     await act(() => router.navigate({ pathname: '/log-food', params: { id: 99 } }));
     const cancel = await screen.findByRole('button', { name: 'Cancel' });
     expect(await screen.findByText('This food is not in your foods')).toBeOnTheScreen();
-    expect(screen.queryByText('No foods yet')).not.toBeOnTheScreen();
+    expect(screen.queryByText('Build your food catalog')).not.toBeOnTheScreen();
 
     // When the user cancels
     await userEvent.press(cancel);
@@ -285,20 +300,20 @@ describe('Log', () => {
     // Given a food pressed that could not be read for its form
     const stores = await storesOf(OATS);
     await openLog(stores);
-    const food = await screen.findByRole('button', { name: /^Rolled oats/ });
+    const food = await screen.findByRole('button', { name: /^Log Rolled oats/ });
     stores.foods.unreadable = true;
     const user = userEvent.setup();
     await user.press(food);
-    await screen.findByText('Your foods could not be read');
+    await screen.findByText('Couldn’t load your foods');
     stores.foods.unreadable = false;
 
     // When the user cancels
     await user.press(screen.getByRole('button', { name: 'Cancel' }));
 
     // Then Log is there, with the food on it
-    expect(await screen.findByRole('button', { name: /^Rolled oats/ })).toBeOnTheScreen();
+    expect(await screen.findByRole('button', { name: /^Log Rolled oats/ })).toBeOnTheScreen();
     expect(screen).toHavePathname('/log');
-    expect(screen.queryByText('Your foods could not be read')).not.toBeOnTheScreen();
+    expect(screen.queryByText('Couldn’t load your foods')).not.toBeOnTheScreen();
   });
 
   it('cancels back to Log with nothing logged', async () => {
@@ -306,7 +321,7 @@ describe('Log', () => {
     const stores = await storesOf(OATS);
     await openLog(stores);
     const user = userEvent.setup();
-    await weigh(user, /^Rolled oats/, '80');
+    await weigh(user, /^Log Rolled oats/, '80');
 
     // When the user cancels
     await user.press(screen.getByRole('button', { name: 'Cancel' }));
@@ -322,7 +337,7 @@ describe('Log', () => {
     // Given an entry logged, and said so
     await openLog(await storesOf(OATS));
     const user = userEvent.setup();
-    await weigh(user, /^Rolled oats/, '80');
+    await weigh(user, /^Log Rolled oats/, '80');
     await user.press(screen.getByRole('button', { name: 'Log entry' }));
     await screen.findByText('Logged: Rolled oats');
     await act(() => router.navigate('/foods'));
@@ -341,9 +356,9 @@ describe('Log', () => {
     const stores = await storesOf(OATS);
     stores.foods.unreadable = true;
     await openLog(stores);
-    const tryAgain = await screen.findByRole('button', { name: 'Try again' });
-    expect(screen.getByText('Your foods could not be read')).toBeOnTheScreen();
-    expect(screen.queryByText('No foods yet')).not.toBeOnTheScreen();
+    const tryAgain = await screen.findByRole('button', { name: 'Retry' });
+    expect(screen.getByText('Couldn’t load your foods')).toBeOnTheScreen();
+    expect(screen.queryByText('Build your food catalog')).not.toBeOnTheScreen();
     expect(screen.queryByRole('header', { name: 'All foods' })).not.toBeOnTheScreen();
     stores.foods.unreadable = false;
 
@@ -351,15 +366,15 @@ describe('Log', () => {
     await userEvent.press(tryAgain);
 
     // Then they are there, under their heading
-    expect(await screen.findByRole('button', { name: /^Rolled oats/ })).toBeOnTheScreen();
+    expect(await screen.findByRole('button', { name: /^Log Rolled oats/ })).toBeOnTheScreen();
     expect(screen.getByRole('header', { name: 'All foods' })).toBeOnTheScreen();
   });
 
   it('leads to Add food where there are no foods', async () => {
     // Given Log open with no foods kept
     await openLog(await storesOf());
-    const wayOn = await screen.findByRole('button', { name: 'Add food' });
-    expect(screen.getByText('No foods yet')).toBeOnTheScreen();
+    const wayOn = await screen.findByRole('button', { name: 'Add your first food' });
+    expect(screen.getByText('Build your food catalog')).toBeOnTheScreen();
 
     // When the user takes the way on
     await userEvent.press(wayOn);
@@ -374,9 +389,9 @@ describe('Log', () => {
     stores.entries.unwritable = true;
     await openLog(stores);
     const user = userEvent.setup();
-    await weigh(user, /^Rolled oats/, '80');
+    await weigh(user, /^Log Rolled oats/, '80');
     await user.press(screen.getByRole('button', { name: 'Log entry' }));
-    await screen.findByText('Not logged. What you typed is still here.');
+    await screen.findByText('Could not save entry. What you typed is still here.');
     expect(screen.getByLabelText('Weight (g)')).toHaveDisplayValue('80');
     stores.entries.unwritable = false;
 

@@ -43,7 +43,7 @@ export default function AddFood() {
   const save = useSave({
     form: { handleSubmit, setError },
     write: (said) => store.add(foodOf(said)),
-    failed: 'Not saved. What you typed is still here.',
+    failed: 'Could not add food. What you typed is still here.',
     leave,
     onRefused: showFirstFault,
   });

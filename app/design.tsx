@@ -352,7 +352,7 @@ export default function Design() {
           </Card>
           <Card>
             <Text className="mb-3 font-language-bold text-body text-ink">
-              Not saved. Your figures are still here.
+              Could not save entry. What you typed is still here.
             </Text>
             <Action solid label="Log entry" />
           </Card>

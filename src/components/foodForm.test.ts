@@ -38,7 +38,7 @@ describe('foodForm', () => {
 
     // Then each field is asked for by name, a blank figure never taken as 0
     expect(told).toEqual({
-      name: 'Enter a name',
+      name: 'Enter a name for this food',
       protein: 'Enter protein per 100 g',
       carbohydrate: 'Enter carbohydrate per 100 g',
       fat: 'Enter fat per 100 g',
@@ -59,7 +59,7 @@ describe('foodForm', () => {
     // Then each field is told its own fault, and 0 and 100 have none
     expect(told).toEqual([
       { fibre: 'Fibre can’t be negative', abv: 'Alcohol can’t be negative' },
-      { abv: 'Alcohol can’t be over 100%' },
+      { abv: 'ABV can’t be over 100%' },
       {},
     ]);
   });
@@ -73,7 +73,7 @@ describe('foodForm', () => {
 
     // Then each field is told its own fault
     expect(told).toEqual({
-      name: 'Enter a name',
+      name: 'Enter a name for this food',
       protein: 'Protein can’t be negative',
       carbohydrate: 'Carbohydrate can’t be negative',
       fat: 'Fat can’t be negative',

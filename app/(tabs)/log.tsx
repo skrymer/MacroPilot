@@ -63,7 +63,7 @@ export default function Log() {
         ref={list}
         data={listed}
         keyExtractor={({ id }) => String(id)}
-        renderItem={({ item }) => <FoodRow food={item} onPress={() => openForm(item.id)} />}
+        renderItem={({ item }) => <FoodRow food={item} onLog={() => openForm(item.id)} />}
         contentContainerClassName="px-4 pb-4"
         ItemSeparatorComponent={Hairline}
         ListEmptyComponent={<FoodsNotice foods={foods} readAgain={readAgain} />}

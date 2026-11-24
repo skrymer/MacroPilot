@@ -6,17 +6,18 @@ import { Row } from './Row';
 
 const PER_100_G = `per ${grams(100)}`;
 
-/** A food and its figures per 100 g, pressed where it leads somewhere. */
-export function FoodRow({ food: { name, macros }, onPress }: { food: Food; onPress?: () => void }) {
+/** A food and its figures per 100 g, and the way to log it where `onLog` is given. */
+export function FoodRow({ food: { name, macros }, onLog }: { food: Food; onLog?: () => void }) {
   const shown = shownName(name);
   const calories = caloriesPer100g(macros);
+  const spoken = `${shown}, ${spokenKcal(calories)}, ${spokenGrams(macros.protein)} of protein per 100 grams`;
   return (
     <Row
       name={shown}
       detail={`${grams(macros.protein)} protein ${PER_100_G}`}
       figure={kcal(calories)}
-      spoken={`${shown}, ${spokenKcal(calories)}, ${spokenGrams(macros.protein)} of protein per 100 grams`}
-      onPress={onPress}
+      spoken={onLog ? `Log ${spoken}` : spoken}
+      onPress={onLog}
     />
   );
 }

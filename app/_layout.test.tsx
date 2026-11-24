@@ -78,14 +78,14 @@ describe('RootLayout', () => {
     await openAt('/foods');
 
     // Then Foods has read it, rather than a missing provider having crashed it
-    expect(await screen.findByText('No foods yet')).toBeOnTheScreen();
+    expect(await screen.findByText('Build your food catalog')).toBeOnTheScreen();
   });
 
   it('keeps a food added on Add food where Foods reads it', async () => {
     // Given Add food filled, over the store the root layout makes
     await openAt('/foods');
     const user = userEvent.setup();
-    await user.press(await screen.findByRole('button', { name: 'Add food' }));
+    await user.press(await screen.findByRole('button', { name: 'Add your first food' }));
     await user.type(await screen.findByLabelText('Name'), 'rolled oats');
     await user.type(screen.getByLabelText('Protein per 100 g'), '13');
     await user.type(screen.getByLabelText('Carbohydrate per 100 g'), '56');
@@ -109,7 +109,7 @@ describe('RootLayout', () => {
     await user.type(screen.getByLabelText('Fat per 100 g'), '0');
     await user.press(screen.getByRole('button', { name: 'Save food' }));
     await act(() => router.navigate('/log'));
-    await user.press(await screen.findByRole('button', { name: /^Muesli/ }));
+    await user.press(await screen.findByRole('button', { name: /^Log Muesli/ }));
     await user.type(await screen.findByLabelText('Weight (g)'), '100');
     await user.press(screen.getByRole('button', { name: 'Log entry' }));
     await screen.findByText('Logged: Muesli');
