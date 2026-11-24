@@ -12,9 +12,9 @@ type FormFieldProps<Typed extends FieldValues, Said> = {
 };
 
 /**
- * A form's field under its label, with its fault beside it: the one place a form is joined to our
- * `Input` (ADR 0009). The form's `ref` goes with the rest, so a refused form focuses its first fault,
- * which brings it into view.
+ * A form's field under its label and its fault: the one place a form is joined to our `Input` (ADR
+ * 0009). The form's `ref` goes with the rest, so a refused form focuses its first fault, which brings
+ * it into view. What is kept in view is the field, so its fault is above it and not under.
  */
 export function FormField<Typed extends FieldValues, Said>({
   control,
@@ -35,6 +35,9 @@ export function FormField<Typed extends FieldValues, Said>({
           >
             {label}
           </Text>
+          {error ? (
+            <Text className="font-language-bold text-label text-ink">{error.message}</Text>
+          ) : null}
           <Input
             {...field}
             accessibilityLabel={label}
@@ -43,9 +46,6 @@ export function FormField<Typed extends FieldValues, Said>({
             onChangeText={onChange}
             className="font-language text-body"
           />
-          {error ? (
-            <Text className="font-language-bold text-label text-ink">{error.message}</Text>
-          ) : null}
         </View>
       )}
     />

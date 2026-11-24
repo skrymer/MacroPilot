@@ -60,6 +60,21 @@ describe('FormField', () => {
     expect(screen.getByLabelText('Name')).toHaveProp('accessibilityHint', 'Enter a name');
   });
 
+  it('has its fault between its label and the field, which the keyboard keeps in view', async () => {
+    // Given a form that asks for a name, left blank
+    await render(<OneField onSubmit={() => {}} />);
+
+    // When it is submitted
+    await userEvent.press(screen.getByText('Save'));
+
+    // Then the fault is met before the field it is about
+    const fault = await screen.findByText('Enter a name');
+    const field = screen.getByLabelText('Name');
+    const inReadingOrder = fault.parent?.children ?? [];
+    expect(inReadingOrder).toContain(field);
+    expect(inReadingOrder.indexOf(fault)).toBeLessThan(inReadingOrder.indexOf(field));
+  });
+
   it('says nothing of a fault once it is put right', async () => {
     // Given a form refused for want of a name
     await render(<OneField onSubmit={() => {}} />);

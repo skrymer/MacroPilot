@@ -61,7 +61,11 @@ describe('Add food', () => {
       // When the user opens Add food
       await openApp('/add-food', foods);
 
-      // Then the field's label joins 100 and g
+      // Then the field's label joins 100 and g, and so does that of Fibre
+      expect(screen.getByLabelText('Fibre per 100 g, optional')).toHaveProp(
+        'accessibilityLabel',
+        'Fibre per 100 g, optional',
+      );
       expect(await screen.findByLabelText(`${macro} per 100 g`)).toHaveProp(
         'accessibilityLabel',
         `${macro} per 100 g`,
@@ -94,6 +98,34 @@ describe('Add food', () => {
     // Then it is in Foods, its zeros kept
     expect(await screen.findByText('Black coffee')).toBeOnTheScreen();
     expect(screen.getByText('0 g protein per 100 g')).toBeOnTheScreen();
+  });
+
+  it.each([
+    ['left blank', '', '', undefined, undefined, '165 kcal'],
+    ['0', '0', '0', 0, 0, '165 kcal'],
+    ['stated', '10', '13', 10, 10.257, '257 kcal'],
+  ])('keeps fibre and alcohol that are %s', async (_, fibre, abv, keptFibre, keptAlcohol, kcal) => {
+    // Given a food filled with them
+    const foods = new InMemoryFoodStore();
+    await openApp('/add-food', foods);
+    const user = userEvent.setup();
+    await fill(user, {
+      Name: 'muesli',
+      'Protein per 100 g': '10',
+      'Carbohydrate per 100 g': '20',
+      'Fat per 100 g': '5',
+      'Fibre per 100 g, optional': fibre,
+      'Alcohol % volume, optional': abv,
+    });
+
+    // When it is saved
+    await user.press(screen.getByRole('button', { name: 'Save food' }));
+
+    // Then its calories count what was stated, and what was not is not a zero
+    expect(await screen.findByText(kcal)).toBeOnTheScreen();
+    const [kept] = await foods.list();
+    expect(kept?.macros.fibre).toBe(keptFibre);
+    expect(kept?.macros.alcohol).toBe(keptAlcohol);
   });
 
   it('opens once, however quickly the way in is pressed again', async () => {
@@ -130,6 +162,36 @@ describe('Add food', () => {
     await screen.findByText('Rolled oats');
     const names = screen.getAllByText(/^(Apple|Rolled oats|Zucchini)$/);
     expect(names.map((name) => name.children[0])).toEqual(['Apple', 'Rolled oats', 'Zucchini']);
+  });
+
+  it('says above the button that a refused food was not saved, until one is', async () => {
+    // Given the form filled, but for an alcohol no drink has
+    await openApp('/add-food', new InMemoryFoodStore());
+    const user = userEvent.setup();
+    await fill(user, { ...OATS, 'Alcohol % volume, optional': '200' });
+
+    // When the user saves it
+    await user.press(screen.getByRole('button', { name: 'Save food' }));
+
+    // Then it says so there, as well as beside the field
+    expect(await screen.findByText('Not saved. A field above needs changing.')).toBeOnTheScreen();
+    expect(screen.getByText('Alcohol can’t be over 100%')).toBeOnTheScreen();
+    expect(screen.queryByText('Not saved. What you typed is still here.')).not.toBeOnTheScreen();
+  });
+
+  it('stops saying that a field needs changing once none does', async () => {
+    // Given a food refused for its alcohol alone
+    await openApp('/add-food', new InMemoryFoodStore());
+    const user = userEvent.setup();
+    await fill(user, { ...OATS, 'Alcohol % volume, optional': '200' });
+    await user.press(screen.getByRole('button', { name: 'Save food' }));
+    await screen.findByText('Not saved. A field above needs changing.');
+
+    // When the alcohol is put right
+    await user.clear(screen.getByLabelText('Alcohol % volume, optional'));
+
+    // Then nothing says a field needs changing
+    expect(screen.queryByText('Not saved. A field above needs changing.')).not.toBeOnTheScreen();
   });
 
   it('has the way out first, where each platform puts it', async () => {

@@ -1,4 +1,4 @@
-import { caloriesPer100g, inNameOrder, newFood } from './food';
+import { caloriesPer100g, inNameOrder, newFood, type Macros } from './food';
 
 describe('caloriesPer100g', () => {
   it('is 4 per gram of protein and of carbohydrate, and 9 of fat', () => {
@@ -10,6 +10,17 @@ describe('caloriesPer100g', () => {
 
     // Then each macro has given its own
     expect(calories).toBe(40 + 80 + 45);
+  });
+
+  it('is 2 per gram of fibre, and 7 of alcohol, where they are stated', () => {
+    // Given a food that states both
+    const macros = { protein: 0, carbohydrate: 12.8, fat: 0, fibre: 16.8, alcohol: 10 };
+
+    // When its calories are worked out
+    const calories = caloriesPer100g(macros);
+
+    // Then each has given its own
+    expect(calories).toBeCloseTo(51.2 + 33.6 + 70, 10);
   });
 });
 
@@ -58,10 +69,8 @@ describe('newFood', () => {
   ])('refuses any macro that is %s', (_, figure) => {
     // Given a food with one macro wrong, each in turn
     const right = { protein: 10, carbohydrate: 20, fat: 5 };
-    const wrong = (['protein', 'carbohydrate', 'fat'] as const).map((macro) => ({
-      macro,
-      macros: { ...right, [macro]: figure },
-    }));
+    const named = ['protein', 'carbohydrate', 'fat', 'fibre', 'alcohol'] as const;
+    const wrong = named.map((macro) => ({ macro, macros: { ...right, [macro]: figure } }));
 
     // When a food is made of each
     const makings = wrong.map(({ macro, macros }) => ({
@@ -71,6 +80,30 @@ describe('newFood', () => {
 
     // Then each is refused, naming the macro
     for (const { macro, making } of makings) expect(making).toThrow(`${macro} must be 0 or more`);
+  });
+
+  it.each(['protein', 'carbohydrate', 'fat'])('refuses %s not stated', (macro) => {
+    // Given macros without one that a food always states
+    const macros = { protein: 10, carbohydrate: 20, fat: 5, [macro]: undefined } as Macros;
+
+    // When a food is made of them
+    const making = () => newFood({ name: 'Oats', macros });
+
+    // Then it is refused, naming the macro
+    expect(making).toThrow(`${macro} must be 0 or more`);
+  });
+
+  it('takes fibre and alcohol not stated, and adds nothing for them', () => {
+    // Given a food that states neither
+    const macros = { protein: 10, carbohydrate: 20, fat: 5, fibre: undefined, alcohol: undefined };
+
+    // When it is made
+    const food = newFood({ name: 'Oats', macros });
+
+    // Then they are still not stated, and its calories are the others'
+    expect(food.macros.fibre).toBeUndefined();
+    expect(food.macros.alcohol).toBeUndefined();
+    expect(caloriesPer100g(food.macros)).toBe(165);
   });
 
   it('keeps the name as typed, and a macro of 0', () => {
