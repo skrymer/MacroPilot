@@ -45,7 +45,9 @@ module.exports = {
       // native rem is 14, so `h-11` is 38.5pt on an iPhone. `a11y/touch-target` requires both
       // floors on every Pressable.
       minHeight: { target: '44px' },
-      minWidth: { target: '44px' },
+      // `name` is the least a name keeps beside its figure: the longest word of one, at double. With
+      // less, the figure drops below it. A basis does not do this: Yoga shrinks past it.
+      minWidth: { target: '44px', name: '150px' },
       colors: Object.fromEntries(
         Object.keys(tokens.light).map((name) => [
           name,
