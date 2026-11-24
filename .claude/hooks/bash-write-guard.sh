@@ -113,6 +113,8 @@ rollback() {
       [ "${after[$p]:-}" = "$(git -C "$root" rev-parse -q --verify ":$p" 2>/dev/null)" ] && continue
     fi
     kept=""
+    deleted=""
+    [ -f "$root/$p" ] || deleted=1
     [ -f "$root/$p" ] && kept="$(git -C "$root" hash-object -w "$root/$p")"
     if [ -n "${before[$p]:-}" ]; then
       mkdir -p "$(dirname "$root/$p")"
@@ -124,7 +126,7 @@ rollback() {
     if [ -n "$kept" ] && [ "$(git -C "$root" rev-parse -q --verify ":$p" 2>/dev/null)" = "$kept" ]; then
       git -C "$root" reset -q -- "$p"
     fi
-    echo "$root/$p${kept:+ (the Bash version is kept: git cat-file -p $kept)}"
+    echo "$root/$p${kept:+ (the Bash version is kept: git cat-file -p $kept)}${deleted:+ (deleted)}"
   done < <(printf '%s\n' "${!before[@]}" "${!after[@]}" | sort -u)
 }
 
@@ -167,6 +169,10 @@ case "$mode" in
       echo "Rolled back production code written through Bash, which probity never sees:"
       sed 's/^/  /' <<<"$changed"
       echo "Change these with Edit or Write, so probity can judge the change."
+      if grep -q ' (deleted)$' <<<"$changed"; then
+        echo "Edit and Write cannot delete. Stop and ask the user to run this, before building on it:"
+        sed -n 's/^\(.*\) (deleted)$/  rm \1/p' <<<"$changed"
+      fi
     } >&2
     exit 2
     ;;

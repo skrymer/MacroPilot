@@ -19,7 +19,7 @@ ad open com.skrymer.macropilot "macropilot://expo-development-client/?url=http%3
 ad wait text "Today" 30000
 ```
 
-- Metro first, with the `debug` skill. `emulator.sh` refuses another checkout's, and says what else is missing.
+- Metro first, with the `debug` skill. `emulator.sh` refuses another checkout's, boots nothing beside another checkout's mutation run, and says what else is missing. The machine is shared: look before a Gradle build too.
 - **`--metro-port` does not load this app**: it stops at the dev client's launcher. The link above does.
 - From a fresh install (`ad settings clear-app-state com.skrymer.macropilot`) the dev menu's introduction is in front: `press 'label="Continue"' --settle`, then `'label="Close"'`.
 - A screen: `ad open macropilot://<route> --platform android`, with the bundle loaded. From a killed app a link lands in the launcher.
@@ -57,14 +57,14 @@ ad wait text "Today" 30000
 .claude/skills/drive-emulator/scripts/sizes.sh <out-dir> / design
 ```
 
-Photographs each route, top to bottom, at the five sizes ADR 0007 fixes. **Look at every photo**: a unit lost, a word broken, text clipped or touching, a control out of reach.
+Photographs each route, top to bottom, at the five sizes ADR 0007 fixes. About five minutes a long route, so run it in the background. While a screen or the script is being worked on, `SIZES=worst` first, and look before running the rest; never start a rerun in the same message as the fix. `/verify` owes all five. **Look at every photo**: a unit lost, a word broken, text clipped or touching, a control out of reach.
 
 ## Traps
 
 - **A text-size change recreates the activity** and, in a development build, leaves two errors and a badge whose white bar hides the tab bar. `ad react-native dismiss-overlay` does not see it. Force-stop, and load the bundle again.
 - `scroll` reports `movement: unobserved` here, so it cannot tell the end of a page.
 - `adb shell uiautomator dump` fails while a session is open; `ad snapshot --raw --json` has the same data.
-- Never `pkill -f agent-device`.
+- **Never `pkill -f`**: it matches the shell running it, and other sessions. Kill by pid.
 
 ## Put it back
 

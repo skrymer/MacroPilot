@@ -9,6 +9,9 @@
 #   worst        text 2.0, 320dp wide
 #   worst-dark   the same, in the dark appearance
 #
+# SIZES=worst photographs one, or several in quotes, while a screen or this script is being worked on.
+# /verify owes all five.
+#
 # Run emulator.sh first; METRO_PORT as there. Each size loads the bundle again, since Android recreates
 # the activity when the text size changes. Every setting is put back on exit, however it ends. Exits 1
 # when a screen could not be photographed whole.
@@ -17,6 +20,11 @@ set -euo pipefail
 out=${1:?usage: sizes.sh <out-dir> <route>…}
 shift
 [ $# -gt 0 ] || { echo "usage: sizes.sh <out-dir> <route>…" >&2; exit 2; }
+all="default text display worst worst-dark"
+sizes=${SIZES:-$all}
+for size in $sizes; do
+  [[ " $all " == *" $size "* ]] || { echo "sizes.sh: no size $size; they are $all" >&2; exit 2; }
+done
 mkdir -p "$out"
 out=$(cd "$out" && pwd)
 cd "$(dirname "$0")/../../../.."
@@ -68,7 +76,7 @@ shoot() {
   miss "$route at $size is longer than 20 pages"
 }
 
-for size in default text display worst worst-dark; do
+for size in $sizes; do
   scale=1.0 density=reset night=no
   case $size in
     text) scale=2.0 ;;
@@ -84,5 +92,6 @@ for size in default text display worst worst-dark; do
   for route in "$@"; do shoot "$size" "$route"; done
 done
 
-ls "$out"/*.png
+ls "$out"/*.png 2>/dev/null || true
+[ "$sizes" = "$all" ] || echo "sizes.sh: only $sizes; not the whole check"
 exit "$failed"

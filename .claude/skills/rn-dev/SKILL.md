@@ -25,6 +25,8 @@ Every rule a screen is held to is in [`platform-conventions`](../platform-conven
 
 **Prefer the platform's own component.** Check what the SDK ships first (`expo-router/native-tabs`, sheets, `expo-haptics`, `expo-symbols`) and add it with `npx expo install`. A native package means a new dev build on both platforms, so batch them. Check that it exists on **both**: SF Symbols are iOS only.
 
+**`app/design.tsx` has no test and no gate but the eye.** A change to it is not called fixed, in a report or a commit, until the photo at the size that failed has been looked at. A check that is not proven does not merge with the change it is meant to check.
+
 ## Rendering rules this domain requires
 
 - **An unknown is not a zero and not a dash.** An unlogged day is not 0 kcal; a food with no protein figure is not 0 g. Say it in words.
