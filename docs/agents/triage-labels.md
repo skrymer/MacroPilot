@@ -14,6 +14,6 @@ This repo uses the canonical names verbatim — the two columns are identical.
 
 When a skill mentions a role (e.g. "apply the AFK-ready triage label"), use the corresponding label string from this table.
 
-Only `wontfix` exists on the GitHub repo so far; create the rest with `gh label create` before first use. Apply them with `gh issue edit <number> --add-label "..."`.
+All five exist on the GitHub repo, and `epic` marks a PRD. Apply them with `gh issue edit <number> --add-label "..."`.
 
 Edit the right-hand column to match whatever vocabulary you actually use — and create any new labels with `gh label create` so the skills don't fail on a missing label.
