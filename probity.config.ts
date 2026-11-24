@@ -94,7 +94,7 @@ these hold. It then needs no failing test:
 Anything else in the same write is judged by the rules above.`;
 
 /**
- * Jest has no keyboard and no focus, presents no page, and lint refuses asserting the props that ask
+ * Jest has no keyboard and no focus, presents and scrolls no page, and lint refuses asserting the props that ask
  * for them, so they have no failing test to show either (ADR 0001).
  */
 const DEVICE_RULE = `### A change only the device can show
@@ -102,8 +102,9 @@ const DEVICE_RULE = `### A change only the device can show
 This takes precedence over the red and green rules above, for a production write of which all of
 these hold. It then needs no failing test:
 
-  - Its only effect is what takes focus as a page opens, whether the keyboard is up, or how the
-    platform presents a page: full height, a sheet, its detents.
+  - Its only effect is what takes focus as a page opens, whether the keyboard is up, how the platform
+    presents a page (full height, a sheet, its detents), or where a page is scrolled to. Scrolling
+    what is already on a page into view is this, and not a change to what is shown.
   - It leaves alone a value, a word, a role, a label, where a press leads, stored data, a computation,
     and anything drawn.
   - The session shows, before the write, the fault on the emulator, as a measurement in a command's
