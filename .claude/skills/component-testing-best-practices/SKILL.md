@@ -65,6 +65,8 @@ Drive interaction with `userEvent`, not `fireEvent` — it reproduces real behav
 
 - **Time.** Move `ScriptedClock` on by hand: `advance` runs each scheduled call at the time it was due, and `setUtcOffset` puts the phone outside UTC. Never depend on real elapsed time, and wrap an `advance` that changes the screen in `act`.
 - **Storage.** Hand the screen the in-memory fake of its store. To prove something persists, unmount and render again over the same fake, rather than asserting on a log of calls.
+- **A store that fails.** The fake can be made unreadable or unwritable, and every screen over a store has both cases: one that cannot be read claims nothing (never an empty day, never a zero), and one that cannot be written keeps what was typed. Assert that no promise rejection went unhandled.
+- **One set of providers.** Screens render through a shared test wrapper holding the providers the root layout gives them, each with a quiet default, so a test names only what it is about. A `useX()` hook with no provider refuses, and has a test saying so.
 - **Never `await` a fixed delay.** Use `findBy*`, which retries.
 
 ## Conventions
