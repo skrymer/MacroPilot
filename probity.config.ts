@@ -93,8 +93,28 @@ these hold. It then needs no failing test:
 
 Anything else in the same write is judged by the rules above.`;
 
+/**
+ * Jest has no keyboard and no focus, presents no page, and lint refuses asserting the props that ask
+ * for them, so they have no failing test to show either (ADR 0001).
+ */
+const DEVICE_RULE = `### A change only the device can show
+
+This takes precedence over the red and green rules above, for a production write of which all of
+these hold. It then needs no failing test:
+
+  - Its only effect is what takes focus as a page opens, whether the keyboard is up, or how the
+    platform presents a page: full height, a sheet, its detents.
+  - It leaves alone a value, a word, a role, a label, where a press leads, stored data, a computation,
+    and anything drawn.
+  - The session shows, before the write, the fault on the emulator, as a measurement in a command's
+    output: whether the keyboard is shown, what has focus, or where an element stands. A measurement
+    after agent-device has pressed or filled is of its headless keyboard and is not one.
+  - It is the least that could repair that fault, and the tests of the file pass.
+
+Anything else in the same write is judged by the rules above.`;
+
 function testFirstRules(defaults: string) {
-  return `${scopeObservedFailureToProductionWrites(defaults)}\n\n${PIXELS_RULE}`;
+  return [scopeObservedFailureToProductionWrites(defaults), PIXELS_RULE, DEVICE_RULE].join('\n\n');
 }
 
 export default defineConfig({
