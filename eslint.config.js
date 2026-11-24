@@ -5,9 +5,12 @@ const prettierConfig = require('eslint-config-prettier/flat');
 const givenWhenThen = require('./eslint-rules/given-when-then');
 const perceivableOnly = require('./eslint-rules/perceivable-only');
 const cappedText = require('./eslint-rules/capped-text');
+const noWatch = require('./eslint-rules/no-watch');
 const noFontScalingOff = require('./eslint-rules/no-font-scaling-off');
 const pressableRole = require('./eslint-rules/pressable-role');
 const touchTarget = require('./eslint-rules/touch-target');
+const keyboardAvoided = require('./eslint-rules/keyboard-avoided');
+const noCoercedNumber = require('./eslint-rules/no-coerced-number');
 const noDarkVariant = require('./eslint-rules/no-dark-variant');
 const noDashPlaceholder = require('./eslint-rules/no-dash-placeholder');
 const tokensOnly = require('./eslint-rules/tokens-only');
@@ -121,6 +124,21 @@ const A11Y = {
   rules: allErrors('a11y', a11yPlugin),
 };
 
+/** How a form may not be written (ADR 0009). */
+const formsPlugin = {
+  rules: {
+    'keyboard-avoided': keyboardAvoided,
+    'no-coerced-number': noCoercedNumber,
+    'no-watch': noWatch,
+  },
+};
+
+const FORMS = {
+  ...SOURCE,
+  plugins: { forms: formsPlugin },
+  rules: allErrors('forms', formsPlugin),
+};
+
 /** The components that wrap an uncapped text component, so they can cap it. */
 const CAPPED_TEXT_HOMES = {
   files: ['src/components/Text.tsx', 'src/components/Link.tsx', 'src/components/Input.tsx'],
@@ -195,6 +213,7 @@ module.exports = defineConfig([
   DESIGN,
   A11Y,
   CAPPED_TEXT_HOMES,
+  FORMS,
   INJECTED_CLOCK,
   SYSTEM_CLOCK,
   NO_ALERT,
