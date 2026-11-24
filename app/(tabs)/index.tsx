@@ -73,7 +73,7 @@ export default function Today() {
               Today
             </Text>
             {found === 'unreadable' ? (
-              <Notice title="Today could not be read" action="Try again" onAction={readAgain} />
+              <Notice title="Couldn’t load today’s summary" action="Retry" onAction={readAgain} />
             ) : null}
             {Array.isArray(found) ? <Totals entries={found} /> : null}
           </View>

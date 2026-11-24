@@ -79,8 +79,8 @@ describe('Foods', () => {
     await openFoods(foods);
 
     // Then the page says so and offers the way on
-    expect(await screen.findByText('No foods yet')).toBeOnTheScreen();
-    expect(screen.getByRole('button', { name: 'Add food' })).toBeOnTheScreen();
+    expect(await screen.findByText('Build your food catalog')).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Add your first food' })).toBeOnTheScreen();
     expect(screen.queryByText(/kcal/)).not.toBeOnTheScreen();
   });
 
@@ -94,9 +94,9 @@ describe('Foods', () => {
     await openFoods(foods);
 
     // Then the page says so, offers to try again, and claims nothing
-    expect(await screen.findByText('Your foods could not be read')).toBeOnTheScreen();
-    expect(screen.getByRole('button', { name: 'Try again' })).toBeOnTheScreen();
-    expect(screen.queryByText('No foods yet')).not.toBeOnTheScreen();
+    expect(await screen.findByText('Couldn’t load your foods')).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Retry' })).toBeOnTheScreen();
+    expect(screen.queryByText('Build your food catalog')).not.toBeOnTheScreen();
     expect(screen.queryByText('Oats')).not.toBeOnTheScreen();
   });
 
@@ -105,15 +105,15 @@ describe('Foods', () => {
     const foods = new InMemoryFoodStore();
     foods.unreadable = true;
     await openFoods(foods);
-    const tryAgain = await screen.findByRole('button', { name: 'Try again' });
+    const tryAgain = await screen.findByRole('button', { name: 'Retry' });
     foods.holdNextRead();
 
     // When the user tries again
     await userEvent.press(tryAgain);
 
     // Then the page no longer says they could not be read, nor that there are none
-    expect(screen.queryByText('Your foods could not be read')).not.toBeOnTheScreen();
-    expect(screen.queryByText('No foods yet')).not.toBeOnTheScreen();
+    expect(screen.queryByText('Couldn’t load your foods')).not.toBeOnTheScreen();
+    expect(screen.queryByText('Build your food catalog')).not.toBeOnTheScreen();
   });
 
   it('reads the foods again when asked, once they can be read', async () => {
@@ -122,7 +122,7 @@ describe('Foods', () => {
     await foods.add({ name: 'oats', macros: { protein: 13, carbohydrate: 56, fat: 6 } });
     foods.unreadable = true;
     await openFoods(foods);
-    const tryAgain = await screen.findByRole('button', { name: 'Try again' });
+    const tryAgain = await screen.findByRole('button', { name: 'Retry' });
     foods.unreadable = false;
 
     // When the user tries again
@@ -130,6 +130,6 @@ describe('Foods', () => {
 
     // Then the foods are listed, and nothing says they could not be read
     expect(await screen.findByText('Oats')).toBeOnTheScreen();
-    expect(screen.queryByText('Your foods could not be read')).not.toBeOnTheScreen();
+    expect(screen.queryByText('Couldn’t load your foods')).not.toBeOnTheScreen();
   });
 });

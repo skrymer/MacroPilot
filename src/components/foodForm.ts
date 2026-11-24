@@ -16,14 +16,14 @@ const macro = (name: string) =>
 
 /** A food as it is typed: grams per 100 g, with alcohol in percent by volume as a label gives it. */
 export const foodForm = z.object({
-  name: z.string().refine(isFoodName, 'Enter a name'),
+  name: z.string().refine(isFoodName, 'Enter a name for this food'),
   protein: macro('Protein'),
   carbohydrate: macro('Carbohydrate'),
   fat: macro('Fat'),
   fibre: optionalMacro('Fibre'),
   abv: optionalMacro('Alcohol').refine(
     (abv) => abv === undefined || isAbv(abv),
-    `Alcohol can’t be over ${MAX_ABV}%`,
+    `ABV can’t be over ${MAX_ABV}%`,
   ),
 });
 

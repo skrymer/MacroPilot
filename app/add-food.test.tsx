@@ -40,7 +40,7 @@ describe('Add food', () => {
     // Given Foods open with none in it, and the form filled from there
     await openApp('/foods', new InMemoryFoodStore());
     const user = userEvent.setup();
-    await user.press(await screen.findByRole('button', { name: 'Add food' }));
+    await user.press(await screen.findByRole('button', { name: 'Add your first food' }));
     await fill(user, OATS);
 
     // When the user saves it
@@ -80,7 +80,7 @@ describe('Add food', () => {
     const user = userEvent.setup();
     await fill(user, { Name: '  ', 'Protein per 100 g': '1,500', 'Carbohydrate per 100 g': '-1' });
     await user.press(screen.getByRole('button', { name: 'Save food' }));
-    expect(await screen.findByText('Enter a name')).toBeOnTheScreen();
+    expect(await screen.findByText('Enter a name for this food')).toBeOnTheScreen();
     expect(screen.getByText('Did you mean 1500 or 1.5?')).toBeOnTheScreen();
     expect(screen.getByText('Carbohydrate can’t be negative')).toBeOnTheScreen();
     expect(screen.getByText('Enter fat per 100 g')).toBeOnTheScreen();
@@ -132,7 +132,7 @@ describe('Add food', () => {
     // Given Foods open, and Add food pressed
     await openApp('/foods', new InMemoryFoodStore());
     const user = userEvent.setup();
-    const wayIn = await screen.findByRole('button', { name: 'Add food' });
+    const wayIn = await screen.findByRole('button', { name: 'Add your first food' });
     await user.press(wayIn);
 
     // When it is pressed again before the page has come
@@ -141,7 +141,7 @@ describe('Add food', () => {
     // Then one step back is Foods
     await act(() => router.back());
     expect(screen.queryByRole('button', { name: 'Save food' })).not.toBeOnTheScreen();
-    expect(screen.getByText('No foods yet')).toBeOnTheScreen();
+    expect(screen.getByText('Build your food catalog')).toBeOnTheScreen();
   });
 
   it('puts a food among those there already, in order of name', async () => {
@@ -175,8 +175,10 @@ describe('Add food', () => {
 
     // Then it says so there, as well as beside the field
     expect(await screen.findByText('Not saved. A field above needs changing.')).toBeOnTheScreen();
-    expect(screen.getByText('Alcohol can’t be over 100%')).toBeOnTheScreen();
-    expect(screen.queryByText('Not saved. What you typed is still here.')).not.toBeOnTheScreen();
+    expect(screen.getByText('ABV can’t be over 100%')).toBeOnTheScreen();
+    expect(
+      screen.queryByText('Could not add food. What you typed is still here.'),
+    ).not.toBeOnTheScreen();
   });
 
   it('stops saying that a field needs changing once none does', async () => {
@@ -211,14 +213,14 @@ describe('Add food', () => {
     const foods = new InMemoryFoodStore();
     await openApp('/foods', foods);
     const user = userEvent.setup();
-    await user.press(await screen.findByRole('button', { name: 'Add food' }));
+    await user.press(await screen.findByRole('button', { name: 'Add your first food' }));
     await fill(user, OATS);
 
     // When the user cancels
     await user.press(screen.getByRole('button', { name: 'Cancel' }));
 
     // Then Foods is showing, with nothing in it
-    expect(await screen.findByText('No foods yet')).toBeOnTheScreen();
+    expect(await screen.findByText('Build your food catalog')).toBeOnTheScreen();
     expect(screen.queryByRole('button', { name: 'Save food' })).not.toBeOnTheScreen();
     expect(await foods.list()).toEqual([]);
   });
@@ -247,11 +249,11 @@ describe('Add food', () => {
     const written = foods.holdWrites();
     await openApp('/foods', foods);
     const user = userEvent.setup();
-    await user.press(await screen.findByRole('button', { name: 'Add food' }));
+    await user.press(await screen.findByRole('button', { name: 'Add your first food' }));
     await fill(user, OATS);
     await user.press(screen.getByRole('button', { name: 'Save food' }));
     await user.press(screen.getByRole('button', { name: 'Cancel' }));
-    await user.press(await screen.findByRole('button', { name: 'Add food' }));
+    await user.press(await screen.findByRole('button', { name: 'Add your first food' }));
     await user.type(await screen.findByLabelText('Name'), 'black coffee');
 
     // When it is written
@@ -270,14 +272,14 @@ describe('Add food', () => {
     foods.unreadable = false;
     await act(() => router.push('/add-food'));
     await userEvent.press(await screen.findByRole('button', { name: 'Cancel' }));
-    await screen.findByText('No foods yet');
+    await screen.findByText('Build your food catalog');
 
     // When the older one comes in
     await act(async () => olderComesIn());
 
     // Then Foods still says what the newer one found
-    expect(screen.getByText('No foods yet')).toBeOnTheScreen();
-    expect(screen.queryByText('Your foods could not be read')).not.toBeOnTheScreen();
+    expect(screen.getByText('Build your food catalog')).toBeOnTheScreen();
+    expect(screen.queryByText('Couldn’t load your foods')).not.toBeOnTheScreen();
   });
 
   it('keeps what was typed when the save fails, says so, and saves when tried again', async () => {
@@ -288,7 +290,7 @@ describe('Add food', () => {
     const user = userEvent.setup();
     await fill(user, OATS);
     await user.press(screen.getByRole('button', { name: 'Save food' }));
-    await screen.findByText('Not saved. What you typed is still here.');
+    await screen.findByText('Could not add food. What you typed is still here.');
     const kept = screen.getByLabelText('Protein per 100 g');
     expect(kept).toHaveDisplayValue('13,2');
     foods.unwritable = false;

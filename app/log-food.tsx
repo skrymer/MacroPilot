@@ -43,7 +43,7 @@ function GramsForm({ food }: { food: Food }) {
       await store.add(entry);
       setLogged({ name: food.name, entry });
     },
-    failed: 'Not logged. What you typed is still here.',
+    failed: 'Could not save entry. What you typed is still here.',
     leave,
   });
   return (

@@ -76,7 +76,7 @@ describe('Today', () => {
     expect(screen.getByText('0 kcal')).toBeOnTheScreen();
     expect(screen.getByText('0 g protein')).toBeOnTheScreen();
     expect(screen.getByRole('button', { name: 'Log' })).toBeOnTheScreen();
-    expect(screen.queryByText('Today could not be read')).not.toBeOnTheScreen();
+    expect(screen.queryByText('Couldn’t load today’s summary')).not.toBeOnTheScreen();
   });
 
   it('goes to Log from an empty day', async () => {
@@ -97,8 +97,8 @@ describe('Today', () => {
     await entries.add(weighedEntry(OATS, 80, '2026-11-24'));
     entries.unreadable = true;
     await openToday(entries);
-    const tryAgain = await screen.findByRole('button', { name: 'Try again' });
-    expect(screen.getByText('Today could not be read')).toBeOnTheScreen();
+    const tryAgain = await screen.findByRole('button', { name: 'Retry' });
+    expect(screen.getByText('Couldn’t load today’s summary')).toBeOnTheScreen();
     expect(screen.queryByText('Nothing logged yet')).not.toBeOnTheScreen();
     expect(screen.queryByText(/kcal/)).not.toBeOnTheScreen();
     entries.unreadable = false;
@@ -108,6 +108,6 @@ describe('Today', () => {
 
     // Then the day is there, and nothing says it could not be read
     expect(await screen.findByText('Rolled oats')).toBeOnTheScreen();
-    expect(screen.queryByText('Today could not be read')).not.toBeOnTheScreen();
+    expect(screen.queryByText('Couldn’t load today’s summary')).not.toBeOnTheScreen();
   });
 });
