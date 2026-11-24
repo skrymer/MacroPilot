@@ -41,6 +41,7 @@ The rules are the `agent-device` skill's. They are here because the first tester
 - **A tab shares its label with its page**: `label="Today"` matches three elements. The selected tab is `'role=group label="Today" selected=true'`.
 - A tree that looks stale: one screenshot and one fresh snapshot, never a loop.
 - **Look at the pixels where they decide**: colour, appearance, clipping, size, a figure. `ad screenshot <file> --normalize-status-bar`, `--crop-on 'text="0 kcal"'` for one element. The tree has read "0 kcal" while the screen showed "0".
+- `ad audit` on a screen the change touched: targets under 48dp, controls with no name, covered controls. It reads what is in front, so clear a warning overlay first. The 44dp floor it reports on every target of ours is #22.
 - An `ERROR` in Metro's log since the last probe fails it. So does a red badge at the bottom left.
 - The round gear is the dev client's, not the app's.
 
@@ -73,7 +74,7 @@ Photographs each route, top to bottom, at the five sizes ADR 0007 fixes. About f
 
 ## Traps
 
-- **A development load shows an `ImageBackground` warning toast over the tab bar** for some seconds, and a press on a tab hits it.
+- **A development load shows an `ImageBackground` warning toast over the tab bar** for some seconds, and a press on a tab hits it. `snapshot -i` then shows a group starting "!" and hints at `ad react-native dismiss-overlay` (*unproven* on it).
 - **A text-size change recreates the activity** and, in a development build, leaves two errors and a badge whose white bar hides the tab bar. `ad react-native dismiss-overlay` does not see it. Force-stop, and load the bundle again.
 - `scroll` reports `movement: unobserved` here, so it cannot tell the end of a page.
 - `adb shell uiautomator dump` fails while a session is open; `ad snapshot --raw --json` has the same data.
