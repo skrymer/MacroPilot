@@ -21,7 +21,7 @@ ad wait text "Today" 30000
 
 - Metro first, with the `debug` skill. `emulator.sh` refuses another checkout's, boots nothing beside another checkout's mutation run, and says what else is missing. The machine is shared: look before a Gradle build too.
 - **`--metro-port` does not load this app**: it stops at the dev client's launcher. The link above does.
-- From a fresh install (`ad settings clear-app-state com.skrymer.macropilot`) the dev menu's introduction is in front: `press 'label="Continue"' --settle`, then `'label="Close"'`.
+- From a fresh install (`ad settings clear-app-state com.skrymer.macropilot`) the dev menu's introduction is in front: `press 'label="Continue"' --settle`, then `adb shell input keyevent BACK`.
 - A screen: `ad open macropilot://<route> --platform android`, with the bundle loaded. **A cold link** is force-stop, then the link, then a tap on the launcher's row for the server, which delivers it. Loading the bundle by its own link drops the waiting one, and then passes any check that expects Today. Run the control too: the same gesture on the development bundle has to show the page.
 - One agent drives one emulator. Finish with `ad close`, without `--shutdown`: `emulator.sh` booted it, not the session.
 
@@ -75,6 +75,8 @@ Photographs each route, top to bottom, at the five sizes ADR 0007 fixes. About f
 
 ## Traps
 
+- **`ad close` sends the app to the launcher**: measure and photograph before it.
+- **The manifest comes from the installed build**, not from Metro. A change to `app.json` or a plugin needs a prebuild, a Gradle build and a reinstall, and so does going back.
 - **A development load shows an `ImageBackground` warning toast over the tab bar** for some seconds, and a press on a tab hits it. `snapshot -i` then shows a group starting "!" and hints at `ad react-native dismiss-overlay` (*unproven* on it).
 - **A text-size change recreates the activity** and, in a development build, leaves two errors and a badge whose white bar hides the tab bar. `ad react-native dismiss-overlay` does not see it. Force-stop, and load the bundle again.
 - `scroll` reports `movement: unobserved` here, so it cannot tell the end of a page.
