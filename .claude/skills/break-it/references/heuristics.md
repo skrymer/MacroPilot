@@ -46,7 +46,7 @@ Charters take their attacks from these families. [drive-emulator](../../drive-em
 
 - The largest text size and the largest display size. Does anything clip, overlap or become unreachable?
 - Both appearances: is anything unreadable in one?
-- The keyboard over the field being typed in, or over the button that commits it.
+- The keyboard over the field being typed in, its label or its fault, or over the button that commits it: first and last field at fault, a second refusal, a focus move that changes the keyboard's kind.
 - The smallest supported screen.
 
 ## Around the change
