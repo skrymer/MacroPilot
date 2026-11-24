@@ -8,10 +8,13 @@ import { openDatabaseAsync } from 'expo-sqlite';
 import { StatusBar } from 'expo-status-bar';
 import { View } from 'react-native';
 
+import { LoggedProvider } from '@/components/LoggedContext';
 import { ClockProvider } from '@/lifecycle/ClockContext';
 import { SystemClock } from '@/lifecycle/SystemClock';
+import { EntryStoreProvider } from '@/storage/EntryStoreContext';
 import { FoodStoreProvider } from '@/storage/FoodStoreContext';
 import { LazyDatabase } from '@/storage/LazyDatabase';
+import { SqliteEntryStore } from '@/storage/SqliteEntryStore';
 import { SqliteFoodStore } from '@/storage/SqliteFoodStore';
 
 import '../global.css';
@@ -19,6 +22,7 @@ import '../global.css';
 const clock = new SystemClock();
 const database = new LazyDatabase(() => openDatabaseAsync('macropilot.db'));
 const foodStore = new SqliteFoodStore(database);
+const entryStore = new SqliteEntryStore(database);
 
 /**
  * Stands in a release build for a page of a development one, since Expo Router ships every route
@@ -39,18 +43,22 @@ export default function RootLayout() {
   return (
     <ClockProvider clock={clock}>
       <FoodStoreProvider store={foodStore}>
-        <View className="flex-1 bg-ground">
-          <StatusBar style="auto" />
-          <Stack
-            screenOptions={{
-              headerShown: false,
-              contentStyle: { backgroundColor: 'transparent' },
-            }}
-            screenLayout={({ route, children }) =>
-              !__DEV__ && route.name === 'design' ? <BackToToday /> : children
-            }
-          />
-        </View>
+        <EntryStoreProvider store={entryStore}>
+          <LoggedProvider>
+            <View className="flex-1 bg-ground">
+              <StatusBar style="auto" />
+              <Stack
+                screenOptions={{
+                  headerShown: false,
+                  contentStyle: { backgroundColor: 'transparent' },
+                }}
+                screenLayout={({ route, children }) =>
+                  !__DEV__ && route.name === 'design' ? <BackToToday /> : children
+                }
+              />
+            </View>
+          </LoggedProvider>
+        </EntryStoreProvider>
       </FoodStoreProvider>
     </ClockProvider>
   );

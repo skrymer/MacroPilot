@@ -2,8 +2,12 @@ import { useState, type ReactNode } from 'react';
 
 import { ClockProvider } from '@/lifecycle/ClockContext';
 import { ScriptedClock } from '@/lifecycle/ScriptedClock';
+import { EntryStoreProvider } from '@/storage/EntryStoreContext';
 import { FoodStoreProvider } from '@/storage/FoodStoreContext';
+import { InMemoryEntryStore } from '@/storage/InMemoryEntryStore';
 import { InMemoryFoodStore } from '@/storage/InMemoryFoodStore';
+
+import { LoggedProvider } from './LoggedContext';
 
 /**
  * For screen tests: the providers the root layout gives every screen, over the fakes. Each has a
@@ -13,17 +17,24 @@ import { InMemoryFoodStore } from '@/storage/InMemoryFoodStore';
 export function TestProviders({
   clock,
   foods,
+  entries,
   children,
 }: {
   clock?: ScriptedClock;
   foods?: InMemoryFoodStore;
+  entries?: InMemoryEntryStore;
   children: ReactNode;
 }) {
   const [quietClock] = useState(() => new ScriptedClock());
   const [noFoods] = useState(() => new InMemoryFoodStore());
+  const [noEntries] = useState(() => new InMemoryEntryStore());
   return (
     <ClockProvider clock={clock ?? quietClock}>
-      <FoodStoreProvider store={foods ?? noFoods}>{children}</FoodStoreProvider>
+      <FoodStoreProvider store={foods ?? noFoods}>
+        <EntryStoreProvider store={entries ?? noEntries}>
+          <LoggedProvider>{children}</LoggedProvider>
+        </EntryStoreProvider>
+      </FoodStoreProvider>
     </ClockProvider>
   );
 }

@@ -1,0 +1,22 @@
+import { caloriesPer100g, type Food } from '@/domain/food';
+import { shownName } from '@/domain/shownName';
+
+import { grams, kcal, spokenGrams, spokenKcal } from './figures';
+import { Row } from './Row';
+
+const PER_100_G = `per ${grams(100)}`;
+
+/** A food and its figures per 100 g, pressed where it leads somewhere. */
+export function FoodRow({ food: { name, macros }, onPress }: { food: Food; onPress?: () => void }) {
+  const shown = shownName(name);
+  const calories = caloriesPer100g(macros);
+  return (
+    <Row
+      name={shown}
+      detail={`${grams(macros.protein)} protein ${PER_100_G}`}
+      figure={kcal(calories)}
+      spoken={`${shown}, ${spokenKcal(calories)}, ${spokenGrams(macros.protein)} of protein per 100 grams`}
+      onPress={onPress}
+    />
+  );
+}

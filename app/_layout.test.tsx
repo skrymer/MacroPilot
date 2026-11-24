@@ -6,9 +6,11 @@ import TabsLayout from './(tabs)/_layout';
 import Developer from './(tabs)/developer';
 import Foods from './(tabs)/foods';
 import Today from './(tabs)/index';
+import Log from './(tabs)/log';
 import RootLayout from './_layout';
 import AddFood from './add-food';
 import Design from './design';
+import LogFood from './log-food';
 
 // NativeWind compiles the stylesheet in Metro; Jest has no CSS loader, and the classes reach the
 // rendered elements as `className` without it.
@@ -19,6 +21,16 @@ jest.mock('../global.css', () => ({}));
 jest.mock('expo-sqlite', () => ({
   openDatabaseSync: () => {
     throw new Error('The app opened its database before anything was read from it');
+  },
+}));
+jest.mock('@/storage/SqliteEntryStore', () => ({
+  SqliteEntryStore: class
+    extends jest.requireActual('@/storage/InMemoryEntryStore').InMemoryEntryStore
+  {
+    constructor() {
+      // The layout's stores outlive a test, so whichever id the food was given is this one.
+      super([1, 2, 3].map((id) => ({ id, name: 'muesli' })));
+    }
   },
 }));
 jest.mock('@/storage/SqliteFoodStore', () => ({
@@ -34,7 +46,9 @@ const openAt = (initialUrl: string) =>
       _layout: RootLayout,
       '(tabs)/_layout': TabsLayout,
       '(tabs)/index': Today,
+      '(tabs)/log': Log,
       '(tabs)/foods': Foods,
+      'log-food': LogFood,
       '(tabs)/developer': Developer,
       'add-food': AddFood,
       design: Design,
@@ -83,6 +97,28 @@ describe('RootLayout', () => {
     // Then Foods shows it
     expect(await screen.findByText('Rolled oats')).toBeOnTheScreen();
     expect(screen.getByText('276 kcal')).toBeOnTheScreen();
+  });
+
+  it('keeps an entry logged on Log where Today reads it', async () => {
+    // Given a food kept, and 100 g of it typed on Log
+    await openAt('/add-food');
+    const user = userEvent.setup();
+    await user.type(await screen.findByLabelText('Name'), 'muesli');
+    await user.type(screen.getByLabelText('Protein per 100 g'), '13');
+    await user.type(screen.getByLabelText('Carbohydrate per 100 g'), '56');
+    await user.type(screen.getByLabelText('Fat per 100 g'), '0');
+    await user.press(screen.getByRole('button', { name: 'Save food' }));
+    await act(() => router.navigate('/log'));
+    await user.press(await screen.findByRole('button', { name: /^Muesli/ }));
+    await user.type(await screen.findByLabelText('Weight (g)'), '100');
+    await user.press(screen.getByRole('button', { name: 'Log entry' }));
+    await screen.findByText('Logged: Muesli');
+
+    // When the user goes to Today
+    await act(() => router.navigate('/'));
+
+    // Then it is there
+    expect(await screen.findByLabelText(/^Muesli, 100 grams, 276 calories/)).toBeOnTheScreen();
   });
 
   it('opens the design reference in a development build', async () => {

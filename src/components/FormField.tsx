@@ -9,6 +9,8 @@ type FormFieldProps<Typed extends FieldValues, Said> = {
   name: Path<Typed>;
   label: string;
   keyboardType?: KeyboardTypeOptions;
+  /** For a form of one field, which takes focus as it opens. */
+  autoFocus?: boolean;
 };
 
 /**
@@ -21,6 +23,7 @@ export function FormField<Typed extends FieldValues, Said>({
   name,
   label,
   keyboardType,
+  autoFocus,
 }: FormFieldProps<Typed, Said>) {
   return (
     <Controller
@@ -43,6 +46,7 @@ export function FormField<Typed extends FieldValues, Said>({
             accessibilityLabel={label}
             accessibilityHint={error?.message}
             keyboardType={keyboardType}
+            autoFocus={autoFocus}
             onChangeText={onChange}
             className="font-language text-body"
           />

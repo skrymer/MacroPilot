@@ -32,13 +32,16 @@ module.exports = {
   },
 
   create(context) {
+    const reportIfCovered = (node) => {
+      const around = context.sourceCode.getAncestors(node);
+      const scrolls = around.findLastIndex((ancestor) => tagOf(ancestor) === 'ScrollView');
+      if (scrolls === -1 || around.slice(0, scrolls).some(avoidsKeyboard)) return;
+      context.report({ node, messageId: 'covered' });
+    };
     return {
-      'JSXOpeningElement[name.name="FormField"]'(node) {
-        const around = context.sourceCode.getAncestors(node);
-        const scrolls = around.findLastIndex((ancestor) => tagOf(ancestor) === 'ScrollView');
-        if (scrolls === -1 || around.slice(0, scrolls).some(avoidsKeyboard)) return;
-        context.report({ node, messageId: 'covered' });
-      },
+      'JSXOpeningElement[name.name="FormField"]': reportIfCovered,
+      // A page that scrolls what it is given scrolls a form's fields out of this rule's sight.
+      'JSXExpressionContainer[expression.name="children"]': reportIfCovered,
     };
   },
 };

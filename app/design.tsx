@@ -230,8 +230,7 @@ const AppearanceSwitch = () => {
 const TABS = ['Today', 'Log', 'Review', 'Foods', 'Profile'];
 
 const ASKING = [
-  ['Grams, an estimate', 'The system\u2019s sheet'],
-  ['A food', 'A full-height page, with Cancel'],
+  ['Grams, an estimate, a food', 'A full-height page, with Cancel'],
   ['Deleting, or discarding a food', 'The system\u2019s own question'],
   ['It worked, and the page shows it', 'Nothing is said'],
 ] as const;
