@@ -31,7 +31,7 @@ describe('Link', () => {
     // When VoiceOver finds the link by its name
     const link = screen.getByRole('link', { name: 'The design reference' });
 
-    // Then the label sits inside it, so the 44pt floor is the target's and not the text's
+    // Then the label sits inside it, so the target floor is the link's and not the text's
     const label = screen.getByText('The design reference');
     expect(link).not.toBe(label);
     expect(link).toContainElement(label);

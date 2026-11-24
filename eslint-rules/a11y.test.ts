@@ -10,7 +10,7 @@ describe('a11y/touch-target', () => {
     ['no size, animated', `const c = <Animated.Pressable accessibilityRole="button" />;`],
     ['no size, as a Touchable', `const c = <TouchableOpacity accessibilityRole="button" />;`],
   ])('reports a Pressable with %s', (_, code) => {
-    // Given a Pressable that may be smaller than 44pt
+    // Given a Pressable that may be smaller than its platform's floor
     const source = code;
 
     // When it is linted
@@ -24,7 +24,7 @@ describe('a11y/touch-target', () => {
     ['the target floor', `const c = <Pressable className="min-h-target min-w-target px-4" />;`],
     ['a hitSlop', `const c = <Pressable hitSlop={12} />;`],
   ])('accepts a Pressable with %s', (_, code) => {
-    // Given a Pressable guaranteed a 44pt target
+    // Given a Pressable guaranteed its platform's floor
     const source = code;
 
     // When it is linted

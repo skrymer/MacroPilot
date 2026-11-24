@@ -17,7 +17,7 @@ export type LinkProps = Pick<
  * expo-router's `Link`, with its label drawn by the app's `Text` so it carries
  * the font-scaling cap (ADR 0007). The router's own draws React Native's.
  *
- * The label sits in a `Pressable` holding the 44pt floor, so the target is
+ * The label sits in a `Pressable` holding the target floor, so the target is
  * never the text's own box, whatever its size token or Larger Text setting.
  * `className` styles the label; the target is the wrapper's.
  */

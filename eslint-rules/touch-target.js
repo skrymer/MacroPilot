@@ -1,7 +1,7 @@
 /**
- * Every pressable control (see `isPressable`) is a target of at least 44pt — the floor in DESIGN.md's
- * quality guardrails and the Apple HIG minimum. On a handlebar, out of breath,
- * a target that is merely visible is not one a user can hit.
+ * Every pressable control (see `isPressable`) is a target of at least its platform's floor, 44pt on
+ * iOS and 48dp on Android (DESIGN.md, *Controls*). With one hand, in a kitchen, a target that is
+ * merely visible is not one a user can hit.
  *
  * Satisfied by the `min-h-target` and `min-w-target` tokens together, or by a
  * `hitSlop` that extends a smaller visual. The Tailwind numeric scale does not
@@ -17,11 +17,11 @@ const FLOOR = ['min-h-target', 'min-w-target'];
 module.exports = {
   meta: {
     type: 'problem',
-    docs: { description: 'Every Pressable is at least a 44pt target' },
+    docs: { description: "Every Pressable is at least its platform's floor" },
     schema: [],
     messages: {
       small:
-        'This Pressable may be under 44pt. Give it `min-h-target min-w-target`, or a `hitSlop` that makes up the difference.',
+        'This Pressable may be under 44pt on iOS or 48dp on Android. Give it `min-h-target min-w-target`, or a `hitSlop` that makes up the difference.',
     },
   },
 
