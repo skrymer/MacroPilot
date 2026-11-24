@@ -1,6 +1,6 @@
 # A unit owes its own test when it owns something; everything else is driven through the screen
 
-Everything here is built test-first, and that settles *how* a test is written. It does not settle **which units get their own test and which are left to a higher-level one**. Answering that per feature risks the two failures either side: a mock-heavy test for code that has no rule of its own, or a genuine rule reachable only through a rendered screen that cannot easily put it at its boundary. `mutation-test`'s survivor triage needs the answer too: one of its verdicts is *killed by an out-of-scope layer*, and without a recorded rule about where a behaviour's red lives, that verdict is indistinguishable from an excuse.
+Everything here is built test-first, but for what only the pixels can show (below), and that settles *how* a test is written. It does not settle **which units get their own test and which are left to a higher-level one**. Answering that per feature risks the two failures either side: a mock-heavy test for code that has no rule of its own, or a genuine rule reachable only through a rendered screen that cannot easily put it at its boundary. `mutation-test`'s survivor triage needs the answer too: one of its verdicts is *killed by an out-of-scope layer*, and without a recorded rule about where a behaviour's red lives, that verdict is indistinguishable from an excuse.
 
 ## The rule
 
@@ -47,16 +47,19 @@ A **fake of a port is not a mock of an internal collaborator.** It is a second i
 
 One more is not a suite: **`/verify`**, on the Android emulator for an issue and the iPhone for an epic ([`0004`](./0004-an-issue-is-verified-on-the-emulator-and-an-epic-on-the-iphone.md)). How a screen looks (colour, safe areas, clipping at the largest text) is its, because Jest cannot see it without asserting on styles, which the screen tests refuse.
 
+**So a change only the pixels can show is driven by a measurement.** Test-first is enforced by probity, which would refuse it: a tab bar that kept the old appearance has no failing test, however plainly it is wrong. Its red is the fault measured in the pixels of the emulator's screen before the write, and its green is the same measured after. Probity reads what a command printed and never an image, so a photograph alone shows it nothing. `probity.config.ts` carries the limits. Anything Jest can see keeps its failing test.
+
 **There is no Maestro or Detox suite**, and neither may be cited as if there were.
 
 ## Alternatives rejected
 
 - **A test per file.** Mock-heavy tests coupled to structure, which break on refactor without a behaviour change.
 - **Only screen tests.** A screen test shows that one bad input was handled; it cannot show that a bad value is *unconstructible*, and the arithmetic has to be driven at boundary values a rendered screen cannot conveniently reach.
+- **Asserting the colours handed to the platform.** A test of the props a native component was given shows that they changed and not that they were drawn, and nothing in it can see a fault in the platform's own drawing.
 - **A line-coverage threshold in CI.** Coverage says a line ran, not that anything would notice it change, which is the gap mutation testing exists to close.
 
 ## Consequences
 
 - "Does this get its own test?" has a mechanical answer.
 - The screen test is load-bearing and grows with the feature.
-- This is a coverage rule, not a TDD rule. Everything is still built test-first; this fixes only *where* each behaviour's red lives.
+- This is a coverage rule, not a TDD rule. Everything Jest can see is still built test-first; this fixes only *where* each behaviour's red lives.
