@@ -6,6 +6,8 @@
 # Metro is looked for on METRO_PORT, 8081 when unset, and has to be this checkout's: another's would
 # serve another app's code.
 #
+# Boots nothing beside another checkout's mutation run, or with too little memory.
+#
 # Stops, saying what is missing, rather than carry on: a probe on no app, or on a bundle from a
 # Metro that is not there, reads as a finding about the code.
 set -euo pipefail
@@ -23,6 +25,16 @@ running() { adb devices | awk '/^emulator-[0-9]+\tdevice$/ { print $1; exit }'; 
 
 serial=$(running)
 if [ -z "$serial" ]; then
+  # The machine is shared between sessions, and an emulator takes about 4 GB.
+  for pid in $(pgrep -f 'stryker run' || true); do
+    owner=$(readlink "/proc/$pid/cwd" || true)
+    case $owner in
+      '' | "$root" | "$root"/*) ;;
+      *) stop "Stryker is running in $owner; ask before booting beside it" ;;
+    esac
+  done
+  free=$(awk '/^MemAvailable/ { print int($2 / 1048576) }' "${MEMINFO:-/proc/meminfo}")
+  [ "$free" -ge 6 ] || stop "$free GB of memory to spare; an emulator and Metro need 6"
   avd=${1:-$(emulator -list-avds | grep -v '^INFO' | head -1)}
   [ -n "$avd" ] || stop "no AVD exists; create one first"
   log=$(mktemp -t emulator-XXXX.log)

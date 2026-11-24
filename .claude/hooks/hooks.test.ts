@@ -15,6 +15,7 @@ import path from 'node:path';
 const LINT = path.join(__dirname, 'lint-edited-file.sh');
 const PROBITY = path.join(__dirname, 'probity.sh');
 const GUARD = path.join(__dirname, 'bash-write-guard.sh');
+const GATE = path.join(__dirname, 'gate-pipe-guard.sh');
 const CONFIG = path.join(__dirname, '../../probity.config.ts');
 
 /**
@@ -287,6 +288,31 @@ describe('bash-write-guard.sh', () => {
     expect(existsSync(path.join(root, 'src/new/b.ts'))).toBe(false);
     expect(status).toBe(2);
     expect(stderr).toContain('src/new/b.ts');
+  });
+
+  it('puts back a guarded file a Bash command deleted, and says who can delete one', () => {
+    // Given a checkout whose src/a.ts probity guards
+    const root = guardedCheckout();
+
+    // When Bash deletes it
+    const { status, stderr } = guarded('git rm -q src/a.ts', root);
+
+    // Then it is back, and Claude is told to ask the user, since Edit and Write cannot delete
+    expect(srcA(root)).toBe(ORIGINAL);
+    expect(status).toBe(2);
+    expect(stderr).toContain(`rm ${path.join(root, 'src/a.ts')}`);
+    expect(stderr).toContain('ask the user');
+  });
+
+  it('says nothing of deleting when a file was only changed', () => {
+    // Given a checkout whose src/a.ts probity guards
+    const root = guardedCheckout();
+
+    // When Bash rewrites it
+    const { stderr } = guarded('echo x > src/a.ts', root);
+
+    // Then the message is about changing it
+    expect(stderr).not.toContain('ask the user');
   });
 
   it('lets a Bash command revert a guarded file to HEAD', () => {
@@ -573,3 +599,50 @@ const conflict = (root: string) => {
 
 /** Installs, as `node_modules/.bin/<name>`, a stand-in formatter that rewrites src/a.ts. */
 const formatter = (root: string, name: string) => standIn(root, name, 'echo formatted > src/a.ts');
+
+describe('gate-pipe-guard.sh', () => {
+  const gate = (command: string) => runHook(GATE, [], bashCall(command, '/tmp'), '/tmp');
+
+  it.each([
+    [
+      'a suite piped before a commit',
+      "npx jest 2>&1 | tail -5\ngit add -A\ngit commit -q -F - <<'E'\nx\nE",
+    ],
+    ['a lint piped before a push', 'npm run lint | head -3; git push'],
+    ['the push itself piped', 'git push 2>&1 | tail -2'],
+    ['a typecheck filtered before a commit', 'npm run -s typecheck | grep error; git commit -m x'],
+    ['an errexit that a pipe swallows', 'set -e\nnpx jest | tail -1\ngit commit -m x'],
+  ])('refuses %s', (_, command) => {
+    // Given a command whose gate's own status a pipe throws away
+
+    // When it is about to run
+    const { status, stderr } = gate(command);
+
+    // Then it is refused, and told to keep the status
+    expect(status).toBe(2);
+    expect(stderr).toContain('status');
+  });
+
+  it.each([
+    [
+      'a gate kept in a log',
+      'npx jest >j.log 2>&1; echo $?; git push >p.log 2>&1; grep Tests: p.log',
+    ],
+    ['a gate piped with nothing shipped', 'npx jest 2>&1 | tail -5'],
+    ['a gate piped under pipefail', 'set -o pipefail; npx jest | tail -5 && git commit -m x'],
+    [
+      'another command piped',
+      'git commit -m x; git log --oneline | head -3; gh pr create | tail -1',
+    ],
+    ['a message that talks of it', 'git commit -m "never npx jest | tail && commit"'],
+    ['a heredoc that talks of it', "git commit -F - <<'E'\nnever npx jest | tail\nE"],
+  ])('lets through %s', (_, command) => {
+    // Given a command that keeps every gate's status
+
+    // When it is about to run
+    const { status } = gate(command);
+
+    // Then it runs
+    expect(status).toBe(0);
+  });
+});
