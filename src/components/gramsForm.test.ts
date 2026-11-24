@@ -2,10 +2,10 @@ import { gramsForm } from './gramsForm';
 
 describe('gramsForm', () => {
   it.each([
-    ['', 'Enter the grams'],
-    ['  ', 'Enter the grams'],
-    ['0', 'Grams must be more than 0'],
-    ['-5', 'Grams must be more than 0'],
+    ['', 'Enter the weight in grams'],
+    ['  ', 'Enter the weight in grams'],
+    ['0', 'Grams must be greater than 0'],
+    ['-5', 'Grams must be greater than 0'],
     ['1,500', 'Did you mean 1500 or 1.5?'],
     ['abc', 'Enter a number'],
   ])('refuses "%s": %s', (typed, fault) => {

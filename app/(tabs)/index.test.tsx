@@ -22,7 +22,7 @@ const atNoon = () => {
 /** Opens the app on Today, over `entries`. */
 const openToday = (entries: InMemoryEntryStore, clock = atNoon()) =>
   renderRouter(
-    { '(tabs)/index': Today },
+    { '(tabs)/index': Today, '(tabs)/log': () => null },
     {
       initialUrl: '/',
       wrapper: ({ children }: { children: ReactNode }) => (
@@ -77,6 +77,18 @@ describe('Today', () => {
     expect(screen.getByText('0 g protein')).toBeOnTheScreen();
     expect(screen.getByRole('button', { name: 'Log' })).toBeOnTheScreen();
     expect(screen.queryByText('Today could not be read')).not.toBeOnTheScreen();
+  });
+
+  it('goes to Log from an empty day', async () => {
+    // Given Today open with nothing logged
+    await openToday(new InMemoryEntryStore([OATS]));
+    const log = await screen.findByRole('button', { name: 'Log' });
+
+    // When the user takes the way on
+    await userEvent.press(log);
+
+    // Then Log is open
+    expect(screen).toHavePathname('/log');
   });
 
   it('says it could not read the day, rather than that it is empty, and reads it when asked', async () => {

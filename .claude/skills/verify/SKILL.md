@@ -38,7 +38,8 @@ The running copy and its tools are in `~/Development/macropilot-reference`, outs
    - **Agreed**: in the PRD's *Further Notes*, an ADR, `CONTEXT.md` or `DESIGN.md`, cited. The look is Trim's and never a difference.
    - **Out of scope**: micronutrients, accounts, or a later epic's, with its issue.
    - **Wrong here**: fixed, test-first, before the sign-off goes on.
-   - **Undecided**: nothing says which is right. It is listed on the PRD for the user, and the reference app's behaviour is what ships until they say. Where that behaviour is itself a fault (a figure taken for another), what is here stays, and the list says so.
+   - **Undecided**: nothing says which is right. It is the user's, and the reference app's behaviour is what ships until they say. Where that behaviour is itself a fault (a figure taken for another), what is here stays, and the list says so.
+5. **Record every one on the epic**, in its one comment *Where this differs from the reference app*, edited in place and linked from the epic's body: the user reads it when they test by hand and sign off. Each row says what the reference app does, what this one does, why, who decided and where, and whether it was run or only read. The user's to decide come first. A comment that the epic has not yet is made. An agreed difference is recorded like any other; only the look is left out. **A difference not in that list is a FAIL**, and so is one whose words are left out of date by a fix.
 
 Where the Kotlin and its own screen disagree, the Kotlin is the rule. A difference **wrong here**, or a step not run, is a FAIL. When the running copy cannot be started, the verdict is BLOCKED, not a skip. A change with no counterpart there (tooling, a lint rule) says so in a line.
 
@@ -54,7 +55,7 @@ Run `/break-it`. Never explore in this conversation: the tester must not know wh
 Build: <sha>, Android emulator API <n>
 AC1 ✅ <what was seen> (shot-1.png)
 AC2 ❌ <what was seen> (shot-2.png)
-Parity: <commit>, <n> compared on the backend, <n> actions on the screens; differences: <n> agreed, <n> out of scope, <n> wrong here (fixed), <n> undecided (where listed)
+Parity: <commit>, <n> compared on the backend, <n> actions on the screens; differences: <n> agreed, <n> out of scope, <n> wrong here (fixed), <n> undecided; all <n> in the epic's list (url)
 Charters: <as check printed them>
 Needs a phone: <what iOS or real hardware could still break, one line each>
 Skipped: <probe, and why>
@@ -71,5 +72,6 @@ When a PRD's last issue has merged:
 1. Walk the PRD's user stories end to end on the emulator, on `main`, from a fresh install. Cross the issues: what one wrote, read on another's screen.
 2. Run Part 2 over the whole epic, on flows that cross its issues: the same day logged in both, compared at its end.
 3. Run `/break-it` on the PRD, over the epic's whole diff. Settle its findings before the user is asked for anything.
-4. Merge the issues' *Needs a phone* lists, and the epic tester's, into one script for the user to run on iOS: numbered steps, one action each, the expected screen in the app's own words, from a fresh install, ten minutes at most. If a native package was added, it starts with the EAS build to run.
-5. Post it on the PRD and stop. Each finding becomes an issue in this epic. The user's pass closes it, and `/post-mortem` runs on the epic.
+4. Read the epic's list of differences against what was just run. Every row is still true, and none is left *not compared*.
+5. Merge the issues' *Needs a phone* lists, and the epic tester's, into one script for the user to run on iOS: numbered steps, one action each, the expected screen in the app's own words, from a fresh install, ten minutes at most. If a native package was added, it starts with the EAS build to run. The script links the list of differences and says which rows wait on the user.
+6. Post it on the PRD and stop. Each finding becomes an issue in this epic. The user's pass closes it, and `/post-mortem` runs on the epic.

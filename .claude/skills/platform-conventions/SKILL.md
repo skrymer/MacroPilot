@@ -22,7 +22,7 @@ In `eslint-rules/`, wired in `eslint.config.js`. A `PostToolUse` hook lints each
 | `a11y/capped-text` | React Native's `Text`/`TextInput`, expo-router's `Link` | `@/components/Text` · `Input` · `Link` ([`0007`](../../../docs/adr/0007-figures-are-fixed-size-and-text-scales-to-double.md)) |
 | `forms/no-coerced-number` | `z.coerce.number()`, which makes a blank 0 | `optionalFigure` in `src/components/figureText.ts` ([`0009`](../../../docs/adr/0009-forms-are-react-hook-form-with-zod-and-the-domain-still-judges.md)) |
 | `forms/no-watch` | A form's `watch()`, stale under the React Compiler | `useWatch` |
-| `forms/keyboard-avoided` | A `FormField` in a `ScrollView` the keyboard can cover | A `KeyboardAvoidingView` around the scroll view |
+| `forms/keyboard-avoided` | A `FormField`, or a page's `children`, in a `ScrollView` the keyboard can cover | A `KeyboardAvoidingView` around the scroll view |
 | `testing/perceivable-only` | Props, styles, snapshots, test IDs in a `*.test.tsx` | Text, role or label |
 | `no-restricted-imports` | `Alert` under `app/`; frameworks, ports and adapters in the domain | State the condition in place; pass plain values |
 | `no-restricted-properties` / `-syntax` | `Date.now()`, `performance.now()`, bare `new Date()` | The `Clock` port |

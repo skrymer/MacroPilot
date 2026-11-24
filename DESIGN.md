@@ -42,6 +42,8 @@ The figure in the centre is `ink` while the day is within its budget, `slightly-
 
 **A total takes the surest kind in it.** One weighed entry makes the day's calories solid; a day of estimates alone is set as one, and says *about*. A protein total that some entry does not state says *at least*, and one that no entry states is *not stated*. **An empty day is 0 kcal and 0 g**, which are known, with *Nothing logged yet* and a way to log.
 
+**Grams** have their thousands apart by a comma, `1,500 g`, and calories do not, `4410 kcal`, whatever the phone's language.
+
 **An entry's row** has its calories at the right and its grams and protein under its name.
 
 **A figure and its unit are joined by a no-break space.** Android can break the line at an ordinary one and clip the second half: "0 kcal" was drawn as "0".
@@ -68,13 +70,14 @@ A target is at least 44pt on iOS and 48dp on Android, each platform's own floor,
 
 | When | What | Not |
 | --- | --- | --- |
-| A form of up to three fields (grams, an estimate) | The system's sheet, over the page it came from | A page of its own |
-| A longer form (a food) | A full-height modal page with *Cancel* | A sheet |
+| A form (grams, an estimate, a food) | A full-height page with *Cancel* | A sheet |
 | Deleting | The system's own question, naming what goes, answered *Delete* or *Cancel*: an action sheet on iOS, a dialog on Android | A question drawn by us |
-| Leaving a full-height form with something typed | The same question, answered *Discard* or *Cancel*, on every way out. A sheet does not ask, and neither does a form left as it opened | A silent loss of six fields |
+| Leaving a full-height form with something typed | The same question, answered *Discard* or *Cancel*, on every way out. A form of up to three fields does not ask, and neither does a form left as it opened | A silent loss of six fields |
 | It worked, and the page shows it (a row goes, a row appears) | Nothing | A message repeating it |
 | It worked, and the result is on another page (an entry logged) | A line at the top of the page, announced by a screen reader. It stays until the next replaces it or the page is left | A toast, a timer, a haptic |
 | It failed | Words above the button, the form still open and filled, and the button tries again | A message that goes away |
+
+**Not a sheet, even for one field.** It was tried for grams. Over Android's own keypad, at 320dp with text at double, a food whose name is five lines left *Log entry* touching the keypad, and one fault beside the field put it out of reach under it. A sheet the height of its contents has nowhere to scroll, and a name is not cut short ([`0007`](./docs/adr/0007-figures-are-fixed-size-and-text-scales-to-double.md)). A page scrolls, with its button outside what scrolls.
 
 **No toasts.** iOS has none, and a message on a timer is gone before someone slow to look has read it.
 

@@ -4,6 +4,7 @@ import { FlatList, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { grams, kcal, spokenGrams, spokenKcal } from '@/components/figures';
+import { Hairline } from '@/components/Hairline';
 import { Notice } from '@/components/Notice';
 import { Row } from '@/components/Row';
 import { Text } from '@/components/Text';
@@ -56,6 +57,7 @@ export default function Today() {
         keyExtractor={({ id }) => String(id)}
         renderItem={({ item }) => <EntryRow entry={item} />}
         contentContainerClassName="px-4 pb-4"
+        ItemSeparatorComponent={Hairline}
         ListEmptyComponent={
           Array.isArray(found) ? (
             <Notice
@@ -66,7 +68,7 @@ export default function Today() {
           ) : undefined
         }
         ListHeaderComponent={
-          <View className="gap-3">
+          <View className="gap-3 pb-3">
             <Text accessibilityRole="header" className="font-language-bold text-title text-ink">
               Today
             </Text>

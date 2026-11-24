@@ -59,10 +59,10 @@ const openLog = (
     },
   );
 
-/** Opens a food's sheet from Log, and types `grams` in it. */
+/** Opens a food's form from Log, and types `grams` in it. */
 const weigh = async (user: ReturnType<typeof userEvent.setup>, food: RegExp, grams: string) => {
   await user.press(await screen.findByRole('button', { name: food }));
-  await user.type(await screen.findByLabelText('Grams'), grams);
+  await user.type(await screen.findByLabelText('Weight (g)'), grams);
 };
 
 describe('Log', () => {
@@ -76,10 +76,10 @@ describe('Log', () => {
     // When the user logs it
     await user.press(screen.getByRole('button', { name: 'Log entry' }));
 
-    // Then the sheet is gone, Log says what was logged, and the entry is on the phone's day
+    // Then the form is gone, Log says what was logged, and the entry is on the phone's day
     expect(await screen.findByText('Logged: Rolled oats')).toBeOnTheScreen();
     expect(screen.getByText('80 g, 235 kcal, 10 g protein')).toBeOnTheScreen();
-    expect(screen.queryByLabelText('Grams')).not.toBeOnTheScreen();
+    expect(screen.queryByLabelText('Weight (g)')).not.toBeOnTheScreen();
     expect(await stores.entries.listOn('2026-11-24')).toMatchObject([
       { name: 'rolled OATS', grams: 80 },
     ]);
@@ -92,30 +92,30 @@ describe('Log', () => {
     // When the user presses one
     await userEvent.press(await screen.findByRole('button', { name: /^Coffee/ }));
 
-    // Then its sheet names it, and its grams are blank rather than a figure
-    expect(await screen.findByRole('header', { name: 'Coffee' })).toBeOnTheScreen();
-    expect(screen.getByLabelText('Grams')).toHaveDisplayValue('');
+    // Then its form names it, and its grams are blank rather than a figure
+    expect(await screen.findByRole('header', { name: 'Log Coffee' })).toBeOnTheScreen();
+    expect(screen.getByLabelText('Weight (g)')).toHaveDisplayValue('');
   });
 
   it.each([
-    ['blank', '', 'Enter the grams'],
-    ['0', '0', 'Grams must be more than 0'],
-    ['negative', '-5', 'Grams must be more than 0'],
+    ['blank', '', 'Enter the weight in grams'],
+    ['0', '0', 'Grams must be greater than 0'],
+    ['negative', '-5', 'Grams must be greater than 0'],
   ])('refuses grams that are %s, beside the field, and logs nothing', async (_, typed, fault) => {
-    // Given a food's sheet with those grams
+    // Given a food's form with those grams
     const stores = await storesOf(OATS);
     await openLog(stores);
     const user = userEvent.setup();
     await user.press(await screen.findByRole('button', { name: /^Rolled oats/ }));
-    const field = await screen.findByLabelText('Grams');
+    const field = await screen.findByLabelText('Weight (g)');
     if (typed) await user.type(field, typed);
 
     // When the user logs it
     await user.press(screen.getByRole('button', { name: 'Log entry' }));
 
-    // Then the sheet says what is wrong, in words and to a screen reader, and nothing is logged
+    // Then the form says what is wrong, in words and to a screen reader, and nothing is logged
     expect(await screen.findByText(fault)).toBeOnTheScreen();
-    expect(screen.getByLabelText('Grams')).toHaveProp('accessibilityHint', fault);
+    expect(screen.getByLabelText('Weight (g)')).toHaveProp('accessibilityHint', fault);
     expect(await stores.entries.listOn('2026-11-24')).toHaveLength(0);
   });
 
@@ -139,7 +139,7 @@ describe('Log', () => {
   });
 
   it('leaves the user where they have gone by the time an entry is written', async () => {
-    // Given an entry still being written, with the user gone back and on to another food's sheet
+    // Given an entry still being written, with the user gone back and on to another food's form
     const stores = await storesOf(OATS, COFFEE);
     const written = stores.entries.holdWrites();
     await openLog(stores);
@@ -152,12 +152,12 @@ describe('Log', () => {
     // When it is written
     await act(async () => written());
 
-    // Then the other food's sheet is still open, with what was typed in it
-    expect(screen.getByLabelText('Grams')).toHaveDisplayValue('250');
+    // Then the other food's form is still open, with what was typed in it
+    expect(screen.getByLabelText('Weight (g)')).toHaveDisplayValue('250');
   });
 
-  it('is on the phone’s day when it is saved, not when its sheet was opened', async () => {
-    // Given a phone ten hours ahead of UTC, a sheet opened a minute before its midnight, and two gone by
+  it('is on the phone’s day when it is saved, not when its form was opened', async () => {
+    // Given a phone ten hours ahead of UTC, a form opened a minute before its midnight, and two gone by
     const clock = new ScriptedClock();
     clock.setUtcOffset(600);
     clock.advance(Date.UTC(2026, 10, 24, 13, 59));
@@ -176,8 +176,8 @@ describe('Log', () => {
     expect(await stores.entries.listOn('2026-11-24')).toHaveLength(0);
   });
 
-  it('keeps what it said was logged through a sheet left without logging, and replaces it', async () => {
-    // Given an entry logged and said so, and a second food's sheet opened and left
+  it('keeps what it said was logged through a form left without logging, and replaces it', async () => {
+    // Given an entry logged and said so, and a second food's form opened and left
     await openLog(await storesOf(OATS, COFFEE));
     const user = userEvent.setup();
     await weigh(user, /^Rolled oats/, '80');
@@ -198,6 +198,104 @@ describe('Log', () => {
     expect(
       screen.getByLabelText('Logged: Coffee, 250 grams, 0 calories, 0 grams of protein'),
     ).toHaveProp('accessibilityLiveRegion', 'polite');
+  });
+
+  it('sets a weight’s thousands apart', async () => {
+    // Given a food's grams typed, over a thousand
+    await openLog(await storesOf(OATS));
+    const user = userEvent.setup();
+    await weigh(user, /^Rolled oats/, '1500');
+
+    // When it is logged
+    await user.press(screen.getByRole('button', { name: 'Log entry' }));
+
+    // Then its grams are said with a comma, and its calories without
+    expect(await screen.findByText('1,500 g, 4410 kcal, 195 g protein')).toBeOnTheScreen();
+  });
+
+  it('says a food to be weighed could not be read, and reads it when asked', async () => {
+    // Given a food pressed that could not be read for its form, and now can be
+    const stores = await storesOf(OATS);
+    await openLog(stores);
+    const food = await screen.findByRole('button', { name: /^Rolled oats/ });
+    stores.foods.unreadable = true;
+    const user = userEvent.setup();
+    await user.press(food);
+    const tryAgain = await screen.findByRole('button', { name: 'Try again' });
+    expect(screen.getByText('Your foods could not be read')).toBeOnTheScreen();
+    stores.foods.unreadable = false;
+
+    // When the user tries again
+    await user.press(tryAgain);
+
+    // Then its grams are asked for
+    expect(await screen.findByLabelText('Weight (g)')).toBeOnTheScreen();
+  });
+
+  it('asks for another food’s grams anew, when a link opens it over the first', async () => {
+    // Given 80 g typed for one food
+    await openLog(await storesOf(OATS, COFFEE));
+    await weigh(userEvent.setup(), /^Rolled oats/, '80');
+
+    // When a link opens the other's form
+    await act(() => router.navigate({ pathname: '/log-food', params: { id: 2 } }));
+
+    // Then its grams are blank, not the first food's
+    expect(await screen.findByRole('header', { name: 'Log Coffee' })).toBeOnTheScreen();
+    expect(screen.getByLabelText('Weight (g)')).toHaveDisplayValue('');
+  });
+
+  it('cancels back to Log from a food that is not kept', async () => {
+    // Given a link to the form of a food that is not among the user's
+    await openLog(await storesOf(OATS));
+    await screen.findByRole('button', { name: /^Rolled oats/ });
+    await act(() => router.navigate({ pathname: '/log-food', params: { id: 99 } }));
+    const cancel = await screen.findByRole('button', { name: 'Cancel' });
+    expect(await screen.findByText('This food is not in your foods')).toBeOnTheScreen();
+    expect(screen.queryByText('No foods yet')).not.toBeOnTheScreen();
+
+    // When the user cancels
+    await userEvent.press(cancel);
+
+    // Then Log is open
+    expect(screen).toHavePathname('/log');
+  });
+
+  it('cancels back to Log from a food that could not be read', async () => {
+    // Given a food pressed that could not be read for its form
+    const stores = await storesOf(OATS);
+    await openLog(stores);
+    const food = await screen.findByRole('button', { name: /^Rolled oats/ });
+    stores.foods.unreadable = true;
+    const user = userEvent.setup();
+    await user.press(food);
+    await screen.findByText('Your foods could not be read');
+    stores.foods.unreadable = false;
+
+    // When the user cancels
+    await user.press(screen.getByRole('button', { name: 'Cancel' }));
+
+    // Then Log is there, with the food on it
+    expect(await screen.findByRole('button', { name: /^Rolled oats/ })).toBeOnTheScreen();
+    expect(screen).toHavePathname('/log');
+    expect(screen.queryByText('Your foods could not be read')).not.toBeOnTheScreen();
+  });
+
+  it('cancels back to Log with nothing logged', async () => {
+    // Given 80 g of a food typed
+    const stores = await storesOf(OATS);
+    await openLog(stores);
+    const user = userEvent.setup();
+    await weigh(user, /^Rolled oats/, '80');
+
+    // When the user cancels
+    await user.press(screen.getByRole('button', { name: 'Cancel' }));
+
+    // Then Log is there, saying nothing was logged, and nothing was
+    expect(await screen.findByRole('header', { name: 'Log' })).toBeOnTheScreen();
+    expect(screen.queryByLabelText('Weight (g)')).not.toBeOnTheScreen();
+    expect(screen.queryByText(/^Logged/)).not.toBeOnTheScreen();
+    expect(await stores.entries.listOn('2026-11-24')).toHaveLength(0);
   });
 
   it('clears what it said was logged once Log is left', async () => {
@@ -259,7 +357,7 @@ describe('Log', () => {
     await weigh(user, /^Rolled oats/, '80');
     await user.press(screen.getByRole('button', { name: 'Log entry' }));
     await screen.findByText('Not logged. What you typed is still here.');
-    expect(screen.getByLabelText('Grams')).toHaveDisplayValue('80');
+    expect(screen.getByLabelText('Weight (g)')).toHaveDisplayValue('80');
     stores.entries.unwritable = false;
 
     // When the user presses the button again

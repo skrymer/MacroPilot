@@ -2,7 +2,7 @@ import { createContext, useContext, useState, type ReactNode } from 'react';
 
 import type { WeighedEntry } from '@/domain/entry';
 
-/** What was logged last, under the name it was logged by: the sheet says it and Log shows it. */
+/** What was logged last, under the name it was logged by: the form says it and Log shows it. */
 export type Logged = { name: string; entry: WeighedEntry };
 
 type LoggedState = [Logged | undefined, (logged: Logged | undefined) => void];

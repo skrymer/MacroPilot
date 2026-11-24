@@ -17,6 +17,7 @@ describe('forms/keyboard-avoided', () => {
       'a field, beside one that does avoid it',
       `const c = <View><KeyboardAvoidingView /><ScrollView><FormField name="fat" /></ScrollView></View>;`,
     ],
+    ['a page’s children, which can be fields', `const c = <ScrollView>{children}</ScrollView>;`],
   ])('reports a scroll view the keyboard can cover with %s', (_, code) => {
     // Given a form that scrolls, with nothing to make room for the keyboard
     const source = code;

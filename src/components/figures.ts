@@ -4,7 +4,10 @@
  */
 export const kcal = (calories: number) => `${Math.round(calories)} kcal`;
 
-export const grams = (weight: number) => `${Math.round(weight)} g`;
+export const grams = (weight: number) => `${THOUSANDS.format(Math.round(weight))} g`;
+
+/** One for every figure: a formatter is slow to make, and a list shows hundreds. */
+const THOUSANDS = new Intl.NumberFormat('en-US');
 
 /** A figure as a screen reader says it, its unit a word. */
 const spoken = (figure: number, unit: string) =>

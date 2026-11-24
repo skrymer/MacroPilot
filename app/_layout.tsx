@@ -55,13 +55,7 @@ export default function RootLayout() {
                 screenLayout={({ route, children }) =>
                   !__DEV__ && route.name === 'design' ? <BackToToday /> : children
                 }
-              >
-                {/* The system's sheet, over the page it came from (DESIGN.md, *Asking and telling*). */}
-                <Stack.Screen
-                  name="log-food"
-                  options={{ presentation: 'formSheet', sheetAllowedDetents: 'fitToContents' }}
-                />
-              </Stack>
+              />
             </View>
           </LoggedProvider>
         </EntryStoreProvider>

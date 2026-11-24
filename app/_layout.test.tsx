@@ -110,7 +110,7 @@ describe('RootLayout', () => {
     await user.press(screen.getByRole('button', { name: 'Save food' }));
     await act(() => router.navigate('/log'));
     await user.press(await screen.findByRole('button', { name: /^Muesli/ }));
-    await user.type(await screen.findByLabelText('Grams'), '100');
+    await user.type(await screen.findByLabelText('Weight (g)'), '100');
     await user.press(screen.getByRole('button', { name: 'Log entry' }));
     await screen.findByText('Logged: Muesli');
 

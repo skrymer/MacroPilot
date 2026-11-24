@@ -1,10 +1,12 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useForm } from 'react-hook-form';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Button } from '@/components/Button';
+import { CancelButton } from '@/components/CancelButton';
+import { FoodsNotice } from '@/components/FoodsNotice';
 import { FormField } from '@/components/FormField';
+import { FormPage } from '@/components/FormPage';
 import { gramsForm } from '@/components/gramsForm';
 import { useLogged } from '@/components/LoggedContext';
 import { Text } from '@/components/Text';
@@ -19,7 +21,6 @@ import { useFoods } from '@/storage/useFoods';
 
 function GramsForm({ food }: { food: Food }) {
   const router = useRouter();
-  const navigation = useNavigation();
   const clock = useClock();
   const store = useEntryStore();
   const [, setLogged] = useLogged();
@@ -32,44 +33,52 @@ function GramsForm({ food }: { food: Food }) {
     resolver: zodResolver(gramsForm),
     defaultValues: { grams: '' },
   });
-  const log = useSave(async () => {
-    let saved = false;
-    await handleSubmit(async ({ grams }) => {
-      // The day is the phone's when it is saved, not when the sheet was opened.
+  const leave = () => router.dismissTo('/log');
+  const log = useSave({
+    form: { handleSubmit, setError },
+    write: async ({ grams }) => {
+      // The day is the phone's when it is saved, not when the form was opened.
       const now = clock.now();
       const entry = weighedEntry(food, grams, dayOf(now, clock.utcOffsetMinutes(now)));
-      try {
-        await store.add(entry);
-      } catch {
-        setError('root', { message: 'Not logged. What you typed is still here.' });
-        return;
-      }
-      saved = true;
+      await store.add(entry);
       setLogged({ name: food.name, entry });
-      // The user may have left while it was written, and is not taken from where they went.
-      if (navigation.isFocused()) router.dismissTo('/log');
-    })();
-    return saved;
+    },
+    failed: 'Not logged. What you typed is still here.',
+    leave,
   });
   return (
-    <SafeAreaView className="gap-4 bg-surface p-4" edges={['bottom']}>
-      <Text accessibilityRole="header" className="font-language-bold text-title text-ink">
-        {shownName(food.name)}
-      </Text>
-      <FormField control={control} name="grams" label="Grams" keyboardType="decimal-pad" />
-      {errors.root ? (
-        <Text accessibilityRole="alert" className="font-language-bold text-body text-ink">
-          {errors.root.message}
-        </Text>
-      ) : null}
-      <Button label="Log entry" onPress={() => void log()} />
-    </SafeAreaView>
+    <FormPage
+      title={`Log ${shownName(food.name)}`}
+      onCancel={leave}
+      fault={errors.root?.message}
+      action="Log entry"
+      onAction={log}
+    >
+      <FormField
+        control={control}
+        name="grams"
+        label="Weight (g)"
+        keyboardType="decimal-pad"
+        autoFocus
+      />
+    </FormPage>
   );
 }
 
 export default function LogFood() {
+  const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { foods } = useFoods();
+  const { foods, readAgain } = useFoods();
   const food = Array.isArray(foods) ? foods.find((kept) => String(kept.id) === id) : undefined;
-  return food ? <GramsForm food={food} /> : null;
+  // A link can put another food on this page, and what was typed is not of it.
+  if (food) return <GramsForm key={food.id} food={food} />;
+  return (
+    <SafeAreaView className="flex-1 bg-ground px-4">
+      <CancelButton onPress={() => router.dismissTo('/log')} />
+      {foods === 'unreadable' ? <FoodsNotice foods={foods} readAgain={readAgain} /> : null}
+      {Array.isArray(foods) ? (
+        <Text className="font-language text-body text-ink">This food is not in your foods</Text>
+      ) : null}
+    </SafeAreaView>
+  );
 }

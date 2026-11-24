@@ -4,8 +4,9 @@ import { AccessibilityInfo, FlatList, Platform, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { grams, kcal, spokenGrams, spokenKcal } from '@/components/figures';
-import { FoodButton } from '@/components/FoodRow';
+import { FoodRow } from '@/components/FoodRow';
 import { FoodsNotice } from '@/components/FoodsNotice';
+import { Hairline } from '@/components/Hairline';
 import { useLogged, type Logged } from '@/components/LoggedContext';
 import { Text } from '@/components/Text';
 import { shownName } from '@/domain/shownName';
@@ -37,19 +38,19 @@ export default function Log() {
   const { foods, readAgain } = useFoods();
   const listed = Array.isArray(foods) ? foods : [];
   const [logged, setLogged] = useLogged();
-  // A sheet is opened over Log, and Log is not left by it.
-  const sheetIsOver = useRef(false);
+  // A food's form is opened over Log, and Log is not left by it.
+  const formIsOver = useRef(false);
   useFocusEffect(
     useCallback(() => {
-      sheetIsOver.current = false;
+      formIsOver.current = false;
       return () => {
-        if (!sheetIsOver.current) setLogged(undefined);
+        if (!formIsOver.current) setLogged(undefined);
       };
     }, [setLogged]),
   );
-  const openSheet = (id: number) => {
-    sheetIsOver.current = true;
-    // Not `push`, which opens a second sheet over the first when it is pressed twice.
+  const openForm = (id: number) => {
+    formIsOver.current = true;
+    // Not `push`, which opens a second form over the first when it is pressed twice.
     router.navigate({ pathname: '/log-food', params: { id } });
   };
   return (
@@ -57,8 +58,9 @@ export default function Log() {
       <FlatList
         data={listed}
         keyExtractor={({ id }) => String(id)}
-        renderItem={({ item }) => <FoodButton food={item} onPress={() => openSheet(item.id)} />}
+        renderItem={({ item }) => <FoodRow food={item} onPress={() => openForm(item.id)} />}
         contentContainerClassName="px-4 pb-4"
+        ItemSeparatorComponent={Hairline}
         ListEmptyComponent={<FoodsNotice foods={foods} readAgain={readAgain} />}
         ListHeaderComponent={
           <View className="gap-3">

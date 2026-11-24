@@ -1,14 +1,44 @@
+import { useNavigation } from 'expo-router';
 import { useRef } from 'react';
+import type { FieldErrors, FieldValues, UseFormReturn } from 'react-hook-form';
 
 /**
- * One save at a time. `save` says whether it worked, and one that did is the last: the page can still
- * be pressed while it goes.
+ * Saves a form, one save at a time. A write that fails says `failed` and leaves the form as it was. One
+ * that works is the last, since the page can still be pressed while it goes.
  */
-export function useSave(save: () => Promise<boolean>): () => Promise<void> {
+export function useSave<Typed extends FieldValues, Said>({
+  form: { handleSubmit, setError },
+  write,
+  failed,
+  leave,
+  onRefused,
+}: {
+  form: Pick<UseFormReturn<Typed, unknown, Said>, 'handleSubmit' | 'setError'>;
+  write: (said: Said) => Promise<void>;
+  failed: string;
+  leave: () => void;
+  onRefused?: (faults: FieldErrors<Typed>) => void;
+}): () => void {
+  const navigation = useNavigation();
   const saving = useRef(false);
-  return async () => {
+  const submit = async (said: Said) => {
+    try {
+      await write(said);
+    } catch {
+      setError('root', { message: failed });
+      saving.current = false;
+      return;
+    }
+    // The user may have left while it was written, and is not taken from where they went.
+    if (navigation.isFocused()) leave();
+  };
+  const refuse = (faults: FieldErrors<Typed>) => {
+    saving.current = false;
+    onRefused?.(faults);
+  };
+  return () => {
     if (saving.current) return;
     saving.current = true;
-    saving.current = await save();
+    void handleSubmit(submit, refuse)();
   };
 }
