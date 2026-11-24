@@ -1,5 +1,5 @@
 // What a session cost, in one line each: what the user said, each tool call that failed, and each
-// hook that refused, with its line in the transcript; then the same for every agent it spawned.
+// hook that refused, with its line in the transcript, and how long it and its longest calls took; then the same for every agent it spawned.
 //
 //   digest.mjs [<session-id>] [--repo <path>]     the newest session of this checkout by default
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
@@ -74,8 +74,48 @@ function entries(file) {
   return found;
 }
 
+const seconds = (from, to) => Math.round((to - from) / 1000);
+
+/** How long a transcript ran, how much of it was inside tool calls, and its longest calls. */
+function durations(file) {
+  const open = new Map();
+  const done = [];
+  const times = [];
+  for (const line of parse(file)) {
+    const at = Date.parse(line.timestamp);
+    if (Number.isNaN(at)) continue;
+    times.push(at);
+    const blocks = Array.isArray(line.message?.content) ? line.message.content : [];
+    for (const block of blocks) {
+      if (block.type === 'tool_use') {
+        const call = oneLine(`${block.name} ${inputOf(block.input)}`).slice(0, WIDTH / 2);
+        open.set(block.id, { number: line.number, from: at, call });
+      }
+      const started = block.type === 'tool_result' && open.get(block.tool_use_id);
+      if (started) done.push({ ...started, to: at });
+    }
+  }
+  if (times.length === 0) return [];
+  // Calls run at once overlap, and their time is counted once.
+  let inCalls = 0;
+  let reached = -Infinity;
+  for (const { from, to } of done.sort((a, b) => a.from - b.from)) {
+    inCalls += Math.max(0, to - Math.max(from, reached));
+    reached = Math.max(reached, to);
+  }
+  const longest = [...done].sort((a, b) => b.to - b.from - (a.to - a.from)).slice(0, 5);
+  const took = times.reduce((a, b) => Math.max(a, b)) - times.reduce((a, b) => Math.min(a, b));
+  return [
+    `${seconds(0, took)} s in all, ${seconds(0, inCalls)} s in tool calls`,
+    ...longest.map(
+      ({ number, from, to, call }) => `${number} took ${seconds(from, to)} s: ${call}`,
+    ),
+  ];
+}
+
 const print = (heading, file) => {
   console.log(`\n## ${heading} ${file}`);
+  for (const entry of durations(file)) console.log(entry);
   for (const entry of entries(file)) console.log(entry);
 };
 

@@ -19,7 +19,7 @@ Address what each surfaces *before* starting the next. If a later fix changes be
 
    It runs here for two reasons: after gate 1, because `/simplify` edits the tree and mutating pre-simplify code wastes time on survivors that have moved; before gate 3, because this gate *writes tests* the reviewer should read.
 
-3. **`/code-review medium` — hunt correctness bugs.** Review the now-simplified diff. **Medium, not high**: at medium it focuses on correctness and drops the reuse and simplification angles gate 1 just applied. Triage every finding — fix the genuine ones, and for each you do not fix, say why. No unexplained findings.
+3. **`/code-review medium` — hunt correctness bugs.** Review the now-simplified diff. **Medium, not high**: at medium it focuses on correctness and drops the reuse and simplification angles gate 1 just applied. Triage every finding — fix the genuine ones, and for each you do not fix, say why. No unexplained findings. **One reproduced, by a test or on the device, is genuine**: keep its failing test, drive it repeated before judging its size, and leaving it is the user's call.
 
 4. **`/check-adrs` — honour the recorded decisions.** Judge the final diff against `docs/adr/` and the language in `CONTEXT.md`. A FAIL is either a code fix or a same-PR doc fix — the user's call, surfaced rather than decided quietly.
 

@@ -186,4 +186,27 @@ describe('digest.mjs', () => {
     expect(status).toBe(1);
     expect(output).toContain('no transcript for session s9');
   });
+
+  it('says how long a session took, how much of it was tool calls, and which were longest', () => {
+    // Given two overlapping calls of 60 and 40 seconds, then 20 seconds of nothing but thought
+    const at = (seconds: number, line: Line): Line => ({
+      ...line,
+      timestamp: new Date(Date.UTC(2026, 10, 24, 3, 0, seconds)).toISOString(),
+    });
+    const root = home([
+      at(0, calls('a', 'Bash', { command: 'drive 25 spellings' })),
+      at(10, calls('b', 'Bash', { command: 'read the log' })),
+      at(50, result('b', 'ok')),
+      at(60, result('a', 'ok')),
+      at(80, user('done')),
+    ]);
+
+    // When it is digested
+    const { output } = digest(root);
+
+    // Then time spent in both calls at once is counted once, and the longest call is named at its line
+    expect(output).toContain('80 s in all, 60 s in tool calls');
+    expect(output).toContain('1 took 60 s: Bash drive 25 spellings');
+    expect(output).toContain('2 took 40 s: Bash read the log');
+  });
 });
