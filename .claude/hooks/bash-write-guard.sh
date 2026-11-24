@@ -21,6 +21,9 @@
 #   which reformat but add no behaviour, and only when nothing is chained onto them; and, while a
 #   merge, rebase, cherry-pick or revert is stopped on a conflict, an unmerged file or one left as
 #   the merge staged it, which a rollback would silently resolve to one side.
+# - Deleting source under src/ or app/ is let through when the command does nothing else that is rolled
+#   back, since Edit and Write cannot delete: write the new file first, then delete the old. A test, a
+#   lint rule or the lint config is put back, and Claude is told to ask the user.
 # - Not allowed: anything else, `git stash apply` and `pop` included. Set work aside with a WIP
 #   commit. A rolled-back write is unstaged too, and its content is kept as a blob the message
 #   names, so a rollback never loses work.
@@ -88,6 +91,12 @@ roots() {
 }
 
 # Puts back every guarded file in a snapshot's checkout that changed, and names each one.
+# Source a move or a refactor leaves behind. What checks it (a test, a lint rule, the lint config) is
+# not the agent's to delete.
+deletable() {
+  [[ "$1" =~ ^(src|app)/ && ! "$1" =~ \.test\.tsx?$ ]]
+}
+
 rollback() {
   local file="$1" root p blob head state kept after_list merging=""
   local -A before=() after=() unmerged=()
@@ -103,6 +112,8 @@ rollback() {
   # A config the command removed or emptied leaves nothing to compare against: judge nothing.
   after_list="$(hashes "$root")" || return
   while IFS=$'\t' read -r p blob; do [ -n "$p" ] && after[$p]="$blob"; done <<<"$after_list"
+  local -a judged=()
+  local moved=""
   while read -r p; do
     [ -n "$p" ] || continue
     [ "${before[$p]:-}" = "${after[$p]:-}" ] && continue
@@ -112,6 +123,13 @@ rollback() {
       [ -n "${unmerged[$p]:-}" ] && continue
       [ "${after[$p]:-}" = "$(git -C "$root" rev-parse -q --verify ":$p" 2>/dev/null)" ] && continue
     fi
+    judged+=("$p")
+    [ -z "${after[$p]:-}" ] && deletable "$p" || moved=1
+  done < <(printf '%s\n' "${!before[@]}" "${!after[@]}" | sort -u)
+  # Deletions alone stand. Beside a write that is rolled back they may be a move's other end, and
+  # would lose the file at both.
+  [ -n "$moved" ] || return
+  for p in "${judged[@]}"; do
     kept=""
     deleted=""
     [ -f "$root/$p" ] || deleted=1
@@ -127,7 +145,7 @@ rollback() {
       git -C "$root" reset -q -- "$p"
     fi
     echo "$root/$p${kept:+ (the Bash version is kept: git cat-file -p $kept)}${deleted:+ (deleted)}"
-  done < <(printf '%s\n' "${!before[@]}" "${!after[@]}" | sort -u)
+  done
 }
 
 mode="${1:-}"

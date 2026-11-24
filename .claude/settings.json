@@ -19,6 +19,11 @@
             "type": "command",
             "command": "f=\"${CLAUDE_PROJECT_DIR}/.claude/hooks/bash-write-guard.sh\"; [ -x \"$f\" ] || { echo \"hook missing: $f, so nothing can be guarded: refusing. Restart Claude Code from a checkout that exists.\" >&2; exit 2; }; exec \"$f\" pre",
             "timeout": 30
+          },
+          {
+            "type": "command",
+            "command": "f=\"${CLAUDE_PROJECT_DIR}/.claude/hooks/gate-pipe-guard.sh\"; [ -x \"$f\" ] || { echo \"hook missing: $f, so a gate's status cannot be guarded: refusing. Restart Claude Code from a checkout that exists.\" >&2; exit 2; }; exec \"$f\"",
+            "timeout": 30
           }
         ]
       }
