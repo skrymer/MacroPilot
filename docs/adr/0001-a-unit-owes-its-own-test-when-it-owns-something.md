@@ -1,6 +1,6 @@
 # A unit owes its own test when it owns something; everything else is driven through the screen
 
-Everything here is built test-first, but for what only the pixels can show (below), and that settles *how* a test is written. It does not settle **which units get their own test and which are left to a higher-level one**. Answering that per feature risks the two failures either side: a mock-heavy test for code that has no rule of its own, or a genuine rule reachable only through a rendered screen that cannot easily put it at its boundary. `mutation-test`'s survivor triage needs the answer too: one of its verdicts is *killed by an out-of-scope layer*, and without a recorded rule about where a behaviour's red lives, that verdict is indistinguishable from an excuse.
+Everything here is built test-first, but for what only the pixels or the device can show (below), and that settles *how* a test is written. It does not settle **which units get their own test and which are left to a higher-level one**. Answering that per feature risks the two failures either side: a mock-heavy test for code that has no rule of its own, or a genuine rule reachable only through a rendered screen that cannot easily put it at its boundary. `mutation-test`'s survivor triage needs the answer too: one of its verdicts is *killed by an out-of-scope layer*, and without a recorded rule about where a behaviour's red lives, that verdict is indistinguishable from an excuse.
 
 ## The rule
 
@@ -26,6 +26,7 @@ There is no server, and so no HTTP boundary to drive a feature through ([`0003`]
 
 - **The wall clock**, behind the `Clock` port, which also carries the phone's UTC offset. Which **day** a meal at 23:30 belongs to is a clock and time-zone judgement, so a test must be able to put the phone outside UTC. `Date.now()` is refused by lint.
 - **Persistent storage**: `expo-sqlite`, behind a port. A store that keeps tables takes a narrow `SqlDatabase`, backed in its own test by `better-sqlite3`.
+- **The system's own question** (an action sheet, a dialog), behind an `Ask` port that says what is asked and answers yes or no. The platform draws it and answers it outside React, so no screen test can press *Delete* or *Cancel* on it. Its adapter is driven on the emulator, and on the iPhone with the epic.
 
 Expected, and added here by the slice that first needs each: the nutrition providers over the network, the camera that reads a barcode, and local notifications.
 
@@ -48,6 +49,8 @@ A **fake of a port is not a mock of an internal collaborator.** It is a second i
 One more is not a suite: **`/verify`**, on the Android emulator for an issue and the iPhone for an epic ([`0004`](./0004-an-issue-is-verified-on-the-emulator-and-an-epic-on-the-iphone.md)). How a screen looks (colour, safe areas, clipping at the largest text) is its, because Jest cannot see it without asserting on styles, which the screen tests refuse.
 
 **So a change only the pixels can show is driven by a measurement.** Test-first is enforced by probity, which would refuse it: a tab bar that kept the old appearance has no failing test, however plainly it is wrong. Its red is the fault measured in the pixels of the emulator's screen before the write, and its green is the same measured after. Probity reads what a command printed and never an image, so a photograph alone shows it nothing. `probity.config.ts` carries the limits. Anything Jest can see keeps its failing test.
+
+**The same holds for what only the device can show**: what takes focus as a page opens, whether the keyboard is up, and how the platform presents a page. React Native's Jest mock of `TextInput` focuses nothing, Jest presents no sheet, and asserting the prop that asks for either is refused by `testing/perceivable-only`, rightly, since it would pass while the keyboard stayed down. Its red is the fault measured on the emulator by a command (`dumpsys input_method`, the focused node, where an element stands) and its green is the same measured after, over the system's keyboard and not the headless one `agent-device` types with. It covers those three things and nothing a press leads to, a word or a figure says, or a test can drive.
 
 **There is no Maestro or Detox suite**, and neither may be cited as if there were.
 
