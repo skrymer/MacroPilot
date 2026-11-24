@@ -18,7 +18,7 @@
     "android": {
       "package": "com.skrymer.macropilot",
       "adaptiveIcon": {
-        "backgroundColor": "#F6F5F2",
+        "backgroundColor": "#00C16A",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       }
