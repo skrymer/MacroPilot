@@ -11,7 +11,7 @@ const ISOLATED = Object.fromEntries(
   Object.entries(process.env).filter(([name]) => !name.startsWith('GIT_')),
 );
 
-/** A git repo holding one committed file, and a screenshot outside it. */
+/** A git repo holding one committed file, and evidence of each kind outside it. */
 const repo = () => {
   const root = mkdtempSync(path.join(tmpdir(), 'charters-'));
   const git = (...args: string[]) => spawnSync('git', args, { cwd: root, env: ISOLATED });
@@ -21,7 +21,11 @@ const repo = () => {
   git('-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-qm', 'a');
   const shot = path.join(mkdtempSync(path.join(tmpdir(), 'shot-')), 'shot.png');
   writeFileSync(shot, 'png');
-  return { root, shot };
+  const snapshot = path.join(path.dirname(shot), 'snapshot.txt');
+  writeFileSync(snapshot, '@e2 [group] "Today" [selected]\n');
+  const empty = path.join(path.dirname(shot), 'empty.txt');
+  writeFileSync(empty, '');
+  return { root, shot, snapshot, empty };
 };
 
 const run = (root: string, ...args: string[]) => {
@@ -120,23 +124,25 @@ describe('charters.mjs', () => {
 
   it.each([
     ['no note', ['pass', '--screenshot', 'SHOT'], 'note'],
-    ['no screenshot', ['pass', '--note', 'one row'], 'screenshot'],
+    ['neither a snapshot nor a screenshot', ['pass', '--note', 'one row'], '--snapshot'],
+    ['an empty snapshot', ['pass', '--snapshot', 'EMPTY', '--note', 'one row'], 'empty'],
     [
-      'a screenshot that does not exist',
+      'evidence that does not exist',
       ['fail', '--screenshot', '/nowhere.png', '--note', 'x'],
-      'screenshot',
+      'does not exist',
     ],
     ['an unknown status', ['skipped', '--note', 'x'], 'status'],
   ])('refuses a result with %s', (_, args, named) => {
     // Given a registered charter
-    const { root, shot } = chartered();
+    const { root, shot, empty } = chartered();
+    const files: Record<string, string> = { SHOT: shot, EMPTY: empty };
 
     // When a result lacking what makes it evidence is recorded
     const { status, output } = run(
       root,
       'record',
       'EX-8.1',
-      ...args.map((arg) => (arg === 'SHOT' ? shot : arg)),
+      ...args.map((arg) => files[arg] ?? arg),
     );
 
     // Then it is refused, saying what is wrong
@@ -144,7 +150,20 @@ describe('charters.mjs', () => {
     expect(output).toContain(named);
   });
 
-  it('takes a blocked result without a screenshot, since there may be no screen', () => {
+  it('takes a snapshot as evidence, and shows where it is', () => {
+    // Given a registered charter, and the accessibility tree it ended on
+    const { root, snapshot } = chartered();
+
+    // When a pass is recorded with the snapshot
+    run(root, 'record', 'EX-8.1', 'pass', '--snapshot', snapshot, '--note', 'one row');
+
+    // Then the result stands, and names its evidence
+    const { status, output } = run(root, 'check', '8');
+    expect(status).toBe(0);
+    expect(output).toContain(snapshot);
+  });
+
+  it('takes a blocked result without evidence, since there may be no screen', () => {
     // Given a registered charter
     const { root } = chartered();
 

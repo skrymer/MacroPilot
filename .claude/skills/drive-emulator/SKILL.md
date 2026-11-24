@@ -5,7 +5,7 @@ description: Drives this app on the Android emulator. Boots it and loads this ch
 
 # Drive the emulator
 
-**The `agent-device` skill is how to drive; this is what it cannot know about this app.** The tool is a dev dependency, so `npx agent-device` in the repo is always the pinned version, and that skill is copied unchanged from the same version's tag: bump both together. For a command's shape, `npx agent-device help <command>`. The docs online describe a newer one.
+**The `agent-device` skill is how to drive; this is what it cannot know about this app.** The tool is a dev dependency, so `npx agent-device` in the repo is always the pinned version, and that skill is copied unchanged from the same version's tag: bump both together. For a command's shape, `npx agent-device help <command>`. The docs online name no version, so the help decides.
 
 Commands below have been run against this app, except those marked *unproven*.
 
@@ -22,13 +22,25 @@ ad wait text "Today" 30000
 - Metro first, with the `debug` skill. `emulator.sh` refuses another checkout's, boots nothing beside another checkout's mutation run, and says what else is missing. The machine is shared: look before a Gradle build too.
 - **`--metro-port` does not load this app**: it stops at the dev client's launcher. The link above does.
 - From a fresh install (`ad settings clear-app-state com.skrymer.macropilot`) the dev menu's introduction is in front: `press 'label="Continue"' --settle`, then `'label="Close"'`.
-- A screen: `ad open macropilot://<route> --platform android`, with the bundle loaded. From a killed app a link lands in the launcher.
+- A screen: `ad open macropilot://<route> --platform android`, with the bundle loaded. **A cold link** is force-stop, then the link, then a tap on the launcher's row for the server, which delivers it. Loading the bundle by its own link drops the waiting one, and then passes any check that expects Today. Run the control too: the same gesture on the development bundle has to show the page.
 - One agent drives one emulator. Finish with `ad close`, without `--shutdown`: `emulator.sh` booted it, not the session.
+
+## Drive it the tool's way
+
+The rules are the `agent-device` skill's. They are here because the first testers had them and broke them.
+
+- **Act with `--settle` and read the diff it prints.** `snapshot` again only when the diff lacks the next target.
+- **Wait for a thing, never `sleep`**: `wait text "…"`, `wait absent <selector>`.
+- **No pipes**: `| tail` and `| grep` drop the refs and the hints the next step needs. Chain sure steps with `&&`, or `ad batch`.
+- **Raw `adb` only for a move in the table below**, or for a race the tool cannot produce, such as links 60 ms apart.
 
 ## Check
 
-- A named expectation: `wait text`, `is`, `get`. **`find` clicks.** Wait for a thing, never for a time.
-- **Then look at the pixels.** `ad screenshot <file> --normalize-status-bar`, `--crop-on 'text="0 kcal"'` for one element. The tree has read "0 kcal" while the screen showed "0".
+- A named expectation: `is exists|absent|visible|text <selector>` exits non-zero when it fails; `wait text`, `get`. **`find` clicks.** Wait for a thing, never for a time.
+- **The evidence is the snapshot**: `ad snapshot --force-full > <file>`. Without the flag an unchanged screen prints an acknowledgement, not a tree; `-i` is for finding the next target and drops static text, so it never showed Today's header. A `--scope` that matches nothing is an empty tree, not an absence: for that, `is absent`. `charters.mjs` refuses an empty file.
+- **A tab shares its label with its page**: `label="Today"` matches three elements. The selected tab is `'role=group label="Today" selected=true'`.
+- A tree that looks stale: one screenshot and one fresh snapshot, never a loop.
+- **Look at the pixels where they decide**: colour, appearance, clipping, size, a figure. `ad screenshot <file> --normalize-status-bar`, `--crop-on 'text="0 kcal"'` for one element. The tree has read "0 kcal" while the screen showed "0".
 - An `ERROR` in Metro's log since the last probe fails it. So does a red badge at the bottom left.
 - The round gear is the dev client's, not the app's.
 
@@ -61,6 +73,7 @@ Photographs each route, top to bottom, at the five sizes ADR 0007 fixes. About f
 
 ## Traps
 
+- **A development load shows an `ImageBackground` warning toast over the tab bar** for some seconds, and a press on a tab hits it.
 - **A text-size change recreates the activity** and, in a development build, leaves two errors and a badge whose white bar hides the tab bar. `ad react-native dismiss-overlay` does not see it. Force-stop, and load the bundle again.
 - `scroll` reports `movement: unobserved` here, so it cannot tell the end of a page.
 - `adb shell uiautomator dump` fails while a session is open; `ad snapshot --raw --json` has the same data.
