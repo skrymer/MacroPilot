@@ -40,7 +40,8 @@ const Card = ({ children }: { children: ReactNode }) => (
 
 type Arc = { radius: number; width: number; filled: number; stroke: string };
 
-const SIZE = 200;
+/** Wide enough that the words under the figure clear the inner arc at double text, at 320dp. */
+const SIZE = 240;
 
 const ArcTrack = ({ radius, width, filled, stroke }: Arc) => {
   const around = 2 * Math.PI * radius;
@@ -79,6 +80,7 @@ type Day = {
   state: string;
   centre: string;
   unit: string;
+  proteinLeft: string;
   calories: number;
   protein: number;
   stroke: string;
@@ -92,6 +94,7 @@ const DAYS: Day[] = [
     state: 'Nothing logged yet',
     centre: '1840',
     unit: 'kcal left',
+    proteinLeft: '132\u00A0g protein to go',
     calories: 0,
     protein: 0,
     stroke: 'stroke-within',
@@ -101,6 +104,7 @@ const DAYS: Day[] = [
     state: 'In progress',
     centre: '620',
     unit: 'kcal left',
+    proteinLeft: '69\u00A0g protein to go',
     calories: 0.66,
     protein: 0.48,
     stroke: 'stroke-within',
@@ -110,6 +114,7 @@ const DAYS: Day[] = [
     state: 'On target',
     centre: '45',
     unit: 'kcal left',
+    proteinLeft: 'protein floor met',
     calories: 0.98,
     protein: 1,
     stroke: 'stroke-within',
@@ -119,6 +124,7 @@ const DAYS: Day[] = [
     state: 'Slightly over',
     centre: '96',
     unit: 'kcal over',
+    proteinLeft: 'protein floor met',
     calories: 1,
     protein: 1,
     stroke: 'stroke-slightly-over',
@@ -129,6 +135,7 @@ const DAYS: Day[] = [
     state: 'Over budget',
     centre: '410',
     unit: 'kcal over',
+    proteinLeft: '26\u00A0g protein to go',
     calories: 1,
     protein: 0.8,
     stroke: 'stroke-over',
@@ -141,6 +148,7 @@ const DayRing = ({
   state,
   centre,
   unit,
+  proteinLeft,
   calories,
   protein,
   stroke,
@@ -149,16 +157,17 @@ const DayRing = ({
 }: Day) => (
   <Card>
     <Ring
-      label={`${state}, ${centre} ${unit}`}
+      label={`${state}, ${centre} ${unit}, ${proteinLeft}`}
       arcs={[
-        { radius: 90, width: 14, filled: calories, stroke },
-        { radius: 70, width: 8, filled: protein, stroke: 'stroke-within' },
+        { radius: 110, width: 14, filled: calories, stroke },
+        { radius: 88, width: 8, filled: protein, stroke: 'stroke-within' },
       ]}
     >
       <Text className={`font-weighed text-figure ${figure}`}>{centre}</Text>
       <Text className="font-language text-label text-ink-mid">{unit}</Text>
     </Ring>
     <Text className={`mt-3 text-center font-language-bold text-body ${text}`}>{state}</Text>
+    <Text className="text-center font-language text-label text-ink-mid">{proteinLeft}</Text>
   </Card>
 );
 
@@ -171,7 +180,7 @@ const Entry = ({ name, detail, first = false, children }: EntrySpecimen) => (
       first ? '' : 'border-t'
     }`}
   >
-    <View className="shrink grow basis-40">
+    <View className="min-w-name flex-1">
       <Text className="font-language text-body text-ink">{name}</Text>
       <Text className="font-language text-label text-ink-mid">{detail}</Text>
     </View>
@@ -186,7 +195,9 @@ const Action = ({ label, solid = false }: { label: string; solid?: boolean }) =>
       solid ? 'bg-ink' : 'border border-ink'
     }`}
   >
-    <Text className={`font-language-bold text-body ${solid ? 'text-ground' : 'text-ink'}`}>
+    <Text
+      className={`text-center font-language-bold text-body ${solid ? 'text-ground' : 'text-ink'}`}
+    >
       {label}
     </Text>
   </Pressable>
@@ -261,7 +272,7 @@ export default function Design() {
           <Card>
             <Ring
               label="Goal, 4.2 kilograms to go"
-              arcs={[{ radius: 90, width: 14, filled: 0.58, stroke: 'stroke-within' }]}
+              arcs={[{ radius: 110, width: 14, filled: 0.58, stroke: 'stroke-within' }]}
             >
               <Text className="font-weighed text-figure text-ink">4.2</Text>
               <Text className="font-language text-label text-ink-mid">kg to go</Text>
@@ -274,23 +285,23 @@ export default function Design() {
           note="Weighed is solid. Estimated is lighter, and says so. An unknown is words. A known zero is a figure."
         >
           <View className="mb-3 rounded-2xl bg-surface px-4 py-1">
-            <Entry first name="Chicken thigh, roasted" detail="180 g, 46 g protein">
+            <Entry first name="Chicken thigh, roasted" detail={'180\u00A0g, 46\u00A0g protein'}>
               <Text className="font-weighed text-body text-ink">{'376\u00A0kcal'}</Text>
             </Entry>
             <Entry name="Lunch at the canteen" detail="Estimate, protein not stated">
               <Text className="font-estimated text-body text-ink-mid">{'about 650\u00A0kcal'}</Text>
             </Entry>
-            <Entry name="Black coffee" detail="250 g, 0 g protein">
+            <Entry name="Black coffee" detail={'250\u00A0g, 0\u00A0g protein'}>
               <Text className="font-weighed text-body text-ink">{'0\u00A0kcal'}</Text>
             </Entry>
-            <Entry name="Fibre" detail="Rye bread, per 100 g">
+            <Entry name="Fibre" detail={'Rye bread, per 100\u00A0g'}>
               <Text className="font-absence text-body text-ink-dim">not stated</Text>
             </Entry>
           </View>
         </Section>
 
         <Section title="Actions" note="Ink, never a hue: a button expresses no verdict.">
-          <Action solid label="Log 180 g" />
+          <Action solid label={'Log 180\u00A0g'} />
           <Action label="Log an estimate instead" />
         </Section>
 

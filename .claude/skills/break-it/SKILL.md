@@ -7,11 +7,11 @@ description: Sends a fresh break-it tester at a change on the Android emulator, 
 
 `verify` checks what the issue asked for. This checks what nobody asked about. A **fresh** `break-it-tester` agent does it: never explore in this conversation, and never hand the tester the walk-through's results, so it doesn't anchor on what passed.
 
-Run `s=.claude/skills/break-it/scripts` from the repo root.
+Run `s=.claude/skills/break-it/scripts` and `e=.claude/skills/drive-emulator/scripts` from the repo root.
 
 | Command | Does |
 | --- | --- |
-| `$s/emulator.sh` | Boots the emulator if none runs, checks the app is installed and Metro answers, and prints the serial. Stops, saying what is missing, rather than carry on |
+| `$e/emulator.sh` | Boots the emulator if none runs, checks the app is installed and Metro answers, and prints the serial. Stops, saying what is missing, rather than carry on |
 | `node $s/charters.mjs head <issue>` | Stamps the code, drops rows recorded on other code, prints the results and screenshot directory |
 | `node $s/charters.mjs charter <issue> "<charter>"` | Registers a charter, prints its key |
 | `node $s/charters.mjs record <key> <status> --screenshot <file> --note "<text>"` | Records a result. Refused once the code has changed |
@@ -19,7 +19,7 @@ Run `s=.claude/skills/break-it/scripts` from the repo root.
 
 ## Workflow
 
-1. **Device and code.** `$s/emulator.sh`, then `node $s/charters.mjs head <issue>`. Note the serial and the directory. Don't change code from here until `check` passes.
+1. **Device and code.** `$e/emulator.sh`, then `node $s/charters.mjs head <issue>`. Note the serial and the directory. Don't change code from here until `check` passes.
 2. **Spawn the tester** (`subagent_type: break-it-tester`) with this brief, every slot filled:
 
    ```
@@ -30,7 +30,7 @@ Run `s=.claude/skills/break-it/scripts` from the repo root.
    Charters: node <absolute path to charters.mjs>; run from the repo root
    Screenshots: <the directory head printed>
    Emulator: <serial>
-   Driving: <absolute path to references/driving.md>
+   Driving: <absolute paths to the agent-device and drive-emulator SKILL.md>
    Heuristics: <absolute path to references/heuristics.md>; inputs: <absolute path to references/inputs.md>
    ```
 

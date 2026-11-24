@@ -1,6 +1,6 @@
 ---
 name: feature-sign-off
-description: The pre-commit sign-off gate for a finished feature or fix. Runs five quality gates in order — /simplify, /mutation-test, /code-review, /check-adrs, then /verify on the Android emulator — fixing what each surfaces before moving on, and only then commits and pushes. Use when a change is functionally complete and the user says "sign off", "ready to commit", "ready to push", "wrap up this feature", "run the gates", or before opening a PR.
+description: The pre-commit sign-off gate for a finished feature or fix. Runs five quality gates in order — /simplify, /mutation-test, /code-review, /check-adrs, then /verify on the Android emulator — fixing what each surfaces before moving on, and only then commits and pushes, with a post-mortem after that turns what the run cost into changes to the process. Use when a change is functionally complete and the user says "sign off", "ready to commit", "ready to push", "wrap up this feature", "run the gates", or before opening a PR.
 ---
 
 # Feature sign-off
@@ -25,6 +25,8 @@ Address what each surfaces *before* starting the next. If a later fix changes be
 
 5. **`/verify` — does it actually work?** Last, so what was verified is what ships: every gate before it can edit the tree. On the Android emulator, in two parts: the acceptance criteria, then `/break-it` beyond them ([`0004`](../../../docs/adr/0004-an-issue-is-verified-on-the-emulator-and-an-epic-on-the-iphone.md)). The user is not part of it. What the emulator cannot show goes on the issue's *Needs a phone* list. A change no screen can show may `SKIP` with a named reason. A FAIL stops the sign-off; its fix goes back through the gates it touches first.
 
+6. **`/post-mortem` — what should the next session not have to learn again?** After the gates, a fresh agent mines the transcripts and each lesson goes into the one file it would have been read from, on a branch of its own. It judges the process and never this change, so it does not hold the merge. "Nothing worth recording" is a result.
+
 ## What this repo's gates bite on
 
 - **An unknown shown as a figure.** An unlogged day is not a day at 0 kcal, and a food with no protein figure is not 0 g. `/verify` and the screen test's sibling case.
@@ -37,7 +39,7 @@ Address what each surfaces *before* starting the next. If a later fix changes be
 
 ## After the gates
 
-Only once all five are green, or every non-green item is fixed or explicitly justified:
+Only once the five gates are green, or every non-green item is fixed or explicitly justified:
 
 1. Re-run the suite if any gate changed code: `npm run lint && npm run typecheck && npm test`.
 2. **Commit on a feature branch, never straight to `main`.** Group commits by concern.
@@ -54,6 +56,7 @@ Only once all five are green, or every non-green item is fixed or explicitly jus
 3. /code-review   ⚠️ 2 findings → both fixed; 1 by-design
 4. /check-adrs    ✅ no conflicts
 5. /verify        ⚠️ 5/5 ACs; 4 charters, 1 fail (double tap logged twice) → fixed, re-verified ✅
+6. /post-mortem  ✅ 2 lessons: one into drive-emulator, one a lint rule (PR #n)
 
 Needs a phone: the decimal keyboard on iOS; VoiceOver on the grams field
 

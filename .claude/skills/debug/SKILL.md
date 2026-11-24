@@ -11,7 +11,7 @@ description: Starts Metro in the background for the development build with its o
 
 It stops this checkout's own stale Metro on port 8081 (or `METRO_PORT`), starts a new one over LAN without `CI=1`, and prints the address the phone should reach. **Exit 3 means another checkout holds the port**: never stop it, run with `METRO_PORT=8082`.
 
-Then the phone: same Wi-Fi, **force-quit and reopen the app**. The emulator: `break-it`'s `emulator.sh`, which takes `METRO_PORT` too.
+Then the phone: same Wi-Fi, **force-quit and reopen the app**. The emulator: `drive-emulator`'s `emulator.sh`, which takes `METRO_PORT` too.
 
 - A fresh `Bundled` line after an edit is the only proof the device runs it.
 - A class new to the codebase needs `npx expo start --dev-client --clear`.

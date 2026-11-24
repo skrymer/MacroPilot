@@ -41,7 +41,7 @@ app/             Expo Router screens: present values, judge nothing
    A new feature's screen, or a change to one that exists, then gets a **`/prototype`** the user judges. A screen ported from the reference app does not.
 2. **`/to-issues`**: break it into independently grabbable GitHub issues.
 3. **`/tdd`** with **`rn-dev`**: one red-green slice at a time.
-4. **`/feature-sign-off`**: `/simplify`, `/mutation-test`, `/code-review medium`, `/check-adrs`, `/verify`, in that order.
+4. **`/feature-sign-off`**: `/simplify`, `/mutation-test`, `/code-review medium`, `/check-adrs`, `/verify`, in that order, then `/post-mortem`, which turns what the run cost into changes to the process.
 
 Then commit on a feature branch, push, open a PR, and merge when CI is green, without asking. Small slices of one PRD may share a PR and a sign-off.
 
@@ -63,7 +63,7 @@ Expo with a dev build (never Expo Go), Expo Router, TypeScript strict, NativeWin
 
 ## Agent skills
 
-In [`.claude/skills/`](./.claude/skills/): `rn-dev` (read it first for any app change), `platform-conventions`, `component-testing-best-practices`, `verify`, `break-it` (an exploring tester on the emulator), `debug`, `prototype` (new features and changes to screens, never a ported one), `mutation-test`, `check-adrs`, `feature-sign-off`.
+In [`.claude/skills/`](./.claude/skills/): `rn-dev` (read it first for any app change), `platform-conventions`, `component-testing-best-practices`, `verify`, `break-it` (an exploring tester on the emulator), `drive-emulator` and `agent-device` (how both drive the app), `debug`, `prototype` (new features and changes to screens, never a ported one), `mutation-test`, `check-adrs`, `post-mortem`, `feature-sign-off`.
 
 ### Issue tracker
 

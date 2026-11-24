@@ -1,6 +1,6 @@
 # Heuristics: attacks for exploratory charters on Android
 
-Charters take their attacks from these families. [driving.md](driving.md) has the command for each move. [inputs.md](inputs.md) owns the input shapes.
+Charters take their attacks from these families. [drive-emulator](../../drive-emulator/SKILL.md) has the command for each move. [inputs.md](inputs.md) owns the input shapes.
 
 ## Interrupt
 

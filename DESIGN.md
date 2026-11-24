@@ -27,7 +27,7 @@ Both appearances are in `design-tokens.js`, and every pair is held to WCAG in bo
 
 ## Signature: the rings
 
-**The full circle is the target.** The day is two arcs: calories outside and thick, protein inside and thin. They are told apart by place, width and name, never by hue. The goal is one arc. The arc takes the hue of where it stands; its track is `line`. Its ends are round, and flat once the gap left is too small for round ones, which would meet and read as a fault. An empty day is an empty track, not a missing ring.
+**The full circle is the target.** The day is two arcs: calories outside and thick, protein inside and thin. They are told apart by place, width and name, never by hue, so **protein's standing is also in words**, on the card and in what a screen reader hears. The goal is one arc. The arc takes the hue of where it stands; its track is `line`. Its ends are round, and flat once the gap left is too small for round ones, which would meet and read as a fault. An empty day is an empty track, not a missing ring.
 
 The figure in the centre is `ink` while the day is within its budget, `slightly-over` past it and `over` past the tolerance: the arc and the figure say one thing. It is the one figure that takes a hue, because it is the day's standing and not a food's. The goal's is always `ink`.
 
@@ -48,7 +48,7 @@ The figure in the centre is `ink` while the day is within its budget, `slightly-
 
 Figure sizes never scale with the user's text size; everything else scales to double ([`0007`](./docs/adr/0007-figures-are-fixed-size-and-text-scales-to-double.md)).
 
-**A row reflows.** Name and figure stand side by side while both fit, and the figure drops below the name when they do not. Nothing holding text has a fixed height, and nothing that matters ends in an ellipsis. The worst case is text at double on a screen 320 points wide.
+**A row reflows.** Name and figure stand side by side while both fit, and the figure drops below the name when they do not: the name keeps `min-w-name`. Nothing holding text has a fixed height, and nothing that matters ends in an ellipsis. The worst case is text at double on a screen 320 points wide.
 
 ## Controls
 
