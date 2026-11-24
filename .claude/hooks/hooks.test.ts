@@ -119,6 +119,16 @@ const configuredCommands = (): string[] => {
 };
 
 describe('.claude/settings.json', () => {
+  it.each(['bash-write-guard.sh', 'gate-pipe-guard.sh'])('registers %s', (script) => {
+    // Given a guard on Bash
+
+    // When the configured hooks are listed
+    const commands = configuredCommands().join('\n');
+
+    // Then it is among them
+    expect(commands).toContain(script);
+  });
+
   it.each(configuredCommands())(
     'refuses, rather than letting the tool call through, when its script is gone: %s',
     (command) => {
@@ -145,7 +155,12 @@ describe('.claude/settings.json', () => {
       // Given a project whose hook scripts each report what they were handed, and allow
       const projectDir = directory('project');
       mkdirSync(path.join(projectDir, '.claude/hooks'), { recursive: true });
-      for (const script of ['probity.sh', 'bash-write-guard.sh', 'lint-edited-file.sh']) {
+      for (const script of [
+        'probity.sh',
+        'bash-write-guard.sh',
+        'gate-pipe-guard.sh',
+        'lint-edited-file.sh',
+      ]) {
         const file = path.join(projectDir, '.claude/hooks', script);
         writeFileSync(file, `#!/usr/bin/env bash\necho "${script} $* <$(cat)>" >&2\n`);
         chmodSync(file, 0o755);
@@ -252,6 +267,14 @@ const guarded = (command: string, cwd: string, projectDir = cwd) => {
   return runHook(GUARD, ['post'], input, projectDir, env);
 };
 
+/** Commits `file` to `root`, holding what `src/a.ts` does. */
+const commitFile = (root: string, file: string) => {
+  mkdirSync(path.dirname(path.join(root, file)), { recursive: true });
+  writeFileSync(path.join(root, file), ORIGINAL);
+  git(root, 'add', '-A');
+  git(root, 'commit', '-q', '--allow-empty', '-m', file);
+};
+
 /** The hook input for a Bash tool call of `command` from `cwd`. */
 const bashCall = (command: string, cwd: string) =>
   JSON.stringify({ tool_use_id: randomUUID(), cwd, tool_name: 'Bash', tool_input: { command } });
@@ -290,18 +313,63 @@ describe('bash-write-guard.sh', () => {
     expect(stderr).toContain('src/new/b.ts');
   });
 
-  it('puts back a guarded file a Bash command deleted, and says who can delete one', () => {
+  it.each([['src/a.ts'], ['app/(tabs)/old.tsx']])('lets Bash delete %s, a source file', (file) => {
+    // Given a checkout holding a guarded source file
+    const root = guardedCheckout();
+    commitFile(root, file);
+
+    // When Bash deletes it, as a route move or a refactor does
+    const { status } = guarded(`git rm -q '${file}'`, root);
+
+    // Then it stays deleted
+    expect(status).toBe(0);
+    expect(existsSync(path.join(root, file))).toBe(false);
+  });
+
+  it.each([
+    ['a test', 'src/a.test.ts'],
+    ['a screen’s test', 'app/day.test.tsx'],
+    ['a lint rule', 'eslint-rules/touch-target.js'],
+    ['the lint config', 'eslint.config.js'],
+  ])('puts back %s that Bash deleted, and says to ask the user', (_, file) => {
+    // Given a checkout holding a file that checks the others
+    const root = guardedCheckout();
+    commitFile(root, file);
+
+    // When Bash deletes it
+    const { status, stderr } = guarded(`git rm -q '${file}'`, root);
+
+    // Then it is back, and Claude is told who can delete it
+    expect(read(path.join(root, file))).toBe(ORIGINAL);
+    expect(status).toBe(2);
+    expect(stderr).toContain(`rm ${path.join(root, file)}`);
+    expect(stderr).toContain('ask the user');
+  });
+
+  it('puts a source file back when Bash moved it, rather than lose it at both ends', () => {
     // Given a checkout whose src/a.ts probity guards
     const root = guardedCheckout();
 
-    // When Bash deletes it
-    const { status, stderr } = guarded('git rm -q src/a.ts', root);
+    // When Bash moves it, creating a file probity never saw
+    const { status } = guarded('git mv src/a.ts src/moved.ts', root);
 
-    // Then it is back, and Claude is told to ask the user, since Edit and Write cannot delete
-    expect(srcA(root)).toBe(ORIGINAL);
+    // Then it is where it was
     expect(status).toBe(2);
-    expect(stderr).toContain(`rm ${path.join(root, 'src/a.ts')}`);
-    expect(stderr).toContain('ask the user');
+    expect(srcA(root)).toBe(ORIGINAL);
+    expect(existsSync(path.join(root, 'src/moved.ts'))).toBe(false);
+  });
+
+  it('puts back a test that Bash moved away as source', () => {
+    // Given a checkout holding a test
+    const root = guardedCheckout();
+    commitFile(root, 'src/a.test.ts');
+
+    // When Bash renames it to something that is not one
+    guarded('git mv src/a.test.ts src/b.ts', root);
+
+    // Then the test is back, and what it was moved to is gone
+    expect(read(path.join(root, 'src/a.test.ts'))).toBe(ORIGINAL);
+    expect(existsSync(path.join(root, 'src/b.ts'))).toBe(false);
   });
 
   it('says nothing of deleting when a file was only changed', () => {
