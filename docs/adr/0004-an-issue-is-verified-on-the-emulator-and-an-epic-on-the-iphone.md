@@ -6,7 +6,7 @@ The app ships on iOS and Android. The development machine runs Linux: it has no 
 
 | Level | Who | What | Result |
 | --- | --- | --- | --- |
-| **Issue** | The agent, on the Android emulator | A walk-through of the acceptance criteria, then a break-it tester exploring beyond them. No iPhone and no user | The pull request merges to `main` when CI is green |
+| **Issue** | The agent, on the Android emulator | A walk-through of the acceptance criteria, then a comparison with the running reference app, then a break-it tester exploring beyond the criteria. No iPhone and no user | The pull request merges to `main` when CI is green |
 | **Epic** (a PRD) | The agent on the emulator, then the user on the iPhone | The agent walks the epic whole, including flows that cross issues, and the break-it tester explores its whole diff. The user then tests it by hand on iOS, from a short written script on an EAS dev build | Findings become issues in the same epic. It closes when the user passes it |
 
 **The epic blocks, the issue does not.** The next epic may be grilled and its issues written while the user tests, but building it starts only once the current one has passed, so an iOS-only fault does not spread. Epics are kept to around five to eight issues, because that fault is found at their end.
@@ -19,7 +19,9 @@ The app ships on iOS and Android. The development machine runs Linux: it has no 
 
 **The agent drives the app with [agent-device](https://incubator.callstack.com/agent-device/docs/introduction)**, reading the screen as an accessibility snapshot. It was chosen over Maestro because it is built for an agent exploring, where Maestro runs flows someone wrote. It is a dev dependency at an exact version, and its own `agent-device` skill is copied unchanged from that version's tag, because the skills and docs on its main branch describe commands a released version may not have. What it cannot know about this app is in `drive-emulator`.
 
-**Two parts, two minds.** The walk-through asks whether each criterion has evidence. The break-it tester asks what nobody asked about, in a fresh context that never sees what passed, because a pass you know about is a place you stop looking. **It runs on every issue and again on every epic.** On an issue it finds a fault while the change is small and not yet merged. On an epic it finds the faults between issues, such as a food corrected on one screen and logged on another, which no issue's diff holds.
+**Two minds.** The walk-through and the comparison ask whether what was meant is there, with evidence. The break-it tester asks what nobody asked about, in a fresh context that never sees what passed, because a pass you know about is a place you stop looking. **It runs on every issue and again on every epic.** On an issue it finds a fault while the change is small and not yet merged. On an epic it finds the faults between issues, such as a food corrected on one screen and logged on another, which no issue's diff holds.
+
+**What is ported is compared with what it is ported from.** The criteria are written from the reference app and can misstate it, and the tests' expected figures are worked out by whoever writes the code, so every gate can pass on a rule that differs. The same inputs therefore go to the reference app's running backend and screens and to this one, unrounded where they are figures, and each difference is agreed, out of scope, fixed, or put to the user. Reading its source was the only comparison before, and nothing required it. It ends when the port is complete, since after that the two are free to part.
 
 **It is per change, not a regression suite.** Jest is the regression net, and a break found becomes a failing Jest test before it is fixed, or a measured one when only the pixels can show it ([`0001`](./0001-a-unit-owes-its-own-test-when-it-owns-something.md)).
 

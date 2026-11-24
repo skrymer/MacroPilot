@@ -23,7 +23,7 @@ Address what each surfaces *before* starting the next. If a later fix changes be
 
 4. **`/check-adrs` — honour the recorded decisions.** Judge the final diff against `docs/adr/` and the language in `CONTEXT.md`. A FAIL is either a code fix or a same-PR doc fix — the user's call, surfaced rather than decided quietly.
 
-5. **`/verify` — does it actually work?** Last, so what was verified is what ships: every gate before it can edit the tree. On the Android emulator, in two parts: the acceptance criteria, then `/break-it` beyond them ([`0004`](../../../docs/adr/0004-an-issue-is-verified-on-the-emulator-and-an-epic-on-the-iphone.md)). The user is not part of it. What the emulator cannot show goes on the issue's *Needs a phone* list. A change no screen can show may `SKIP` with a named reason. A FAIL stops the sign-off; its fix goes back through the gates it touches first.
+5. **`/verify` — does it actually work?** Last, so what was verified is what ships: every gate before it can edit the tree. On the Android emulator, in three parts: the acceptance criteria, then the same inputs in the running reference app's backend and screens, then `/break-it` beyond them ([`0004`](../../../docs/adr/0004-an-issue-is-verified-on-the-emulator-and-an-epic-on-the-iphone.md)). The user is not part of it. What the emulator cannot show goes on the issue's *Needs a phone* list. A change no screen can show may `SKIP` with a named reason. A FAIL stops the sign-off; its fix goes back through the gates it touches first.
 
 6. **`/post-mortem` — what should the next session not have to learn again?** After the gates, a fresh agent mines the transcripts and each lesson goes into the one file it would have been read from, on a branch of its own. It judges the process and never this change, so it does not hold the merge. "Nothing worth recording" is a result.
 
@@ -55,7 +55,7 @@ Only once the five gates are green, or every non-green item is fixed or explicit
 2. /mutation-test ⚠️ 38/44 killed. 6 survivors → 1 real gap (test written), 4 equivalent, 1 out-of-scope (/verify)
 3. /code-review   ⚠️ 2 findings → both fixed; 1 by-design
 4. /check-adrs    ✅ no conflicts
-5. /verify        ⚠️ 5/5 ACs; 4 charters, 1 fail (double tap logged twice) → fixed, re-verified ✅
+5. /verify        ⚠️ 5/5 ACs; parity 120 compared, 2 agreed differences; 4 charters, 1 fail (double tap logged twice) → fixed, re-verified ✅
 6. /post-mortem  ✅ 2 lessons: one into drive-emulator, one a lint rule (PR #n)
 
 Needs a phone: the decimal keyboard on iOS; VoiceOver on the grams field
