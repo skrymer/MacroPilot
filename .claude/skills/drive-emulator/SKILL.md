@@ -77,7 +77,8 @@ Photographs each route, top to bottom, at the five sizes ADR 0007 fixes. About f
 
 - **`ad close` sends the app to the launcher**: measure and photograph before it.
 - **The manifest comes from the installed build**, not from Metro. A change to `app.json` or a plugin needs a prebuild, a Gradle build and a reinstall, and so does going back.
-- **A development load shows an `ImageBackground` warning toast over the tab bar** for some seconds, and a press on a tab hits it. `snapshot -i` then shows a group starting "!" and hints at `ad react-native dismiss-overlay` (*unproven* on it).
+- **A development load shows an `ImageBackground` warning toast over the tab bar.** It has stayed over 12 s, and catches a press on a tab, which opens the LogBox. Open pages by link instead (`ad open macropilot://developer --platform android`). If the LogBox opens: `ad press 'role=group label="Dismiss"' --settle`; `label="Dismiss"` alone is ambiguous.
+- **Selectors match exactly.** There is no `text*=`, which is refused as invalid.
 - **A text-size change recreates the activity** and, in a development build, leaves two errors and a badge whose white bar hides the tab bar. `ad react-native dismiss-overlay` does not see it. Force-stop, and load the bundle again.
 - `scroll` reports `movement: unobserved` here, so it cannot tell the end of a page.
 - `adb shell uiautomator dump` fails while a session is open; `ad snapshot --raw --json` has the same data.
