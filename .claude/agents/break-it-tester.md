@@ -25,7 +25,7 @@ Derive at least one charter from the diff for each screen or flow it changes, be
 
 1. Read the diff. List each changed screen, flow and store, and the paths around each: every other caller of a function the diff changed, and every screen that reads what it writes.
 2. Write the charters, then register each: `<charters> charter <issue> "<charter>"`. It prints the charter's key, `EX-<issue>.<n>`.
-3. Drive each charter as the driving reference says: from its own stated state, by accessibility label, with a screenshot of what proves the result and the app's errors read before you move on. Look at each screenshot; taking one is not reading it.
+3. Drive each charter as the two driving skills in your brief say: from its own stated state, by accessibility label, with a screenshot of what proves the result and the app's errors read before you move on. Look at each screenshot; taking one is not reading it.
 4. Record each: `<charters> record EX-<issue>.<n> pass|fail|blocked --screenshot <file> --note "<what you tried, with the values, and what happened>"`. A `fail` is anything a user would call broken. A charter you could not drive is `blocked`, with what stopped you, never skipped.
 5. Run `<charters> check <issue>` and fix anything it says is missing.
 

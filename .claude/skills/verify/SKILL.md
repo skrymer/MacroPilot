@@ -10,7 +10,7 @@ Runtime evidence that a change works. Tests already ran. Who verifies what is [`
 ## Before the first probe
 
 1. Start Metro with the `debug` skill.
-2. `.claude/skills/break-it/scripts/emulator.sh` boots the emulator and prints its serial. Drive it as [driving.md](../break-it/references/driving.md) says.
+2. Boot and drive the emulator with the `drive-emulator` skill.
 3. **Confirm the device fetched the bundle**: Metro's log shows a fresh `Android Bundled` line after the latest edit. Without it every probe tests old code.
 4. A schema change needs `clear-app-state`, or the old database stays.
 
@@ -19,7 +19,8 @@ Runtime evidence that a change works. Tests already ran. Who verifies what is [`
 List the issue's criteria. Give each evidence: the exact expectation checked on the screen, and a screenshot you have looked at. **A criterion with no evidence is a FAIL**, however much else passed. For a screen the change touched, always:
 
 - **Unknowns.** A fresh install, an empty day, a food with a missing figure. A number or a dash there is a FAIL; so is a known zero that is hidden.
-- **Both appearances**, and **the largest text size**: figures hold, text stops at double, nothing clips.
+- **Every size**: run `drive-emulator`'s `sizes.sh` on its route and look at every photo. Figures hold, text stops at double, nothing clips, no word breaks, no figure is parted from its unit ([`0007`](../../../docs/adr/0007-figures-are-fixed-size-and-text-scales-to-double.md)).
+- **Both appearances**, the light one at the default size included.
 - **Persistence.** Kill and reopen.
 
 A criterion the emulator cannot show names the Jest test that covers it, or goes under *Needs a phone*.
@@ -52,4 +53,4 @@ When a PRD's last issue has merged:
 1. Walk the PRD's user stories end to end on the emulator, on `main`, from a fresh install. Cross the issues: what one wrote, read on another's screen.
 2. Run `/break-it` on the PRD, over the epic's whole diff. Settle its findings before the user is asked for anything.
 3. Merge the issues' *Needs a phone* lists, and the epic tester's, into one script for the user to run on iOS: numbered steps, one action each, the expected screen in the app's own words, from a fresh install, ten minutes at most. If a native package was added, it starts with the EAS build to run.
-4. Post it on the PRD and stop. Each finding becomes an issue in this epic. The user's pass closes it.
+4. Post it on the PRD and stop. Each finding becomes an issue in this epic. The user's pass closes it, and `/post-mortem` runs on the epic.

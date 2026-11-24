@@ -17,7 +17,7 @@ The app ships on iOS and Android. The development machine runs Linux: it has no 
 
 ### On the emulator
 
-**The agent drives the app with [agent-device](https://incubator.callstack.com/agent-device/docs/introduction)**, reading the screen as an accessibility snapshot. It was chosen over Maestro because it is built for an agent exploring, where Maestro runs flows someone wrote. Its version is pinned in one place, the `break-it` skill's driving reference.
+**The agent drives the app with [agent-device](https://incubator.callstack.com/agent-device/docs/introduction)**, reading the screen as an accessibility snapshot. It was chosen over Maestro because it is built for an agent exploring, where Maestro runs flows someone wrote. It is a dev dependency at an exact version, and its own `agent-device` skill is copied unchanged from that version's tag, because the skills and docs on its main branch describe commands a released version may not have. What it cannot know about this app is in `drive-emulator`.
 
 **Two parts, two minds.** The walk-through asks whether each criterion has evidence. The break-it tester asks what nobody asked about, in a fresh context that never sees what passed, because a pass you know about is a place you stop looking. **It runs on every issue and again on every epic.** On an issue it finds a fault while the change is small and not yet merged. On an epic it finds the faults between issues, such as a food corrected on one screen and logged on another, which no issue's diff holds.
 
