@@ -12,8 +12,8 @@ Run `s=.claude/skills/break-it/scripts` and `e=.claude/skills/drive-emulator/scr
 | Command | Does |
 | --- | --- |
 | `$e/emulator.sh` | Boots the emulator if none runs, checks the app is installed and Metro answers, and prints the serial. Stops, saying what is missing, rather than carry on |
-| `node $s/charters.mjs head <issue>` | Stamps the code, drops rows recorded on other code, prints the results and evidence directory |
-| `node $s/charters.mjs charter <issue> "<charter>"` | Registers a charter, prints its key |
+| `node $s/charters.mjs head <issue>` | Stamps the code and measures the change, drops rows recorded on other code, prints the results and evidence directory |
+| `node $s/charters.mjs charter <issue> "<charter>"` | Registers a charter, prints its key. A fifth is refused while the app's lines in the change, its tests aside, are 100 or fewer |
 | `node $s/charters.mjs record <key> <status> --snapshot <file> --note "<text>"` | Records a result. `--screenshot <file>` too, or instead, where the pixels decide ([`0004`](../../../docs/adr/0004-an-issue-is-verified-on-the-emulator-and-an-epic-on-the-iphone.md)). Refused once the code has changed |
 | `node $s/charters.mjs check <issue>` | Fails on no charter, or on one with no result |
 
@@ -35,17 +35,17 @@ Run `s=.claude/skills/break-it/scripts` and `e=.claude/skills/drive-emulator/scr
    Heuristics: <absolute path to references/heuristics.md>; inputs: <absolute path to references/inputs.md>
    ```
 
-   Its contract is in its definition. Add nothing that says what passed, and no time limit. If it is slow, read its charters and send it where the risk is.
+   Its contract is in its definition. Add nothing that says what passed, and no time limit. If it is slow, read its charters and send it where the risk is. Settle here, on the emulator, whether the diff caused what it found.
 3. **Check:** `node $s/charters.mjs check <issue>`. When it fails, send the tester back to what it names.
 4. **Report** each charter's result as `check` printed it, then the tester's findings in its own words.
 
 ## On an epic
 
-The same workflow, with the PRD's number for `<issue>`, on `main`. The change is `git diff <the commit before the epic's first merge>`. Tell the tester to charter what crosses issues: what one wrote, read, corrected or deleted from another's screen.
+The same workflow, with the PRD's number for `<issue>`, on `main`. The change is `git diff <the commit before the epic's first merge>`, and that commit is `head`'s `--base`, or the epic measures as nothing. Tell the tester to charter what crosses issues: what one wrote, read, corrected or deleted from another's screen.
 
 ## What a finding is
 
-A `fail` is not yours to dismiss. Each one is a bug in the diff, or behaviour nothing defines. A bug becomes a failing Jest test before it is fixed, or a measured fault when only the pixels can show it ([`0001`](../../../docs/adr/0001-a-unit-owes-its-own-test-when-it-owns-something.md)), and the fix goes back through the gates it touches. Undefined behaviour is settled against what the app this is built from does, when the user has named one; otherwise it becomes an issue and goes to the user with the epic, not in the middle of the issue. On an epic, findings are settled before the user's test on iOS.
+A `fail` is not yours to dismiss. Before one becomes a criterion or is fixed, say which screen of a release build shows it. If none does, or it proves intermittent, put its size to the user first. Each one is a bug in the diff, or behaviour nothing defines. A bug becomes a failing Jest test before it is fixed, or a measured fault when only the pixels can show it ([`0001`](../../../docs/adr/0001-a-unit-owes-its-own-test-when-it-owns-something.md)), and the fix goes back through the gates it touches. Undefined behaviour is settled against what the app this is built from does, when the user has named one; otherwise it becomes an issue and goes to the user with the epic, not in the middle of the issue. On an epic, findings are settled before the user's test on iOS.
 
 *Needs a phone* items go on the epic's list for the user's test.
 

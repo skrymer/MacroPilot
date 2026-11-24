@@ -16,7 +16,7 @@ Runtime evidence that a change works. Tests already ran. Who verifies what is [`
 
 ## Part 1: the acceptance criteria
 
-List the issue's criteria. Give each evidence: the exact expectation checked on the screen, and the snapshot that shows it, saved to a file. Where the pixels decide (colour, appearance, clipping, size, a figure), a screenshot you have looked at ([`0004`](../../../docs/adr/0004-an-issue-is-verified-on-the-emulator-and-an-epic-on-the-iphone.md)). **A criterion with no evidence is a FAIL**, however much else passed. For a screen the change touched, always:
+List the issue's criteria. Give each evidence: the exact expectation checked on the screen, and the snapshot that shows it, saved to a file. Where the pixels decide (colour, appearance, clipping, size, a figure), a screenshot you have looked at ([`0004`](../../../docs/adr/0004-an-issue-is-verified-on-the-emulator-and-an-epic-on-the-iphone.md)). **A criterion with no evidence is a FAIL**, however much else passed. When one criterion names a path (the background, both directions, another tab), every criterion is driven on it. Until `charters.mjs check` passes, report criteria as measured and never the issue as fixed. For a screen the change touched, always:
 
 - **Unknowns.** A fresh install, an empty day, a food with a missing figure. A number or a dash there is a FAIL; so is a known zero that is hidden.
 - **Every size**: run `drive-emulator`'s `sizes.sh` on its route and look at every photo. Figures hold, text stops at double, nothing clips, no word breaks, no figure is parted from its unit ([`0007`](../../../docs/adr/0007-figures-are-fixed-size-and-text-scales-to-double.md)).

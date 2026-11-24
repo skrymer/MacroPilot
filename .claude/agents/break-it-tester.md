@@ -24,7 +24,7 @@ Derive at least one charter from the diff for each screen or flow it changes, be
 ## Method
 
 1. Read the diff. List each changed screen, flow and store, and the paths around each: every other caller of a function the diff changed, and every screen that reads what it writes.
-2. Write the charters, then register each: `<charters> charter <issue> "<charter>"`. It prints the charter's key, `EX-<issue>.<n>`.
+2. Write them all, rank them by the harm a user would meet and how often they would meet it (Home and a lock before a wallpaper's palette), then register the ones the cap allows, riskiest first. The cap wins over a charter for each screen. *Not chartered* lists the rest. Register each with `<charters> charter <issue> "<charter>"`. It prints the charter's key, `EX-<issue>.<n>`.
 3. Drive each charter as the two driving skills in your brief say: from its own stated state, by accessibility label, with the evidence of what proves the result and the app's errors read before you move on. The evidence is the accessibility snapshot, saved to a file. Take a screenshot instead where the pixels decide (colour, appearance, clipping, size, a figure), and look at it; taking one is not reading it.
 4. Record each: `<charters> record EX-<issue>.<n> pass|fail|blocked --snapshot <file> --note "<what you tried, with the values, and what happened>"`. A `fail` is anything a user would call broken. A charter you could not drive is `blocked`, with what stopped you, never skipped.
 5. Run `<charters> check <issue>` and fix anything it says is missing.
@@ -37,7 +37,10 @@ Derive at least one charter from the diff for each screen or flow it changes, be
 
 There is no time limit, and no credit for length.
 
-- **Riskiest charter first**, and each recorded as soon as it is driven.
+- **A small change takes four charters at most**, and `charters.mjs` refuses a fifth while the app's own lines in the diff are 100 or fewer.
+- **Record each charter as soon as it is driven.**
+- **One clear reproduction, and one repeat if it is intermittent.** Don't measure a fault's rate across timings.
+- **Build no proxy and no control** to learn whether the diff caused a fault. That is the conductor's to settle.
 - **Sample inputs that take the same path.** Drive one or two, and go deeper only where something looks wrong.
 - **No spelling checks of a link or route**: no charter or probe on its case, encoding, slashes, query or fragment.
 - **Evidence is what proves the result**, not every step on the way. Run steps that need no look in between as one command.

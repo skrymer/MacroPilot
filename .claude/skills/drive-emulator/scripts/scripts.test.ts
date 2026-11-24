@@ -12,6 +12,7 @@ import path from 'node:path';
 
 const SIZES = path.join(__dirname, 'sizes.sh');
 const EMULATOR = path.join(__dirname, 'emulator.sh');
+const PIXELS = path.join(__dirname, 'pixels.mjs');
 
 /** An Android SDK and a PATH of stand-ins, each logging how it was called and then running `body`. */
 const stage = (tools: Record<string, string>) => {
@@ -140,5 +141,59 @@ describe('emulator.sh', () => {
     expect(status).toBe(1);
     expect(output).toContain('memory');
     expect(calls).not.toContain('emulator -avd');
+  });
+});
+
+describe('pixels.mjs', () => {
+  /** A 2×2 screen: red and green above, blue and white below, as `screencap` writes it raw. */
+  const SCREEN = [
+    '\\x02\\x00\\x00\\x00\\x02\\x00\\x00\\x00\\x01\\x00\\x00\\x00\\x01\\x00\\x00\\x00',
+    '\\xff\\x00\\x00\\xff\\x00\\xff\\x00\\xff\\x00\\x00\\xff\\xff\\xff\\xff\\xff\\xff',
+  ].join('');
+
+  const device = (tree: string) => ({
+    adb: `[ "$2" = screencap ] && printf '${SCREEN}'; exit 0`,
+    npx: `echo '${tree}'; exit 0`,
+  });
+
+  it('prints the colour at each point named', () => {
+    // Given a screen with nothing over the app
+
+    // When two points are measured
+    const { status, output } = stage(device('@e1 [group] "Today"')).run(PIXELS, [
+      'ground=0,0',
+      'bar=1,1',
+    ]);
+
+    // Then each is named with its colour
+    expect(status).toBe(0);
+    expect(output).toContain('ground 0,0 #ff0000');
+    expect(output).toContain('bar 1,1 #ffffff');
+  });
+
+  it.each([
+    ['a warning toast', '@e6 [group] "!, ImageBackground is deprecated"'],
+    ['the log box', '@e33 [group] "Minimize"'],
+  ])('measures nothing through %s', (_, tree) => {
+    // Given the development build's overlay in front of the app
+
+    // When a point is measured
+    const { status, output } = stage(device(tree)).run(PIXELS, ['bar=1,1']);
+
+    // Then it is refused, and no colour is printed
+    expect(status).toBe(1);
+    expect(output).toContain('overlay');
+    expect(output).not.toContain('#');
+  });
+
+  it('refuses a point off the screen', () => {
+    // Given a screen two pixels wide
+
+    // When a point beyond it is measured
+    const { status, output } = stage(device('@e1 [group] "Today"')).run(PIXELS, ['bar=2,0']);
+
+    // Then it is refused, with the screen's size
+    expect(status).toBe(1);
+    expect(output).toContain('2x2');
   });
 });
