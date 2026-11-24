@@ -1,6 +1,6 @@
 ---
 name: feature-sign-off
-description: The pre-commit sign-off gate for a finished feature or fix. Runs five quality gates in order — /simplify, /mutation-test, /code-review, /check-adrs, then /verify on the emulator and the iPhone — fixing what each surfaces before moving on, and only then commits and pushes. Use when a change is functionally complete and the user says "sign off", "ready to commit", "ready to push", "wrap up this feature", "run the gates", or before opening a PR.
+description: The pre-commit sign-off gate for a finished feature or fix. Runs five quality gates in order — /simplify, /mutation-test, /code-review, /check-adrs, then /verify on the Android emulator — fixing what each surfaces before moving on, and only then commits and pushes. Use when a change is functionally complete and the user says "sign off", "ready to commit", "ready to push", "wrap up this feature", "run the gates", or before opening a PR.
 ---
 
 # Feature sign-off
@@ -23,7 +23,7 @@ Address what each surfaces *before* starting the next. If a later fix changes be
 
 4. **`/check-adrs` — honour the recorded decisions.** Judge the final diff against `docs/adr/` and the language in `CONTEXT.md`. A FAIL is either a code fix or a same-PR doc fix — the user's call, surfaced rather than decided quietly.
 
-5. **`/verify` — does it actually work?** Last, so what was verified is what ships: every gate before it can edit the tree. The Android emulator first, then whatever the acceptance criteria owe the iPhone ([`0004`](../../../docs/adr/0004-verify-runs-on-the-emulator-and-the-iphone.md)). A change no screen can show may `SKIP` with a named reason. A FAIL stops the sign-off; its fix goes back through the gates it touches first.
+5. **`/verify` — does it actually work?** Last, so what was verified is what ships: every gate before it can edit the tree. On the Android emulator, in two parts: the acceptance criteria, then `/break-it` beyond them ([`0004`](../../../docs/adr/0004-an-issue-is-verified-on-the-emulator-and-an-epic-on-the-iphone.md)). The user is not part of it. What the emulator cannot show goes on the issue's *Needs a phone* list. A change no screen can show may `SKIP` with a named reason. A FAIL stops the sign-off; its fix goes back through the gates it touches first.
 
 ## What this repo's gates bite on
 
@@ -41,7 +41,8 @@ Only once all five are green, or every non-green item is fixed or explicitly jus
 
 1. Re-run the suite if any gate changed code: `npm run lint && npm run typecheck && npm test`.
 2. **Commit on a feature branch, never straight to `main`.** Group commits by concern.
-3. **Push the branch**, and open a PR if the user wants one. The PR body names the gates that passed.
+3. **Push the branch and open a PR.** Its body names the gates that passed and carries the *Needs a phone* list.
+4. **Merge when CI is green**, without asking. When it was the epic's last issue, `/verify` the epic.
 
 ## Reporting
 
@@ -52,7 +53,9 @@ Only once all five are green, or every non-green item is fixed or explicitly jus
 2. /mutation-test ⚠️ 38/44 killed. 6 survivors → 1 real gap (test written), 4 equivalent, 1 out-of-scope (/verify)
 3. /code-review   ⚠️ 2 findings → both fixed; 1 by-design
 4. /check-adrs    ✅ no conflicts
-5. /verify        ⚠️ emulator 5/5 ACs; iPhone: keyboard hid Save → fixed, re-verified ✅
+5. /verify        ⚠️ 5/5 ACs; 4 charters, 1 fail (double tap logged twice) → fixed, re-verified ✅
+
+Needs a phone: the decimal keyboard on iOS; VoiceOver on the grams field
 
 Suite green. Committed and pushed to <branch>.
 ```

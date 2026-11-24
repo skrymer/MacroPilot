@@ -1,0 +1,51 @@
+---
+name: break-it
+description: Sends a fresh break-it tester at a change on the Android emulator, to explore beyond its acceptance criteria through charters derived from the diff, each recorded with a result and a screenshot. Use as part two of verify on an issue, again on an epic's whole diff, or when the user says "break it", "try to break this", "explore this", or "exploratory test".
+---
+
+# Break it
+
+`verify` checks what the issue asked for. This checks what nobody asked about. A **fresh** `break-it-tester` agent does it: never explore in this conversation, and never hand the tester the walk-through's results, so it doesn't anchor on what passed.
+
+Run `s=.claude/skills/break-it/scripts` from the repo root.
+
+| Command | Does |
+| --- | --- |
+| `$s/emulator.sh` | Boots the emulator if none runs, checks the app is installed and Metro answers, and prints the serial. Stops, saying what is missing, rather than carry on |
+| `node $s/charters.mjs head <issue>` | Stamps the code, drops rows recorded on other code, prints the results and screenshot directory |
+| `node $s/charters.mjs charter <issue> "<charter>"` | Registers a charter, prints its key |
+| `node $s/charters.mjs record <key> <status> --screenshot <file> --note "<text>"` | Records a result. Refused once the code has changed |
+| `node $s/charters.mjs check <issue>` | Fails on no charter, or on one with no result |
+
+## Workflow
+
+1. **Device and code.** `$s/emulator.sh`, then `node $s/charters.mjs head <issue>`. Note the serial and the directory. Don't change code from here until `check` passes.
+2. **Spawn the tester** (`subagent_type: break-it-tester`) with this brief, every slot filled:
+
+   ```
+   Repo: <absolute path> (<a git worktree | the main checkout>; stay in it).
+   The change: cd <path> && git diff <merge-base with origin/main>
+   What it does: <one or two sentences in the code's own terms; description, never assessment>
+   The issue: gh issue view <n> --comments
+   Charters: node <absolute path to charters.mjs>; run from the repo root
+   Screenshots: <the directory head printed>
+   Emulator: <serial>
+   Driving: <absolute path to references/driving.md>
+   Heuristics: <absolute path to references/heuristics.md>; inputs: <absolute path to references/inputs.md>
+   ```
+
+   Its contract is in its definition. Add nothing that says what passed.
+3. **Check:** `node $s/charters.mjs check <issue>`. When it fails, send the tester back to what it names.
+4. **Report** each charter's result as `check` printed it, then the tester's findings in its own words.
+
+## On an epic
+
+The same workflow, with the PRD's number for `<issue>`, on `main`. The change is `git diff <the commit before the epic's first merge>`. Tell the tester to charter what crosses issues: what one wrote, read, corrected or deleted from another's screen.
+
+## What a finding is
+
+A `fail` is not yours to dismiss. Each one is a bug in the diff, or behaviour nothing defines. A bug becomes a failing Jest test before it is fixed, and the fix goes back through the gates it touches. Undefined behaviour is settled against what the app this is built from does, when the user has named one; otherwise it becomes an issue and goes to the user with the epic, not in the middle of the issue. On an epic, findings are settled before the user's test on iOS.
+
+*Needs a phone* items go on the epic's list for the user's test.
+
+One tester at a time per emulator: two would fight over one screen.
