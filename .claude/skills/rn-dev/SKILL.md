@@ -16,6 +16,7 @@ The playbook for any change under `src/` or `app/`. Read it first, build test-fi
 - **Only the boundaries [`0001`](../../../docs/adr/0001-a-unit-owes-its-own-test-when-it-owns-something.md) lists are stubbed.** Adding one is a decision recorded there.
 - **The clock is injected.** Read it with `useNow()`, never `clock.now()` in a render: the React Compiler memoises that.
 - **Text is `@/components/Text`, a field is `@/components/Input`, a link is `@/components/Link`.** Each caps font scaling; lint refuses the others.
+- **A form is React Hook Form with a Zod schema** that translates and never judges; blank is unstated, never `0`. No `z.coerce.number()`, no `watch()` ([`0009`](../../../docs/adr/0009-forms-are-react-hook-form-with-zod-and-the-domain-still-judges.md)).
 - **Domain terms are exact.** `CONTEXT.md` governs.
 
 ## Platform and design rules

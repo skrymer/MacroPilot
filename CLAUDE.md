@@ -2,13 +2,13 @@
 
 ## Project
 
-MacroPilot is a personal macro and calorie tracker for **iOS and Android**. Everything is on the device: no server, no account ([`0003`](./docs/adr/0003-data-and-rules-live-on-the-device.md)). Micronutrients are out of scope.
+MacroPilot is a personal macro and calorie tracker for **iOS and Android**. Everything is on the device: no server, no account ([`0003`](./docs/adr/0003-data-and-rules-live-on-the-device.md)). The macros are protein, carbohydrate, fat, fibre and alcohol; vitamins and minerals are out of scope.
 
-`CONTEXT.md` is the ubiquitous language; read it before naming anything. The first `/grill-with-docs` writes it. The decisions the design rests on are in [`docs/adr/`](./docs/adr/). [`DESIGN.md`](./DESIGN.md) is the design system, not defined yet; its live reference is `app/design.tsx`, and if the two disagree the page is wrong.
+`CONTEXT.md` is the ubiquitous language; read it before naming anything. The first `/grill-with-docs` writes it. The decisions the design rests on are in [`docs/adr/`](./docs/adr/). [`DESIGN.md`](./DESIGN.md) is **Trim**, the design system; its live reference is `app/design.tsx`, and if the two disagree the page is wrong.
 
 ## Status
 
-**Scaffold only.** Every gate is wired and green. The app opens on a placeholder screen with placeholder tokens. No domain code, no storage, no dev build, no EAS project.
+**Scaffold only.** Every gate is wired and green. Two tabs, Today (a placeholder) and Developer (development builds only). No domain code, no storage. The EAS project is `@skrymer/macropilot`; its first iOS development build is being made.
 
 ## Communication
 
@@ -38,11 +38,14 @@ app/             Expo Router screens: present values, judge nothing
 ## How a feature gets built
 
 1. **`/grill-with-docs`**: challenge the plan. New terms and ADRs are written as they crystallise. A plan that survives unchanged was grilled too gently.
+   A new feature's screen, or a change to one that exists, then gets a **`/prototype`** the user judges. A screen ported from the reference app does not.
 2. **`/to-issues`**: break it into independently grabbable GitHub issues.
 3. **`/tdd`** with **`rn-dev`**: one red-green slice at a time.
 4. **`/feature-sign-off`**: `/simplify`, `/mutation-test`, `/code-review medium`, `/check-adrs`, `/verify`, in that order.
 
-Then commit on a feature branch, push, open a PR, and merge when CI is green. Small slices of one PRD may share a PR and a sign-off.
+Then commit on a feature branch, push, open a PR, and merge when CI is green, without asking. Small slices of one PRD may share a PR and a sign-off.
+
+**The user tests an epic, never an issue** ([`0004`](./docs/adr/0004-an-issue-is-verified-on-the-emulator-and-an-epic-on-the-iphone.md)). The agent verifies each issue on the Android emulator, break-it tester included. When a PRD's last issue merges, the agent walks the whole epic there, runs the break-it tester over it, and hands the user a short script to test by hand on iOS. Building the next epic starts once the user passes it.
 
 ## Testing
 
@@ -56,11 +59,11 @@ Then commit on a feature branch, push, open a PR, and merge when CI is green. Sm
 
 ## Stack
 
-Expo with a dev build (never Expo Go), Expo Router, TypeScript strict, NativeWind 4, expo-sqlite behind a port, Jest via jest-expo, RNTL, StrykerJS, probity. EAS Build for iOS, because the development machine runs Linux; Android builds locally.
+Expo with a dev build (never Expo Go), Expo Router, TypeScript strict, NativeWind 4, expo-sqlite behind a port, React Hook Form with Zod ([`0009`](./docs/adr/0009-forms-are-react-hook-form-with-zod-and-the-domain-still-judges.md), not installed yet), Jest via jest-expo, RNTL, StrykerJS, probity. EAS Build for iOS, because the development machine runs Linux; Android builds locally.
 
 ## Agent skills
 
-In [`.claude/skills/`](./.claude/skills/): `rn-dev` (read it first for any app change), `platform-conventions`, `component-testing-best-practices`, `verify`, `debug`, `prototype`, `mutation-test`, `check-adrs`, `feature-sign-off`.
+In [`.claude/skills/`](./.claude/skills/): `rn-dev` (read it first for any app change), `platform-conventions`, `component-testing-best-practices`, `verify`, `break-it` (an exploring tester on the emulator), `debug`, `prototype` (new features and changes to screens, never a ported one), `mutation-test`, `check-adrs`, `feature-sign-off`.
 
 ### Issue tracker
 

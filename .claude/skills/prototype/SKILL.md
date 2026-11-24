@@ -1,6 +1,6 @@
 ---
 name: prototype
-description: Builds a throwaway design prototype as a screen inside the app (app/prototype/), reached from a development-only link on the design page and judged on the phone through Metro, then retires it once its verdict is recorded. Covers when to build one, NOTES.md, the floating variant bar, fake data, the probity and Stryker exemption, and teardown. Use when a grilling session leaves a visual question only the phone can answer, when the user asks for a prototype, mock-up or variants of a screen, or when a prototype's verdict is in and it should be retired.
+description: Builds a throwaway design prototype as a screen inside the app (app/prototype/), reached from a development-only link on the design page and judged on the phone through Metro, then retires it once its verdict is recorded. Covers when to build one, NOTES.md, the floating variant bar, fake data, the probity and Stryker exemption, and teardown. Use when a new feature needs a screen, when an existing screen is to change, when the user asks for a prototype, mock-up or variants, or when a prototype's verdict is in and it should be retired. Not for a screen being ported from the reference app, which is compared with it instead.
 ---
 
 # Prototype
@@ -9,7 +9,9 @@ A prototype answers one design question by putting candidate screens on the real
 
 ## When
 
-- **After `/grill-with-docs` has answered every question it can.** A prototype built mid-grilling is rebuilt as answers land. Questions the grilling leaves open *because they need the phone* (layout, hierarchy, wording at size) are what the prototype is for: name them in NOTES.md.
+- **A new feature's screen, or a change to a screen that exists.** There is no reference to compare with, so a person has to choose.
+- **Not a screen being ported.** The reference app already answers what it says and in what order; its look is the design system's.
+- **After `/grill-with-docs` has answered every question it can, and before `/to-issues`.** The questions left open *because they need the phone* (layout, hierarchy, wording at size) are what it is for: name them in NOTES.md. The verdict is in before an issue is built, so no issue waits on a person.
 - One prototype per question. A new question is a new file under `app/prototype/`.
 
 ## Build

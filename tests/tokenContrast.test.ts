@@ -32,6 +32,11 @@ const PAIRS: { text: string; on: string; size: 'body' | 'large' }[] = [
   { text: 'ink', on: 'surface', size: 'body' },
   { text: 'ink-mid', on: 'surface', size: 'body' },
   { text: 'ink', on: 'surface-lift', size: 'body' },
+  { text: 'ink-dim', on: 'surface', size: 'body' },
+  { text: 'ground', on: 'ink', size: 'body' },
+  { text: 'within', on: 'surface', size: 'body' },
+  { text: 'slightly-over', on: 'surface', size: 'body' },
+  { text: 'over', on: 'surface', size: 'body' },
 ];
 
 const FLOOR = { body: 4.5, large: 3 };

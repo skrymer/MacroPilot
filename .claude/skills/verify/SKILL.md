@@ -1,52 +1,55 @@
 ---
 name: verify
-description: The runtime gate. Gives every acceptance criterion evidence from the running app on the Android emulator (driven by the agent) and the iPhone (by hand), then explores for what breaks it, and emits a verdict with screenshots. Use when a change is functionally complete and needs runtime evidence, when the user says "verify this", "walk it through" or "does it actually work", or as the last gate of feature-sign-off.
+description: The runtime gate, on the Android emulator. Gives every acceptance criterion of an issue evidence from the running app, then has a break-it tester explore beyond them, and emits a verdict with screenshots. For an epic, walks it whole, runs the break-it tester over all of it and writes the user's iPhone script. Use when a change is functionally complete and needs runtime evidence, when the user says "verify this", "walk it through" or "does it actually work", as the last gate of feature-sign-off, or when an epic's last issue has merged.
 ---
 
 # Verify
 
-Runtime evidence that a change works. Tests already ran. Which source carries what is [`0004`](../../../docs/adr/0004-verify-runs-on-the-emulator-and-the-iphone.md); every probe names its source. It runs last, after the four code gates, so what was verified is what ships.
+Runtime evidence that a change works. Tests already ran. Who verifies what is [`0004`](../../../docs/adr/0004-an-issue-is-verified-on-the-emulator-and-an-epic-on-the-iphone.md): an issue is the agent's, on the emulator, and **never asks the user for anything**. It runs last, after the four code gates, so what was verified is what ships.
 
 ## Before the first probe
 
 1. Start Metro with the `debug` skill.
-2. Emulator: boot it, install the dev build (`npm run android`), drive it with agent-device through `npx`. Confirm the CLI's commands from its `--help`; do not guess them.
-3. **Confirm the device fetched the bundle**: Metro's log shows a fresh `Bundled` line for that platform after the latest edit. Without it every probe tests old code. Force-quit, reopen, check again.
-4. A schema change needs a reinstall: an install over the app keeps its database.
+2. `.claude/skills/break-it/scripts/emulator.sh` boots the emulator and prints its serial. Drive it as [driving.md](../break-it/references/driving.md) says.
+3. **Confirm the device fetched the bundle**: Metro's log shows a fresh `Android Bundled` line after the latest edit. Without it every probe tests old code.
+4. A schema change needs `clear-app-state`, or the old database stays.
 
 ## Part 1: the acceptance criteria
 
-List the issue's criteria and give each evidence from the source that owns it. **A criterion with no evidence is a FAIL**, however much else passed.
-
-## Part 2: what breaks it
-
-Explore as a tester would: values at and past each boundary, garbage input, double taps, a kill mid-action, back mid-flow, a refused permission, no network. Always, for a screen the change touched:
+List the issue's criteria. Give each evidence: the exact expectation checked on the screen, and a screenshot you have looked at. **A criterion with no evidence is a FAIL**, however much else passed. For a screen the change touched, always:
 
 - **Unknowns.** A fresh install, an empty day, a food with a missing figure. A number or a dash there is a FAIL; so is a known zero that is hidden.
-- **The day.** An Entry just before and after local midnight, with the emulator outside UTC.
 - **Both appearances**, and **the largest text size**: figures hold, text stops at double, nothing clips.
 - **Persistence.** Kill and reopen.
 
-A break becomes a failing Jest test before it is fixed.
+A criterion the emulator cannot show names the Jest test that covers it, or goes under *Needs a phone*.
 
-## Probes
+## Part 2: what breaks it
 
-- **Independent.** Each starts from its own stated state: `adb shell pm clear com.skrymer.macropilot` on the emulator.
-- **By accessibility label, never coordinates.** A control that cannot be found by label needs a label.
-- **On the iPhone a person runs them.** Send one per message and wait for its result. Number the steps, one action each, with the expected screen in the app's own words, starting from scratch.
+Run `/break-it`. Never explore in this conversation: the tester must not know what passed.
 
 ## Verdict
 
 ```
-## /verify — <feature/issue>
+## /verify — <issue>
 
-Build: <sha>, Android emulator API <n>, iPhone dev build <version>
-AC1 ✅ emulator   <what was seen> (shot-1.png)
-AC2 ⚠️ iPhone     <what was seen> → FAIL
-Explored: <what was tried, not only what broke>
+Build: <sha>, Android emulator API <n>
+AC1 ✅ <what was seen> (shot-1.png)
+AC2 ❌ <what was seen> (shot-2.png)
+Charters: <as check printed them>
+Needs a phone: <what iOS or real hardware could still break, one line each>
 Skipped: <probe, and why>
 
 Verdict: FAIL — <the one reason>
 ```
 
-Say what was observed, not what should happen. Every claim carries a screenshot. Name every skip. A FAIL or BLOCKED stops the sign-off.
+Say what was observed, not what should happen. Name every skip. A FAIL or BLOCKED stops the sign-off.
+
+## An epic
+
+When a PRD's last issue has merged:
+
+1. Walk the PRD's user stories end to end on the emulator, on `main`, from a fresh install. Cross the issues: what one wrote, read on another's screen.
+2. Run `/break-it` on the PRD, over the epic's whole diff. Settle its findings before the user is asked for anything.
+3. Merge the issues' *Needs a phone* lists, and the epic tester's, into one script for the user to run on iOS: numbered steps, one action each, the expected screen in the app's own words, from a fresh install, ten minutes at most. If a native package was added, it starts with the EAS build to run.
+4. Post it on the PRD and stop. Each finding becomes an issue in this epic. The user's pass closes it.

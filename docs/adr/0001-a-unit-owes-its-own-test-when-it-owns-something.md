@@ -45,7 +45,7 @@ A **fake of a port is not a mock of an internal collaborator.** It is a second i
 | Components | Jest + RNTL | co-located `*.test.tsx` |
 | Tooling rules | Jest, plain node | lint rules driven through the real `eslint.config.js`, the resolved Expo config, token contrast, skill scripts, hooks |
 
-One more is not a suite: **`/verify`**, on the iPhone and the Android emulator ([`0004`](./0004-verify-runs-on-the-emulator-and-the-iphone.md)). How a screen looks (colour, safe areas, clipping at the largest text) is its, because Jest cannot see it without asserting on styles, which the screen tests refuse.
+One more is not a suite: **`/verify`**, on the Android emulator for an issue and the iPhone for an epic ([`0004`](./0004-an-issue-is-verified-on-the-emulator-and-an-epic-on-the-iphone.md)). How a screen looks (colour, safe areas, clipping at the largest text) is its, because Jest cannot see it without asserting on styles, which the screen tests refuse.
 
 **There is no Maestro or Detox suite**, and neither may be cited as if there were.
 

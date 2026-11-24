@@ -10,8 +10,7 @@ import jestConfig from './jest.config.js';
  *
  * `app/design.tsx` is excluded. It is the living reference for the design system, checked by
  * a person looking at it, and it owns no behaviour a test could pin — every
- * mutant in it would survive and mean nothing. A prototype under `app/prototype/`
- * is excluded for the same reason while one exists.
+ * mutant in it would survive and mean nothing.
  *
  * The runner is pointed at `jest.config.js` rather than left to discover a
  * config, because this repo runs several Jest projects: the framework-free domain
@@ -47,7 +46,7 @@ export default {
     'app/**/*.tsx',
     '!**/*.test.ts',
     '!**/*.test.tsx',
+    // One to a line: the prototype skill's exempt.sh adds its own after this one.
     '!app/design.tsx',
-    '!app/prototype/**',
   ],
 };

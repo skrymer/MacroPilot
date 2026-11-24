@@ -18,7 +18,7 @@
     "android": {
       "package": "com.skrymer.macropilot",
       "adaptiveIcon": {
-        "backgroundColor": "#FFFFFF",
+        "backgroundColor": "#00C16A",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       }
@@ -32,21 +32,27 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#FFFFFF",
+          "backgroundColor": "#F6F5F2",
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 96,
           "dark": {
-            "backgroundColor": "#121212",
+            "backgroundColor": "#131416",
             "image": "./assets/images/splash-icon.png"
           }
         }
       ],
-      "expo-sqlite"
+      "expo-sqlite",
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
     },
-    "owner": "skrymer"
+    "owner": "skrymer",
+    "extra": {
+      "eas": {
+        "projectId": "18852d0c-bf8a-4843-bb86-c83caf4b89b9"
+      }
+    }
   }
 }

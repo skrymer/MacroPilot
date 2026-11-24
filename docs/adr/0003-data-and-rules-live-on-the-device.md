@@ -10,7 +10,7 @@ MacroPilot is a personal macro and calorie tracker for **iOS and Android**. Wher
 
 **The phone's clock is the only clock.** "Today" is the day on the phone, read through the `Clock` port, which carries the UTC offset.
 
-**Micronutrients are out of scope.** The app tracks energy and the macros. Vitamins, minerals and dietary fibre are not modelled, stored or shown.
+**Micronutrients are out of scope.** The app tracks energy and the macros: protein, carbohydrate, fat, fibre and alcohol. Fibre and alcohol are macros because they carry energy, so they are modelled, stored and counted. Vitamins and minerals are not.
 
 ## Alternatives rejected
 

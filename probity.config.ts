@@ -27,13 +27,6 @@ import { defineConfig, enforceTdd } from '@nizos/probity';
  * logic the domain core should have owned — the day it grows either, it stops
  * being the design page and the negation comes out.
  *
- * A prototype earns a second negation, `!app/prototype/**`, only while one
- * exists, and it is temporary by contract. A prototype is throwaway code that
- * answers a design question (no tests, by design), and its verdict is a person
- * flipping variants on the phone. It is deleted once the question is answered,
- * the winning variant is rewritten test-first in its real home, and the negation
- * goes with the directory.
- *
  * `fastPath` stays off. Probity's language registry recognises `.ts` and `.tsx`, so
  * a fast path would return a deterministic pass whenever a write adds exactly one
  * new test node, which is exactly the green->red boundary where the validator checks
@@ -90,7 +83,6 @@ export default defineConfig({
         'eslint-rules/**/*.{js,ts}',
         'eslint.config.js',
         '!app/design.tsx',
-        '!app/prototype/**',
       ],
       rules: [enforceTdd({ maxEvents: 20, instructions: scopeObservedFailureToProductionWrites })],
     },
