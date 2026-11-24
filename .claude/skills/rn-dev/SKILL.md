@@ -45,7 +45,7 @@ proteinG?: number;
 
 ## Test strategy
 
-Test-first is enforced: probity judges every Write or Edit to the files in `probity.config.ts`, and the Bash guard rolls back any change Bash makes to them. A refusal means a real failing test has to be shown first; it is not a misfire. **One new test per write, with a test run observed between them.** Run tests unpiped, so the failure text reaches the transcript. A change only the pixels can show is driven instead by its fault, measured in the emulator's pixels so that the figures are in a command's output ([`0001`](../../../docs/adr/0001-a-unit-owes-its-own-test-when-it-owns-something.md)); make that the last thing before the edit.
+Test-first is enforced: probity judges every Write or Edit to the files in `probity.config.ts`, and the Bash guard rolls back any change Bash makes to them. A refusal means a real failing test has to be shown first; it is not a misfire. **One new test per write, with a test run observed between them.** Run tests unpiped, so the failure text reaches the transcript. A change only the pixels can show is driven instead by its fault, measured in the emulator's pixels so that the figures are in a command's output ([`0001`](../../../docs/adr/0001-a-unit-owes-its-own-test-when-it-owns-something.md)); make that the last thing before the edit, with `drive-emulator`'s `pixels.mjs`. An edit can be refused, so never send a run that depends on it in the same message.
 
 | Layer | Where | Skill |
 | --- | --- | --- |

@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
@@ -233,6 +233,76 @@ describe('charters.mjs', () => {
 
     // Then the result stands
     expect(run(root, 'check', '8').status).toBe(0);
+  });
+
+  /** A repo whose change is `lines` new lines in `file`, stamped, with four charters registered. */
+  const fourCharters = (file: string, lines: number, ...head: string[]) => {
+    const { root } = repo();
+    const git = (...args: string[]) => spawnSync('git', args, { cwd: root, env: ISOLATED });
+    git('update-ref', 'refs/remotes/origin/main', 'HEAD');
+    mkdirSync(path.dirname(path.join(root, file)), { recursive: true });
+    writeFileSync(path.join(root, file), 'const a = 1;\n'.repeat(lines));
+    run(root, 'head', '8', ...head);
+    for (let n = 1; n <= 4; n += 1) run(root, 'charter', '8', CHARTER);
+    return root;
+  };
+
+  it('refuses a fifth charter on a change of 100 lines', () => {
+    // Given a small change with four charters
+    const root = fourCharters('src/a.ts', 100);
+
+    // When a fifth is registered
+    const { status, output } = run(root, 'charter', '8', CHARTER);
+
+    // Then it is refused, saying how big the change is
+    expect(status).toBe(1);
+    expect(output).toContain('100 lines');
+  });
+
+  it('takes a fifth charter on a change of more than 100 lines', () => {
+    // Given a larger change with four charters
+    const root = fourCharters('app/a.tsx', 101);
+
+    // When a fifth is registered
+    const { output } = run(root, 'charter', '8', CHARTER);
+
+    // Then it takes the next key
+    expect(output.trim()).toBe('EX-8.5');
+  });
+
+  it.each([
+    ['tests', 'src/a.test.ts'],
+    ['what is not the app', 'docs/a.md'],
+  ])('does not count %s as part of the change', (_, file) => {
+    // Given a change of 500 lines that a user cannot meet
+    const root = fourCharters(file, 500);
+
+    // When a fifth charter is registered
+    const { status } = run(root, 'charter', '8', CHARTER);
+
+    // Then it is refused
+    expect(status).toBe(1);
+  });
+
+  it('measures an epic, on main, from the commit it is given', () => {
+    // Given an epic's change, already on main
+    const { root } = repo();
+    const git = (...args: string[]) =>
+      spawnSync('git', args, { cwd: root, env: ISOLATED, encoding: 'utf8' }).stdout.trim();
+    const before = git('rev-parse', 'HEAD');
+    mkdirSync(path.join(root, 'src'));
+    writeFileSync(path.join(root, 'src/a.ts'), 'const a = 1;\n'.repeat(300));
+    git('add', '-A');
+    git('-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-qm', 'epic');
+    git('update-ref', 'refs/remotes/origin/main', 'HEAD');
+    run(root, 'head', '8', '--base', before);
+    for (let n = 1; n <= 4; n += 1) run(root, 'charter', '8', CHARTER);
+
+    // When a fifth charter is registered
+    const { output } = run(root, 'charter', '8', CHARTER);
+
+    // Then it takes the next key
+    expect(output.trim()).toBe('EX-8.5');
   });
 
   it('leaves the checkout and its index as they were', () => {

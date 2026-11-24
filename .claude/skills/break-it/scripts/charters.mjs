@@ -1,7 +1,8 @@
 // The break-it tester's charters and their results, kept inside .git so that recording one never
 // changes the code it is evidence for.
 //
-//   charters.mjs head <issue>               stamps the code; rows recorded on other code are dropped
+//   charters.mjs head <issue> [--base <commit>]
+//                                           stamps the code; rows recorded on other code are dropped
 //   charters.mjs charter <issue> <charter>  registers "explore … with … to discover …", prints its key
 //   charters.mjs record <key> pass|fail|blocked [--snapshot <file>] [--screenshot <file>] --note <text>
 //   charters.mjs check <issue>              exits 1 on no charter, or on one with no result
@@ -20,6 +21,8 @@ import path from 'node:path';
 import { parseArgs } from 'node:util';
 
 const FORM = /^explore\s+\S.*\swith\s+\S.*\sto discover\s+\S.*$/i;
+/** A small change takes few charters: its last ones were spent on what no user would meet. */
+const SMALL = { lines: 100, charters: 4 };
 const STATUSES = ['pass', 'fail', 'blocked'];
 
 class Stop extends Error {}
@@ -68,11 +71,42 @@ function loadOnThisCode(issue) {
   return state;
 }
 
-function head(issue) {
+/**
+ * The lines of the app the change adds and removes, its tests left out. An epic is explored on main,
+ * where nothing differs from origin/main, so it names the commit it started from.
+ */
+function changedLines(base, code) {
+  const counts = git([
+    'diff',
+    '--numstat',
+    base,
+    code,
+    '--',
+    ':/app',
+    ':/src',
+    ':(top,exclude,glob)**/*.test.*',
+  ]);
+  return counts
+    .split('\n')
+    .filter(Boolean)
+    .flatMap((line) => line.split('\t').slice(0, 2))
+    .reduce((total, count) => total + (Number(count) || 0), 0);
+}
+
+/** Where the branch left main; unknown without an origin, which is then no reason to lift the limit. */
+function branchPoint() {
+  try {
+    return git(['merge-base', 'HEAD', 'origin/main']);
+  } catch {
+    return git(['rev-parse', 'HEAD']);
+  }
+}
+
+function head(issue, { base = branchPoint() }) {
   mkdirSync(dirOf(issue), { recursive: true });
   const code = codeNow();
   const kept = existsSync(stateFile(issue)) && load(issue).code === code;
-  if (!kept) save(issue, { code, charters: [] });
+  if (!kept) save(issue, { code, charters: [], lines: changedLines(base, code) });
   console.log(dirOf(issue));
 }
 
@@ -83,6 +117,11 @@ function charter(issue, text) {
     );
   }
   const state = loadOnThisCode(issue);
+  if (state.lines <= SMALL.lines && state.charters.length >= SMALL.charters) {
+    throw new Stop(
+      `a change of ${state.lines} lines takes ${SMALL.charters} charters: drive the riskiest of what you have`,
+    );
+  }
   const key = `EX-${issue}.${state.charters.length + 1}`;
   state.charters.push({ key, text: text.trim() });
   save(issue, state);
@@ -134,10 +173,11 @@ try {
       snapshot: { type: 'string' },
       screenshot: { type: 'string' },
       note: { type: 'string' },
+      base: { type: 'string' },
     },
   });
   const [command, first, second] = positionals;
-  if (command === 'head') head(issueOf(first));
+  if (command === 'head') head(issueOf(first), values);
   else if (command === 'charter') charter(issueOf(first), second);
   else if (command === 'record') record(first, second, values);
   else if (command === 'check') check(issueOf(first));
