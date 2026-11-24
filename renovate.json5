@@ -1,0 +1,80 @@
+{
+  $schema: 'https://docs.renovatebot.com/renovate-schema.json',
+
+  // The executable half of docs/adr/0006. If the two disagree, the ADR is
+  // right and this file is fixed.
+  //
+  // Upgrades here are triggered, never scheduled, because the verification
+  // cost is a person with a phone: anything native costs a cloud build and a
+  // /verify pass on the iPhone. So Renovate opens almost nothing. Its job
+  // is to keep the dashboard current, so that when a trigger does fire the
+  // available versions are already visible, and to raise the one case that is
+  // itself a trigger.
+  extends: ['config:recommended', ':dependencyDashboard'],
+
+  // Renovate decides whether a package is enabled before it looks up any update, so a rule keyed
+  // on update type cannot re-enable a package an earlier rule disabled outright: the package is
+  // skipped and never looked up. The packages whose patches are wanted are therefore never
+  // disabled whole; only their other update types are.
+  packageRules: [
+    {
+      // Nothing is upgraded because a newer version exists. The four triggers
+      // are a security advisory we are exposed to, a bug we actually hit, a
+      // feature we actually need, and an SDK upgrade that forces it — none of
+      // which a bot can detect. Everything stays visible on the dashboard.
+      // Expo's own packages are left out here and handled below. A list of
+      // nothing but negations matches everything else; Renovate refuses `*`
+      // beside other patterns.
+      matchPackageNames: [
+        '!expo',
+        '!expo-*',
+        '!jest-expo',
+        '!babel-preset-expo',
+        '!eslint-config-expo',
+      ],
+      enabled: false,
+    },
+    {
+      // The SDK is the only clock for this half of the tree. A JavaScript half ahead of the native half does not
+      // conflict — it produces symptoms that look like application bugs.
+      // `npx expo install --check` is the authority, and CI runs it.
+      // `react-native-*` gets no patches either: its expected versions come
+      // from the SDK's bundled module list, which Renovate cannot read (0006).
+      groupName: 'expo sdk (never independently — see 0006)',
+      matchPackageNames: ['react', 'react-dom', 'react-native', 'react-native-*'],
+      enabled: false,
+    },
+    {
+      // Expo's own packages move with the SDK, so nothing but a patch is ever
+      // proposed: a new SDK is a decision, argued in an ADR (0006).
+      matchPackageNames: ['expo', 'expo-*', 'jest-expo', 'babel-preset-expo', 'eslint-config-expo'],
+      matchUpdateTypes: ['major', 'minor', 'pin', 'digest', 'pinDigest'],
+      enabled: false,
+    },
+    {
+      // The exception: patch releases of the packages Expo itself publishes,
+      // within the SDK already in use. `npx expo install --check` starts
+      // expecting them the day they ship, so without this CI goes red on a
+      // branch nobody touched. One grouped PR, never automerged. The check
+      // reads the range in package.json, not the lockfile, so the range itself
+      // has to move.
+      groupName: 'expo sdk patches (within the current SDK — see 0006)',
+      matchPackageNames: ['expo', 'expo-*', 'jest-expo', 'babel-preset-expo', 'eslint-config-expo'],
+      rangeStrategy: 'bump',
+    },
+    {
+      // NativeWind 4 requires Tailwind 3; NativeWind 5 requires Tailwind 4.
+      // Bumping tailwindcss alone installs cleanly, typechecks cleanly, lints
+      // cleanly and stops compiling class names — every gate stays green. The
+      // group is what stops a bot proposing one without the other (0005).
+      groupName: 'nativewind + tailwind (move together — see 0005)',
+      matchPackageNames: ['nativewind', 'tailwindcss'],
+    },
+  ],
+
+  // Trigger 1, and the only one a bot can see. Exposure, not count: the tree
+  // carries transitive dev-tooling advisories that never meet untrusted input.
+  vulnerabilityAlerts: {
+    enabled: true,
+  },
+}

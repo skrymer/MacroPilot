@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# Fast local echo of the CI static-analysis gates, so a violation is caught before
+# it costs a round trip. Enable once per clone:
+#
+#     git config core.hooksPath .githooks
+#
+# This is convenience, not enforcement — it is bypassable with --no-verify and is
+# absent in a clone that skipped the command above. The gate that actually binds
+# is the required status check on CI.
+#
+# The tests run here too. Waiting on a suite trains people to reach for
+# --no-verify, but today it takes seconds. Drop it from this hook the
+# first time a push has to wait for it.
+set -euo pipefail
+
+repo="$(git rev-parse --show-toplevel)"
+cd "$repo"
+
+echo "pre-push: typecheck"
+npm run --silent typecheck
+
+echo "pre-push: eslint"
+npm run --silent lint
+
+echo "pre-push: prettier"
+npm run --silent format:check
+
+echo "pre-push: tests"
+npm test --silent -- --silent
+
+echo "pre-push: ok"

@@ -1,0 +1,50 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "f=\"${CLAUDE_PROJECT_DIR}/.claude/hooks/probity.sh\"; [ -x \"$f\" ] || { echo \"hook missing: $f, so nothing can be judged: refusing. Restart Claude Code from a checkout that exists.\" >&2; exit 2; }; exec \"$f\"",
+            "timeout": 120,
+            "statusMessage": "Probity: checking TDD"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "f=\"${CLAUDE_PROJECT_DIR}/.claude/hooks/bash-write-guard.sh\"; [ -x \"$f\" ] || { echo \"hook missing: $f, so nothing can be guarded: refusing. Restart Claude Code from a checkout that exists.\" >&2; exit 2; }; exec \"$f\" pre",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "f=\"${CLAUDE_PROJECT_DIR}/.claude/hooks/lint-edited-file.sh\"; [ -x \"$f\" ] || { echo \"hook missing: $f, so this edit was not linted. Restart Claude Code from a checkout that exists.\" >&2; exit 2; }; exec \"$f\"",
+            "timeout": 60,
+            "statusMessage": "ESLint: checking the edited file"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "f=\"${CLAUDE_PROJECT_DIR}/.claude/hooks/bash-write-guard.sh\"; [ -x \"$f\" ] || { echo \"hook missing: $f, so this command's writes were not checked. Restart Claude Code from a checkout that exists.\" >&2; exit 2; }; exec \"$f\" post",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}

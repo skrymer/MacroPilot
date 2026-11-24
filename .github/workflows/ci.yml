@@ -1,0 +1,58 @@
+# The gate that binds.
+#
+# `.githooks/pre-push` runs the same four static gates locally, but it is
+# bypassable with `--no-verify` and absent in a clone that never ran
+# `git config core.hooksPath .githooks`. Convenience there, enforcement here.
+#
+# What this workflow cannot check is how a screen looks and what the phone does:
+# `/verify` on the iPhone and the Android emulator is the layer above this one.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      # The mechanical answer to "is this package the SDK's business?" (0006).
+      # A native package ahead of the SDK breaks at runtime rather than at install — a failure shape no other
+      # gate here can see. Without this check the two-class dependency split is
+      # a convention, and it erodes the first time someone installs a native
+      # package at @latest.
+      - name: SDK dependency versions
+        run: npx expo install --check
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Format
+        run: npm run format:check
+
+      - name: Test
+        run: npm test
+
+      # The cheapest proof the app still builds, and the only step here that
+      # exercises Metro. It catches the class of break the unit suite cannot
+      # see — a bundler or Babel resolution failure, like `babel-preset-expo`
+      # nesting under `node_modules/expo/` in SDK 57.
+      - name: Bundle for iOS and Android
+        run: npx expo export -p ios -p android
