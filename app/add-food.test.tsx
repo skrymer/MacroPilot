@@ -3,6 +3,7 @@ import { router, Stack } from 'expo-router';
 import { renderRouter } from 'expo-router/testing-library';
 import type { ReactNode } from 'react';
 
+import { ScriptedAsk } from '@/components/ScriptedAsk';
 import { TestProviders } from '@/components/TestProviders';
 import { InMemoryFoodStore } from '@/storage/InMemoryFoodStore';
 
@@ -10,13 +11,15 @@ import Foods from './(tabs)/foods';
 import AddFood from './add-food';
 
 /** Opens the app at `initialUrl`, over `foods`. */
-const openApp = (initialUrl: string, foods: InMemoryFoodStore) =>
+const openApp = (initialUrl: string, foods: InMemoryFoodStore, ask?: ScriptedAsk) =>
   renderRouter(
     { _layout: () => <Stack />, '(tabs)/foods': Foods, 'add-food': AddFood },
     {
       initialUrl,
       wrapper: ({ children }: { children: ReactNode }) => (
-        <TestProviders foods={foods}>{children}</TestProviders>
+        <TestProviders foods={foods} ask={ask}>
+          {children}
+        </TestProviders>
       ),
     },
   );
@@ -209,20 +212,124 @@ describe('Add food', () => {
   });
 
   it('goes back to Foods on Cancel, saving nothing', async () => {
-    // Given the form filled, over Foods
+    // Given the form filled, over Foods, and cancelled, which asked
     const foods = new InMemoryFoodStore();
-    await openApp('/foods', foods);
+    const ask = new ScriptedAsk();
+    await openApp('/foods', foods, ask);
     const user = userEvent.setup();
     await user.press(await screen.findByRole('button', { name: 'Add your first food' }));
     await fill(user, OATS);
-
-    // When the user cancels
     await user.press(screen.getByRole('button', { name: 'Cancel' }));
+
+    // When the user discards it
+    await act(async () => ask.answer(true));
 
     // Then Foods is showing, with nothing in it
     expect(await screen.findByText('Build your food catalog')).toBeOnTheScreen();
     expect(screen.queryByRole('button', { name: 'Save food' })).not.toBeOnTheScreen();
     expect(await foods.list()).toEqual([]);
+  });
+
+  it.each([
+    ['Cancel', () => userEvent.press(screen.getByRole('button', { name: 'Cancel' }))],
+    ['Back', () => act(() => router.back())],
+  ])('asks before a half-filled form is left by %s, and keeps it as it was', async (_, leave) => {
+    // Given the form half filled over Foods, and left, which asked
+    const ask = new ScriptedAsk();
+    await openApp('/foods', new InMemoryFoodStore(), ask);
+    const user = userEvent.setup();
+    await user.press(await screen.findByRole('button', { name: 'Add your first food' }));
+    await fill(user, { Name: 'oats', 'Protein per 100 g': '13' });
+    await leave();
+    expect(ask.question).toEqual({ title: 'Discard this food?', loses: 'Discard' });
+
+    // When the user keeps it
+    await act(async () => ask.answer(false));
+
+    // Then the form is there, with what was typed, and asks again
+    expect(screen.getByLabelText('Name')).toHaveDisplayValue('oats');
+    expect(screen.getByLabelText('Protein per 100 g')).toHaveDisplayValue('13');
+    await leave();
+    expect(ask.question).toEqual({ title: 'Discard this food?', loses: 'Discard' });
+  });
+
+  it('asks once, however often the way out is pressed while it asks', async () => {
+    // Given the form half filled over Foods, left, and left again over the question
+    const ask = new ScriptedAsk();
+    await openApp('/foods', new InMemoryFoodStore(), ask);
+    const user = userEvent.setup();
+    await user.press(await screen.findByRole('button', { name: 'Add your first food' }));
+    await fill(user, { Name: 'oats' });
+    await user.press(screen.getByRole('button', { name: 'Cancel' }));
+    const first = ask.question;
+    await user.press(screen.getByRole('button', { name: 'Cancel' }));
+    expect(ask.question).toBe(first);
+
+    // When the user discards it
+    await act(async () => ask.answer(true));
+
+    // Then Foods is showing
+    expect(await screen.findByText('Build your food catalog')).toBeOnTheScreen();
+    expect(screen.queryByRole('button', { name: 'Save food' })).not.toBeOnTheScreen();
+  });
+
+  it('moves nobody when its question is answered after a save has closed it', async () => {
+    // Given a form left by Back, saved under the question, and a fresh form opened after
+    const ask = new ScriptedAsk();
+    await openApp('/foods', new InMemoryFoodStore(), ask);
+    const user = userEvent.setup();
+    await user.press(await screen.findByRole('button', { name: 'Add your first food' }));
+    await fill(user, OATS);
+    await act(() => router.back());
+    await user.press(screen.getByRole('button', { name: 'Save food' }));
+    await screen.findByText('Rolled oats');
+    await user.press(screen.getByRole('button', { name: 'Add food' }));
+    await screen.findByRole('button', { name: 'Save food' });
+
+    // When the first form's question is answered
+    await act(async () => ask.answer(true));
+
+    // Then the fresh form is still open
+    expect(screen.getByRole('button', { name: 'Save food' })).toBeOnTheScreen();
+  });
+
+  it('goes without asking while it is being saved, when there is nothing to discard', async () => {
+    // Given the form filled, and being saved
+    const foods = new InMemoryFoodStore();
+    const written = foods.holdWrites();
+    const ask = new ScriptedAsk();
+    await openApp('/foods', foods, ask);
+    const user = userEvent.setup();
+    await user.press(await screen.findByRole('button', { name: 'Add your first food' }));
+    await fill(user, OATS);
+    await user.press(screen.getByRole('button', { name: 'Save food' }));
+
+    // When the user leaves before it is written
+    await act(() => router.back());
+
+    // Then nothing is asked, Foods is showing, and the food is kept
+    expect(ask.question).toBeUndefined();
+    expect(screen.queryByRole('button', { name: 'Save food' })).not.toBeOnTheScreen();
+    await act(async () => written());
+    expect(await foods.list()).toHaveLength(1);
+  });
+
+  it('goes without asking when all that was typed was taken out again', async () => {
+    // Given the form typed in over Foods, and emptied
+    const ask = new ScriptedAsk();
+    await openApp('/foods', new InMemoryFoodStore(), ask);
+    const user = userEvent.setup();
+    await user.press(await screen.findByRole('button', { name: 'Add your first food' }));
+    await fill(user, { Name: 'oats' });
+    await user.clear(screen.getByLabelText('Name'));
+
+    // When the user cancels
+    await user.press(screen.getByRole('button', { name: 'Cancel' }));
+
+    // Then Foods is showing, and nothing was asked
+    expect(await screen.findByText('Build your food catalog')).toBeOnTheScreen();
+    expect(screen.queryByRole('button', { name: 'Save food' })).not.toBeOnTheScreen();
+    expect(ask.question).toBeUndefined();
   });
 
   it('saves one food however quickly the button is pressed again', async () => {

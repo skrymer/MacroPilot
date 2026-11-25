@@ -2,12 +2,14 @@ import type { SqlDatabase } from './SqlDatabase';
 
 /**
  * Every table, whichever store is called first. AUTOINCREMENT, so an id is never used again after a
- * delete. A food's macros are grams per 100 g, and NULL is not stated, which is not zero.
+ * delete. A food's macros are grams per 100 g, and NULL is not stated, which is not zero. A phone's
+ * engine holds to its keys only where it is told to, on each connection.
  *
  * Nothing is migrated in development (ADR 0008): after a change here, the app is deleted from the
  * phone before it is installed again.
  */
 const SCHEMA = `
+  PRAGMA foreign_keys = ON;
   CREATE TABLE IF NOT EXISTS foods (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,

@@ -33,6 +33,11 @@ export class SqliteFoodStore implements FoodStore {
     );
   }
 
+  async delete(id: number): Promise<void> {
+    const db = await withSchema(this.db);
+    await db.runAsync('DELETE FROM foods WHERE id = ?', [id]);
+  }
+
   async list(): Promise<Food[]> {
     const db = await withSchema(this.db);
     const rows = await db.getAllAsync<Row>('SELECT * FROM foods ORDER BY id', []);

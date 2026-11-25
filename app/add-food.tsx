@@ -7,6 +7,7 @@ import { View, type ScrollView } from 'react-native';
 import { foodForm, foodOf } from '@/components/foodForm';
 import { FormField } from '@/components/FormField';
 import { FormPage } from '@/components/FormPage';
+import { useDiscard } from '@/components/useDiscard';
 import { useSave } from '@/components/useSave';
 import { useFoodStore } from '@/storage/FoodStoreContext';
 
@@ -26,11 +27,13 @@ export default function AddFood() {
     control,
     handleSubmit,
     setError,
-    formState: { errors },
+    formState: { errors, isDirty, isSubmitting },
   } = useForm({
     resolver: zodResolver(foodForm),
     defaultValues: { name: '', protein: '', carbohydrate: '', fat: '', fibre: '', abv: '' },
   });
+  // What is being saved is not there to be discarded.
+  const letGo = useDiscard(isDirty && !isSubmitting, 'Discard this food?');
   const leave = () => router.dismissTo('/foods');
   const scroll = useRef<ComponentRef<typeof ScrollView>>(null);
   const tops = useRef<Record<string, number>>({});
@@ -44,7 +47,10 @@ export default function AddFood() {
     form: { handleSubmit, setError },
     write: (said) => store.add(foodOf(said)),
     failed: 'Could not add food. What you typed is still here.',
-    leave,
+    leave: () => {
+      letGo();
+      leave();
+    },
     onRefused: showFirstFault,
   });
   // Beside the field as well, where it can be out of view.
