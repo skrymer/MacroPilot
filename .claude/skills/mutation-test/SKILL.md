@@ -59,7 +59,7 @@ The consequence: [`0001`](../../../docs/adr/0001-a-unit-owes-its-own-test-when-i
 
 Add each one that costs a confusing run, symptom first.
 
-**The run is killed partway, and Metro with it, "because the system is running low on memory"**. With no concurrency set, Stryker starts one Jest runner per core but one, 13 on the 14-core laptop, and each loads the whole jest-expo app project, about 2 GiB: together they filled 30 GiB and pushed into swap. `stryker.config.mjs` now caps it at `concurrency: 8`, about 16 GiB, leaving room for Metro and a browser. Never raise it past that or pass a higher `--concurrency`; if memory is short (another session's Metro or Jest running), pass `--concurrency 4`.
+**The run is killed partway, or the user's whole desktop is, for memory**. Each runner loads the whole jest-expo app project, about 2 GiB, and 4 of them beside an emulator, Metro and a Jest run had the system kill the desktop session with everything in it. A mutation run has the machine to itself: no emulator, no Metro and no other Jest while it goes, `free -g` first, and `--concurrency 2` where less than 16 GiB is available. `stryker.config.mjs` caps it at 8; never pass a higher one.
 
 **Test files in the score table, with hundreds of survivors** (`index.test.tsx 59.73`), and a run three times longer than the source alone needs. The scope filter excluded nothing: `grep -v '\.test\.tsx?$'` is a basic regex, where `?` is a literal character, so it matches no filename. It must be `grep -Ev`. Mutating a test file tests nothing; ignore those rows if an old run shows them.
 
