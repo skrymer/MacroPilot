@@ -71,7 +71,7 @@ The rules are the `agent-device` skill's. They are here because the first tester
 .claude/skills/drive-emulator/scripts/sizes.sh <out-dir> / design
 ```
 
-Photographs each route, top to bottom, at the five sizes ADR 0007 fixes. About five minutes a long route, so run it in the background. While a screen or the script is being worked on, `SIZES=worst` first, and look before running the rest. `/verify` owes all five. **The sizes hold a form's width and scale, and not its content**: one that takes a name or shows a fault is photographed with a name of 64 characters, each fault showing and the real keyboard up, and *holds* is said of what was photographed alone. **Look at every photo**: a unit lost, a word broken, text clipped or touching, a control out of reach.
+Photographs each route, top to bottom, at the five sizes ADR 0007 fixes. About five minutes a long route, so run it in the background. While a screen or the script is being worked on, `SIZES=worst` first, and look before running the rest. An issue owes `SIZES=default`, and an epic all five. **The sizes hold a form's width and scale, and not its content**: one that takes a name or shows a fault is photographed with a name of 64 characters, each fault showing and the real keyboard up, and *holds* is said of what was photographed alone. **Look at every photo**: a unit lost, a word broken, text clipped or touching, a control out of reach.
 
 ## Traps
 

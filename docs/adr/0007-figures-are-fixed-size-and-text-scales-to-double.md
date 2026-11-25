@@ -16,7 +16,7 @@ A cap says how large text may get; it does not say the screen survives it. And *
 
 1. **Rows reflow.** A name and a figure stand side by side while both fit; otherwise the figure drops below the name. The content decides, by wrapping with a minimum width for the name. A threshold on the font scale is refused: it knows nothing about the name, the figure or the width.
 2. **Nothing holding text has a fixed height, and nothing that matters is cut off with an ellipsis.** A button and a row grow; a screen scrolls.
-3. **Every screen an issue touches is checked at fixed sizes**, the worst case among them, by a script in `/verify`'s first part. It is not left to the break-it tester: what must be looked at every time cannot depend on an explorer choosing it. The tester attacks what a fixed set cannot hold, such as a long name, or a size changed with a form half filled.
+3. **An issue is checked at the default size, and an epic at all of them.** The sizes are fixed and a script photographs them: text at double, a screen 320dp wide, and the two together, on every screen of the epic, in `/verify` of the epic. They are not left to the break-it tester: what must be looked at every time cannot depend on an explorer choosing it. The tester attacks what a fixed set cannot hold, such as a long name, or a size changed with a form half filled, and at the larger sizes only on an epic. Checking every size on every issue cost more time than its faults were worth: the last one it was spent on was a letter 7 px from the edge of a button, at the two largest settings together.
 
 ### The rules of the cap
 
@@ -37,4 +37,5 @@ A cap says how large text may get; it does not say the screen survives it. And *
 - At the largest sizes a title is as large as the smallest figure. Legibility beats hierarchy.
 - Android scales non-linearly from 14, so the same caps give different sizes there.
 - At the largest settings a screen is long and needs more scrolling.
-- The emulator is checked on every issue. iOS draws its own sizes, so each epic's script for the user includes the largest one.
+- A fault at a larger size is found at the end of an epic and not in the issue that made it, and is fixed then.
+- iOS draws its own sizes, so each epic's script for the user includes the largest one.

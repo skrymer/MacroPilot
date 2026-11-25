@@ -10,7 +10,7 @@
 #   worst-dark   the same, in the dark appearance
 #
 # SIZES=worst photographs one, or several in quotes, while a screen or this script is being worked on.
-# /verify owes all five.
+# /verify owes SIZES=default on an issue, and all five on an epic.
 #
 # Run emulator.sh first; METRO_PORT as there. Each size loads the bundle again, since Android recreates
 # the activity when the text size changes. Every setting is put back on exit, however it ends. Exits 1

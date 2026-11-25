@@ -19,8 +19,8 @@ Runtime evidence that a change works. Tests already ran. Who verifies what is [`
 List the issue's criteria. Give each evidence: the exact expectation checked on the screen, and the snapshot that shows it, saved to a file. Where the pixels decide (colour, appearance, clipping, size, a figure), a screenshot you have looked at ([`0004`](../../../docs/adr/0004-an-issue-is-verified-on-the-emulator-and-an-epic-on-the-iphone.md)). **A criterion with no evidence is a FAIL**, however much else passed. When one criterion names a path (the background, both directions, another tab), every criterion is driven on it. Until `charters.mjs check` passes, report criteria as measured and never the issue as fixed. For a screen the change touched, always:
 
 - **Unknowns.** A fresh install, an empty day, a food with a missing figure. A number or a dash there is a FAIL; so is a known zero that is hidden.
-- **Every size**: run `drive-emulator`'s `sizes.sh` on its route and look at every photo, at a size it can be read at. A state behind a control (a list opened up, a fault showing) is photographed top to bottom at each size too. Figures hold, text stops at double, nothing clips, no word breaks, no figure is parted from its unit ([`0007`](../../../docs/adr/0007-figures-are-fixed-size-and-text-scales-to-double.md)).
-- **Every edge of a list** that scrolls, or that says something in a row: a row cut by the top, one cut by the tab bar, the last with the list at its end, and one in the middle that must not move, at the default size and at the worst, on each page. Again after every change to it: a fix that narrows when something happens drops what the wider rule covered.
+- **The default size**: run `drive-emulator`'s `sizes.sh` on its route with `SIZES=default` and look at every photo, at a size it can be read at. A state behind a control (a list opened up, a fault showing) is photographed top to bottom too. Figures hold, nothing clips, no word breaks, no figure is parted from its unit. An issue goes no further: the larger sizes are the epic's ([`0007`](../../../docs/adr/0007-figures-are-fixed-size-and-text-scales-to-double.md)).
+- **Every edge of a list** that scrolls, or that says something in a row: a row cut by the top, one cut by the tab bar, the last with the list at its end, and one in the middle that must not move, at the default size, on each page. Again after every change to it: a fix that narrows when something happens drops what the wider rule covered.
 - **Both appearances**, the light one at the default size included.
 - **Persistence.** Kill and reopen.
 
@@ -72,7 +72,8 @@ When a PRD's last issue has merged:
 
 1. Walk the PRD's user stories end to end on the emulator, on `main`, from a fresh install. Cross the issues: what one wrote, read on another's screen.
 2. Run Part 2 over the whole epic, on flows that cross its issues: the same day logged in both, compared at its end.
-3. Run `/break-it` on the PRD, over the epic's whole diff. Settle its findings before the user is asked for anything.
-4. Read the epic's list of differences against what was just run. Every row is still true, and none is left *not compared*.
-5. Merge the issues' *Needs a phone* lists, and the epic tester's, into one script for the user to run on iOS: numbered steps, one action each, the expected screen in the app's own words, from a fresh install, ten minutes at most. If a native package was added, it starts with the EAS build to run. The script links the list of differences and says which rows wait on the user.
-6. Post it on the PRD and stop. Each finding becomes an issue in this epic. The user's pass closes it, and `/post-mortem` runs on the epic.
+3. Run `sizes.sh` whole, on every route the epic has, and look at every photo: text stops at double, figures hold, nothing clips, no word breaks, no figure is parted from its unit, and every control is in reach. A list's edges are measured again at the worst size, and so is a form with the real keyboard up and a fault showing.
+4. Run `/break-it` on the PRD, over the epic's whole diff. Settle its findings before the user is asked for anything.
+5. Read the epic's list of differences against what was just run. Every row is still true, and none is left *not compared*.
+6. Merge the issues' *Needs a phone* lists, and the epic tester's, into one script for the user to run on iOS: numbered steps, one action each, the expected screen in the app's own words, from a fresh install, ten minutes at most. If a native package was added, it starts with the EAS build to run. The script links the list of differences and says which rows wait on the user.
+7. Post it on the PRD and stop. Each finding becomes an issue in this epic. The user's pass closes it, and `/post-mortem` runs on the epic.
