@@ -3,7 +3,7 @@ import { renderRouter } from 'expo-router/testing-library';
 import type { ReactNode } from 'react';
 
 import { TestProviders } from '@/components/TestProviders';
-import { weighedEntry } from '@/domain/entry';
+import { estimatedEntry, weighedEntry } from '@/domain/entry';
 import { ScriptedClock } from '@/lifecycle/ScriptedClock';
 import { InMemoryEntryStore } from '@/storage/InMemoryEntryStore';
 
@@ -61,6 +61,96 @@ describe('Today', () => {
     expect(screen.getByText('0 kcal')).toBeOnTheScreen();
     expect(screen.getByText('59 kcal')).toBeOnTheScreen();
     expect(screen.queryByText('Nothing logged yet')).not.toBeOnTheScreen();
+  });
+
+  it('tells an estimate from a weighed entry, its protein not stated or a figure', async () => {
+    // Given a weighed entry, an estimate that states no protein, and one that states 0
+    const entries = new InMemoryEntryStore([OATS]);
+    await entries.add(weighedEntry(OATS, 80, '2026-11-24'));
+    await entries.add(estimatedEntry({ label: 'pub LUNCH', calories: 850 }, '2026-11-24'));
+    await entries.add(estimatedEntry({ label: 'broth', calories: 0, protein: 0 }, '2026-11-24'));
+
+    // When the user opens Today
+    await openToday(entries);
+
+    // Then each estimate says it is one, and what it knows of its protein, to the eye and the ear
+    expect(await screen.findByText('about 850 kcal')).toBeOnTheScreen();
+    expect(screen.getByText('Estimate, protein not stated')).toBeOnTheScreen();
+    expect(
+      screen.getByLabelText('Pub lunch, estimate, about 850 calories, protein not stated'),
+    ).toBeOnTheScreen();
+    expect(screen.getByText('about 0 kcal')).toBeOnTheScreen();
+    expect(screen.getByText('Estimate, 0 g protein')).toBeOnTheScreen();
+    expect(
+      screen.getByLabelText('Broth, estimate, about 0 calories, 0 grams of protein'),
+    ).toBeOnTheScreen();
+    expect(screen.getByText('80 g, 10 g protein')).toBeOnTheScreen();
+  });
+
+  it.each([
+    [
+      'estimates alone, none with protein',
+      [{ calories: 850 }, { calories: 150 }],
+      'about 1000 kcal',
+      'protein not stated',
+      'About 1000 calories, protein not stated today',
+    ],
+    [
+      'estimates alone, one with protein',
+      [{ calories: 850, protein: 30 }, { calories: 150 }],
+      'about 1000 kcal',
+      'at least 30 g protein',
+      'About 1000 calories, at least 30 grams of protein today',
+    ],
+    [
+      'an estimate that states no protein beside one that states none of it',
+      [{ calories: 850, protein: 0 }, { calories: 150 }],
+      'about 1000 kcal',
+      'at least 0 g protein',
+      'About 1000 calories, at least 0 grams of protein today',
+    ],
+    [
+      'estimates that all state it',
+      [
+        { calories: 850, protein: 30 },
+        { calories: 150, protein: 0 },
+      ],
+      'about 1000 kcal',
+      '30 g protein',
+      'About 1000 calories, 30 grams of protein today',
+    ],
+  ])('says how sure a day of %s is', async (_, estimates, kcal, protein, spoken) => {
+    // Given a day's estimates
+    const entries = new InMemoryEntryStore();
+    for (const estimate of estimates) {
+      await entries.add(estimatedEntry({ label: 'lunch', ...estimate }, '2026-11-24'));
+    }
+
+    // When the user opens Today
+    await openToday(entries);
+
+    // Then its card says so, to the eye and the ear
+    expect(await screen.findByLabelText(spoken)).toBeOnTheScreen();
+    expect(screen.getByText(kcal)).toBeOnTheScreen();
+    expect(screen.getByText(protein)).toBeOnTheScreen();
+  });
+
+  it('takes one weighed entry for a solid total, and protein that an estimate does not state for part', async () => {
+    // Given a weighed entry, an estimate with protein and one without
+    const entries = new InMemoryEntryStore([OATS]);
+    await entries.add(weighedEntry(OATS, 80, '2026-11-24'));
+    await entries.add(estimatedEntry({ label: 'soup', calories: 200, protein: 8 }, '2026-11-24'));
+    await entries.add(estimatedEntry({ label: 'lunch', calories: 850 }, '2026-11-24'));
+
+    // When the user opens Today
+    await openToday(entries);
+
+    // Then its calories are not *about*, and its protein is *at least*
+    expect(
+      await screen.findByLabelText('1285 calories, at least 18 grams of protein today'),
+    ).toBeOnTheScreen();
+    expect(screen.getByText('1285 kcal')).toBeOnTheScreen();
+    expect(screen.getByText('at least 18 g protein')).toBeOnTheScreen();
   });
 
   it('says an empty day is known zeros, and offers Log', async () => {

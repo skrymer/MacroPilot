@@ -8,22 +8,14 @@ import { FoodsNotice } from '@/components/FoodsNotice';
 import { FormField } from '@/components/FormField';
 import { FormPage } from '@/components/FormPage';
 import { gramsForm } from '@/components/gramsForm';
-import { useLogged } from '@/components/LoggedContext';
 import { Text } from '@/components/Text';
-import { useSave } from '@/components/useSave';
-import { dayOf } from '@/domain/day';
+import { useLogEntry } from '@/components/useLogEntry';
 import { weighedEntry } from '@/domain/entry';
 import type { Food } from '@/domain/food';
 import { shownName } from '@/domain/shownName';
-import { useClock } from '@/lifecycle/ClockContext';
-import { useEntryStore } from '@/storage/EntryStoreContext';
 import { useFoods } from '@/storage/useFoods';
 
 function GramsForm({ food }: { food: Food }) {
-  const router = useRouter();
-  const clock = useClock();
-  const store = useEntryStore();
-  const [, setLogged] = useLogged();
   const {
     control,
     handleSubmit,
@@ -33,18 +25,9 @@ function GramsForm({ food }: { food: Food }) {
     resolver: zodResolver(gramsForm),
     defaultValues: { grams: '' },
   });
-  const leave = () => router.dismissTo('/log');
-  const log = useSave({
+  const { log, leave } = useLogEntry({
     form: { handleSubmit, setError },
-    write: async ({ grams }) => {
-      // The day is the phone's when it is saved, not when the form was opened.
-      const now = clock.now();
-      const entry = weighedEntry(food, grams, dayOf(now, clock.utcOffsetMinutes(now)));
-      await store.add(entry);
-      setLogged({ name: food.name, entry });
-    },
-    failed: 'Could not save entry. What you typed is still here.',
-    leave,
+    entryOn: ({ grams }, day) => ({ name: food.name, entry: weighedEntry(food, grams, day) }),
   });
   return (
     <FormPage

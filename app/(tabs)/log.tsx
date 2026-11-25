@@ -3,7 +3,8 @@ import { useEffect, useRef, type ComponentRef } from 'react';
 import { AccessibilityInfo, FlatList, Platform, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { grams, kcal, spokenGrams, spokenKcal } from '@/components/figures';
+import { Button } from '@/components/Button';
+import { loggedWords } from '@/components/entryWords';
 import { FoodRow } from '@/components/FoodRow';
 import { FoodsNotice } from '@/components/FoodsNotice';
 import { Hairline } from '@/components/Hairline';
@@ -14,7 +15,9 @@ import { shownName } from '@/domain/shownName';
 import { useFoods } from '@/storage/useFoods';
 
 function LoggedLine({ logged: { name, entry } }: { logged: Logged }) {
-  const spoken = `Logged: ${shownName(name)}, ${spokenGrams(entry.grams)}, ${spokenKcal(entry.calories)}, ${spokenGrams(entry.protein)} of protein`;
+  const title = `Logged: ${shownName(name)}`;
+  const words = loggedWords(entry);
+  const spoken = `${title}, ${words.spoken}`;
   // Android announces a live region as it changes, and iOS has none.
   useEffect(() => {
     if (Platform.OS === 'ios') AccessibilityInfo.announceForAccessibility(spoken);
@@ -26,10 +29,8 @@ function LoggedLine({ logged: { name, entry } }: { logged: Logged }) {
       accessibilityLiveRegion="polite"
       className="rounded-2xl bg-surface p-4"
     >
-      <Text className="font-language-bold text-body text-ink">{`Logged: ${shownName(name)}`}</Text>
-      <Text className="font-language text-label text-ink-mid">
-        {`${grams(entry.grams)}, ${kcal(entry.calories)}, ${grams(entry.protein)} protein`}
-      </Text>
+      <Text className="font-language-bold text-body text-ink">{title}</Text>
+      <Text className="font-language text-label text-ink-mid">{words.shown}</Text>
     </View>
   );
 }
@@ -73,6 +74,11 @@ export default function Log() {
               Log
             </Text>
             {logged ? <LoggedLine logged={logged} /> : null}
+            <Button
+              label="Log an estimate instead"
+              onPress={() => router.navigate('/log-estimate')}
+              secondary
+            />
             {listed.length > 0 ? (
               <Text accessibilityRole="header" className="font-language-bold text-body text-ink">
                 All foods

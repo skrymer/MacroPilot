@@ -1,13 +1,14 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'expo-router';
-import { useRef, type ComponentRef } from 'react';
 import { useForm } from 'react-hook-form';
-import { View, type ScrollView } from 'react-native';
+import { View } from 'react-native';
 
 import { foodForm, foodOf } from '@/components/foodForm';
+import { formFault } from '@/components/formFault';
 import { FormField } from '@/components/FormField';
 import { FormPage } from '@/components/FormPage';
 import { useDiscard } from '@/components/useDiscard';
+import { useFirstFault } from '@/components/useFirstFault';
 import { useSave } from '@/components/useSave';
 import { useFoodStore } from '@/storage/FoodStoreContext';
 
@@ -35,14 +36,7 @@ export default function AddFood() {
   // What is being saved is not there to be discarded.
   const letGo = useDiscard(isDirty && !isSubmitting, 'Discard this food?');
   const leave = () => router.dismissTo('/foods');
-  const scroll = useRef<ComponentRef<typeof ScrollView>>(null);
-  const tops = useRef<Record<string, number>>({});
-  // The system keeps the focused field in view, and not the label and the fault above it.
-  const showFirstFault = (faults: object) => {
-    const first = FIELDS.find(([name]) => name in faults);
-    // At once: one still moving is cut off by the system's own, to the field alone.
-    if (first) scroll.current?.scrollTo({ y: tops.current[first[0]], animated: false });
-  };
+  const { scroll, onLayoutOf, show } = useFirstFault(FIELDS.map(([name]) => name));
   const save = useSave({
     form: { handleSubmit, setError },
     write: (said) => store.add(foodOf(said)),
@@ -51,28 +45,20 @@ export default function AddFood() {
       letGo();
       leave();
     },
-    onRefused: showFirstFault,
+    onRefused: show,
   });
-  // Beside the field as well, where it can be out of view.
-  const refused = Object.keys(errors).some((name) => name !== 'root');
-  const notSaved = refused ? 'Not saved. A field above needs changing.' : errors.root?.message;
 
   return (
     <FormPage
       title="Add food"
       onCancel={leave}
-      fault={notSaved}
+      fault={formFault(errors)}
       action="Save food"
       onAction={save}
       scroll={scroll}
     >
       {FIELDS.map(([name, label]) => (
-        <View
-          key={name}
-          onLayout={({ nativeEvent }) => {
-            tops.current[name] = nativeEvent.layout.y;
-          }}
-        >
+        <View key={name} onLayout={onLayoutOf(name)}>
           <FormField
             control={control}
             name={name}

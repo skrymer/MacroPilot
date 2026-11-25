@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { isAmount } from '@/domain/food';
+
 /** Digits with at most one decimal mark, which is a point or a comma: many keyboards give a comma. */
 const FIGURE = /^-?([0-9]+[.,]?[0-9]*|[.,][0-9]+)$/;
 
@@ -19,5 +21,13 @@ export const optionalFigure = z.string().transform((text, context): number | und
     context.addIssue(`Did you mean ${Number(typed.replace(',', ''))} or ${decimal}?`);
     return z.NEVER;
   }
-  return decimal;
+  // `-0` is 0, and would be shown with its minus.
+  return decimal + 0;
 });
+
+/** The same, of something there can be none of but not less. */
+export const optionalAmount = (name: string) =>
+  optionalFigure.refine((figure) => figure === undefined || isAmount(figure), {
+    error: `${name} can’t be negative`,
+    abort: true,
+  });

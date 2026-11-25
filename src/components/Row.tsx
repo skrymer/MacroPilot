@@ -1,5 +1,6 @@
 import { Pressable, View } from 'react-native';
 
+import { FIGURE_SET } from './figureSet';
 import { Text } from './Text';
 
 /**
@@ -11,12 +12,15 @@ export function Row({
   detail,
   figure,
   spoken,
+  estimated = false,
   onPress,
 }: {
   name: string;
   detail: string;
   figure: string;
   spoken: string;
+  /** Its figure is an estimate, and is set lighter (DESIGN.md, *Figures*). */
+  estimated?: boolean;
   onPress?: () => void;
 }) {
   const said = (
@@ -25,7 +29,9 @@ export function Row({
         <Text className="font-language text-body text-ink">{name}</Text>
         <Text className="font-language text-label text-ink-mid">{detail}</Text>
       </View>
-      <Text className="font-weighed text-body text-ink">{figure}</Text>
+      <Text className={`text-body ${FIGURE_SET[estimated ? 'estimated' : 'weighed']}`}>
+        {figure}
+      </Text>
     </>
   );
   return onPress ? (

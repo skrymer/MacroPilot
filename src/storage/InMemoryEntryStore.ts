@@ -1,4 +1,4 @@
-import type { WeighedEntry } from '@/domain/entry';
+import { isEstimated, type Entry } from '@/domain/entry';
 import type { Food } from '@/domain/food';
 
 import type { EntryStore, LoggedEntry } from './EntryStore';
@@ -21,12 +21,17 @@ export class InMemoryEntryStore implements EntryStore {
     return release;
   }
 
-  async add(entry: WeighedEntry): Promise<void> {
+  async add(entry: Entry): Promise<void> {
     await this.writable;
     if (this.unwritable) throw new Error('The entry cannot be written');
+    this.entries.push({ ...entry, id: this.entries.length + 1, name: this.nameOf(entry) });
+  }
+
+  private nameOf(entry: Entry): string {
+    if (isEstimated(entry)) return entry.label;
     const food = this.foods.find(({ id }) => id === entry.foodId);
-    if (food === undefined) throw new Error('An entry is of a food that is kept');
-    this.entries.push({ ...entry, id: this.entries.length + 1, name: food.name });
+    if (food === undefined) throw new Error('A weighed entry is of a food that is kept');
+    return food.name;
   }
 
   async listOn(day: string): Promise<LoggedEntry[]> {

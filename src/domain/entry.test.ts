@@ -1,7 +1,43 @@
-import { weighedEntry } from './entry';
+import { estimatedEntry, weighedEntry } from './entry';
 
 /** 294 kcal and 13 g protein per 100 g. */
 const OATS = { id: 7, name: 'oats', macros: { protein: 13, carbohydrate: 20, fat: 18 } };
+
+describe('estimatedEntry', () => {
+  it('has the label, the calories and the protein it was given, not stated or stated', () => {
+    // Given two estimates, one that states its protein
+    const lunch = { label: 'pub LUNCH', calories: 850, protein: undefined };
+    const broth = { label: 'broth', calories: 0, protein: 0 };
+
+    // When each is logged on a day
+    const entries = [lunch, broth].map((estimate) => estimatedEntry(estimate, '2026-11-24'));
+
+    // Then each is as it was given, a zero still zero, with no food and no grams
+    expect(entries).toStrictEqual([
+      { day: '2026-11-24', label: 'pub LUNCH', calories: 850, protein: undefined },
+      { day: '2026-11-24', label: 'broth', calories: 0, protein: 0 },
+    ]);
+  });
+
+  it.each([
+    ['a blank label', { label: '' }, 'needs a label'],
+    ['a label of spaces', { label: ' \t ' }, 'needs a label'],
+    ['negative calories', { calories: -0.1 }, 'calories must be 0 or more'],
+    ['calories that are not a number', { calories: Number.NaN }, 'calories must be 0 or more'],
+    ['endless calories', { calories: Infinity }, 'calories must be 0 or more'],
+    ['negative protein', { protein: -0.1 }, 'protein must be 0 or more'],
+    ['endless protein', { protein: Infinity }, 'protein must be 0 or more'],
+  ])('refuses %s', (_, wrong, fault) => {
+    // Given an estimate with one thing wrong
+    const estimate = { label: 'pub lunch', calories: 850, protein: 30, ...wrong };
+
+    // When it is logged
+    const logging = () => estimatedEntry(estimate, '2026-11-24');
+
+    // Then it is refused, for that
+    expect(logging).toThrow(fault);
+  });
+});
 
 describe('weighedEntry', () => {
   it('takes its calories and protein from its food, for the grams eaten', () => {
