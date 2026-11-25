@@ -2,7 +2,7 @@
 # Starts Metro for the development build, writing everything it prints to a log file the agent can
 # read. Run it with `run_in_background`.
 #
-#   metro.sh <metro.log>          on METRO_PORT, 8081 when unset
+#   metro.sh <metro.log> [--clear]   on METRO_PORT, 8081 when unset; the rest goes to `expo start`
 #
 # - A Metro of this checkout's already on that port is stopped first, or it keeps serving the phone.
 #   One belonging to another checkout is left alone and this exits 3: the port is shared between
@@ -11,7 +11,8 @@
 # - stdin from /dev/null: Metro's interactive prompt otherwise waits on a terminal there is none of.
 set -euo pipefail
 
-log=${1:?usage: metro.sh <metro.log>}
+log=${1:?usage: metro.sh <metro.log> [--clear]}
+shift
 port=${METRO_PORT:-8081}
 root=$(cd "$(dirname "$0")/../../../.." && pwd)
 
@@ -39,4 +40,4 @@ echo "metro.sh: force-quit and reopen the app on the phone to pick this server u
 
 cd "$root"
 unset CI
-npx expo start --dev-client --lan --port "$port" </dev/null 2>&1 | tee "$log"
+npx expo start --dev-client --lan --port "$port" "$@" </dev/null 2>&1 | tee "$log"

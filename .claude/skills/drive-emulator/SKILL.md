@@ -13,7 +13,7 @@ Commands below have been run against this app, except those marked *unproven*.
 
 ```bash
 export METRO_PORT=8082                                  # when another checkout holds 8081
-.claude/skills/drive-emulator/scripts/emulator.sh       # boots it headless, prints the serial
+.claude/skills/drive-emulator/scripts/emulator.sh || exit 1   # boots it headless, prints the serial; a pipe hides its refusal
 alias ad="npx agent-device"
 ad open com.skrymer.macropilot "macropilot://expo-development-client/?url=http%3A%2F%2Flocalhost%3A$METRO_PORT" --platform android
 ad wait text "Today" 30000
