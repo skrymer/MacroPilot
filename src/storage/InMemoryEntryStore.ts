@@ -8,7 +8,8 @@ export class InMemoryEntryStore implements EntryStore {
   unreadable = false;
   unwritable = false;
   private writable: Promise<void> = Promise.resolve();
-  private readonly entries: LoggedEntry[] = [];
+  private entries: LoggedEntry[] = [];
+  private lastId = 0;
 
   constructor(private readonly foods: readonly Food[] = []) {}
 
@@ -24,7 +25,13 @@ export class InMemoryEntryStore implements EntryStore {
   async add(entry: Entry): Promise<void> {
     await this.writable;
     if (this.unwritable) throw new Error('The entry cannot be written');
-    this.entries.push({ ...entry, id: this.entries.length + 1, name: this.nameOf(entry) });
+    this.entries.push({ ...entry, id: ++this.lastId, name: this.nameOf(entry) });
+  }
+
+  async delete(id: number): Promise<void> {
+    await this.writable;
+    if (this.unwritable) throw new Error('The entry cannot be deleted');
+    this.entries = this.entries.filter((entry) => entry.id !== id);
   }
 
   private nameOf(entry: Entry): string {
@@ -32,6 +39,11 @@ export class InMemoryEntryStore implements EntryStore {
     const food = this.foods.find(({ id }) => id === entry.foodId);
     if (food === undefined) throw new Error('A weighed entry is of a food that is kept');
     return food.name;
+  }
+
+  /** Whether a food is logged, as the table's key knows. */
+  hasEntryOf(foodId: number): boolean {
+    return this.entries.some((entry) => !isEstimated(entry) && entry.foodId === foodId);
   }
 
   async listOn(day: string): Promise<LoggedEntry[]> {

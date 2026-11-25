@@ -4,7 +4,7 @@ import { AccessibilityInfo, FlatList, Platform, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/Button';
-import { loggedWords } from '@/components/entryWords';
+import { entryFigures } from '@/components/entryWords';
 import { FoodRow } from '@/components/FoodRow';
 import { FoodsNotice } from '@/components/FoodsNotice';
 import { Hairline } from '@/components/Hairline';
@@ -16,7 +16,7 @@ import { useFoods } from '@/storage/useFoods';
 
 function LoggedLine({ logged: { name, entry } }: { logged: Logged }) {
   const title = `Logged: ${shownName(name)}`;
-  const words = loggedWords(entry);
+  const words = entryFigures(entry);
   const spoken = `${title}, ${words.spoken}`;
   // Android announces a live region as it changes, and iOS has none.
   useEffect(() => {

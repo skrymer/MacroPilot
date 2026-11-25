@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 
 import { ClockProvider } from '@/lifecycle/ClockContext';
 import { ScriptedClock } from '@/lifecycle/ScriptedClock';
@@ -33,6 +33,8 @@ export function TestProviders({
   const [noFoods] = useState(() => new InMemoryFoodStore());
   const [noEntries] = useState(() => new InMemoryEntryStore());
   const [unanswered] = useState(() => new ScriptedAsk());
+  // The phone's two stores are tables of one database.
+  useEffect(() => (foods ?? noFoods).loggedIn(entries ?? noEntries));
   return (
     <ClockProvider clock={clock ?? quietClock}>
       <FoodStoreProvider store={foods ?? noFoods}>

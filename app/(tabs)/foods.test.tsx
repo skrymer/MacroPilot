@@ -1,21 +1,31 @@
 import { act, screen, userEvent } from '@testing-library/react-native';
+import { router } from 'expo-router';
 import { renderRouter } from 'expo-router/testing-library';
 import type { ReactNode } from 'react';
 
 import { ScriptedAsk } from '@/components/ScriptedAsk';
 import { TestProviders } from '@/components/TestProviders';
+import { weighedEntry } from '@/domain/entry';
+import { InMemoryEntryStore } from '@/storage/InMemoryEntryStore';
 import { InMemoryFoodStore } from '@/storage/InMemoryFoodStore';
 
+import TabsLayout from './_layout';
 import Foods from './foods';
 
 /** Opens the app on Foods, over `foods`. */
-const openFoods = (foods: InMemoryFoodStore, ask?: ScriptedAsk) =>
+const openFoods = (foods: InMemoryFoodStore, ask?: ScriptedAsk, entries?: InMemoryEntryStore) =>
   renderRouter(
-    { '(tabs)/foods': Foods },
+    {
+      '(tabs)/_layout': TabsLayout,
+      '(tabs)/index': () => null,
+      '(tabs)/log': () => null,
+      '(tabs)/foods': Foods,
+      '(tabs)/developer': () => null,
+    },
     {
       initialUrl: '/foods',
       wrapper: ({ children }: { children: ReactNode }) => (
-        <TestProviders foods={foods} ask={ask}>
+        <TestProviders foods={foods} ask={ask} entries={entries}>
           {children}
         </TestProviders>
       ),
@@ -84,7 +94,8 @@ describe('Foods', () => {
     await userEvent.press(await screen.findByRole('button', { name: 'Delete Rolled oats' }));
     expect(ask.question).toEqual({
       title: 'Delete this food?',
-      message: 'Rolled oats will be removed from your catalog.',
+      message:
+        'Rolled oats will be removed from your catalog. A food you’ve logged entries against can’t be deleted — your entries depend on it.',
       loses: 'Delete',
     });
 
@@ -155,6 +166,52 @@ describe('Foods', () => {
     expect(met.map((text) => text.children[0])).toEqual(['Could not delete food', 'Milk']);
   });
 
+  it('keeps a logged food, and says which it is and why', async () => {
+    // Given Foods open on two, one of them logged and asked to be deleted
+    const foods = new InMemoryFoodStore();
+    const macros = { protein: 13, carbohydrate: 56, fat: 6 };
+    for (const name of ['rolled OATS', 'milk']) await foods.add({ name, macros });
+    const kept = await foods.list();
+    const entries = new InMemoryEntryStore(kept);
+    const oats = kept.find(({ name }) => name === 'rolled OATS');
+    await entries.add(weighedEntry(oats as NonNullable<typeof oats>, 80, '2026-11-24'));
+    const ask = new ScriptedAsk();
+    await openFoods(foods, ask, entries);
+    await userEvent.press(await screen.findByRole('button', { name: 'Delete Rolled oats' }));
+    expect(ask.question?.message).toBe(
+      'Rolled oats will be removed from your catalog. A food you’ve logged entries against can’t be deleted — your entries depend on it.',
+    );
+
+    // When the user says to
+    await act(async () => ask.answer(true));
+
+    // Then it is there, with why
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Could not delete food. Rolled oats has logged Entries and can’t be deleted.',
+    );
+    expect(await foods.list()).toHaveLength(2);
+  });
+
+  it('says no more of a delete that failed once Foods is left', async () => {
+    // Given a food that could not be deleted, and the user gone to Today
+    const foods = new InMemoryFoodStore();
+    await foods.add({ name: 'milk', macros: { protein: 3, carbohydrate: 5, fat: 3 } });
+    foods.unwritable = true;
+    const ask = new ScriptedAsk();
+    await openFoods(foods, ask);
+    await userEvent.press(await screen.findByRole('button', { name: 'Delete Milk' }));
+    await act(async () => ask.answer(true));
+    expect(await screen.findByRole('alert')).toBeOnTheScreen();
+    await act(() => router.navigate('/'));
+
+    // When the user comes back
+    await act(() => router.navigate('/foods'));
+
+    // Then the food is there, and nothing is said of it: what stopped it may be gone
+    expect(await screen.findByText('Milk')).toBeOnTheScreen();
+    expect(screen.queryByRole('alert')).not.toBeOnTheScreen();
+  });
+
   it('asks nothing more while it asks, or while it deletes', async () => {
     // Given Foods open on two, with one asked about, and the other's Delete pressed over the question
     const foods = new InMemoryFoodStore();
@@ -166,7 +223,7 @@ describe('Foods', () => {
     const user = userEvent.setup();
     await user.press(await screen.findByRole('button', { name: 'Delete Milk' }));
     await user.press(screen.getByRole('button', { name: 'Delete Oats' }));
-    expect(ask.question?.message).toBe('Milk will be removed from your catalog.');
+    expect(ask.question?.message).toMatch(/^Milk will be removed from your catalog\./);
     await act(async () => ask.answer(true));
 
     // When it is pressed again while the first is being deleted

@@ -2,9 +2,16 @@ import Database from 'better-sqlite3';
 
 import type { SqlDatabase, SqlValue } from './SqlDatabase';
 
-/** For tests: a real SQLite in memory behind the port a store takes on the phone (ADR 0008). Each instance is fresh and empty. */
+/**
+ * For tests: a real SQLite in memory behind the port a store takes on the phone (ADR 0008). Each
+ * instance is fresh and empty, and holds to no keys unasked, as a phone's does.
+ */
 export class BetterSqliteDatabase implements SqlDatabase {
   private readonly db = new Database(':memory:');
+
+  constructor() {
+    this.db.pragma('foreign_keys = OFF');
+  }
 
   async execAsync(source: string): Promise<void> {
     this.db.exec(source);

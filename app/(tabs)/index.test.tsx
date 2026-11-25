@@ -1,7 +1,8 @@
-import { screen, userEvent } from '@testing-library/react-native';
+import { act, screen, userEvent } from '@testing-library/react-native';
 import { renderRouter } from 'expo-router/testing-library';
 import type { ReactNode } from 'react';
 
+import { ScriptedAsk } from '@/components/ScriptedAsk';
 import { TestProviders } from '@/components/TestProviders';
 import { estimatedEntry, weighedEntry } from '@/domain/entry';
 import { ScriptedClock } from '@/lifecycle/ScriptedClock';
@@ -20,13 +21,13 @@ const atNoon = () => {
 };
 
 /** Opens the app on Today, over `entries`. */
-const openToday = (entries: InMemoryEntryStore, clock = atNoon()) =>
+const openToday = (entries: InMemoryEntryStore, clock = atNoon(), ask?: ScriptedAsk) =>
   renderRouter(
     { '(tabs)/index': Today, '(tabs)/log': () => null },
     {
       initialUrl: '/',
       wrapper: ({ children }: { children: ReactNode }) => (
-        <TestProviders clock={clock} entries={entries}>
+        <TestProviders clock={clock} entries={entries} ask={ask}>
           {children}
         </TestProviders>
       ),
@@ -151,6 +152,79 @@ describe('Today', () => {
     ).toBeOnTheScreen();
     expect(screen.getByText('1285 kcal')).toBeOnTheScreen();
     expect(screen.getByText('at least 18 g protein')).toBeOnTheScreen();
+  });
+
+  it('deletes the entry it asked about by its figures, and the totals follow', async () => {
+    // Given Today open on two entries of one food, and the first asked to be deleted
+    const entries = new InMemoryEntryStore([OATS]);
+    for (const eaten of [80, 20]) {
+      await entries.add(weighedEntry(OATS, eaten, '2026-11-24'));
+    }
+    const ask = new ScriptedAsk();
+    await openToday(entries, atNoon(), ask);
+    const name = 'Delete Rolled oats, 80 grams, 235 calories, 10 grams of protein';
+    await userEvent.press(await screen.findByRole('button', { name }));
+    const { title, message, loses } = ask.question ?? {};
+    expect([title, loses]).toEqual(['Delete this entry?', 'Delete']);
+    // A figure and its unit are joined by a no-break space.
+    expect(message?.replace(/\s/g, ' ')).toBe(
+      'Rolled oats, 80 g, 235 kcal, 10 g protein will be removed, and that day’s totals re-derive without it.',
+    );
+
+    // When the user says to
+    await act(async () => ask.answer(true));
+
+    // Then it alone is gone, and the day is what is left
+    expect(await screen.findByText('20 g, 3 g protein')).toBeOnTheScreen();
+    expect(screen.queryByText('80 g, 10 g protein')).not.toBeOnTheScreen();
+    expect(screen.getByLabelText('59 calories, 3 grams of protein today')).toBeOnTheScreen();
+    expect(screen.queryByRole('alert')).not.toBeOnTheScreen();
+    expect(await entries.listOn('2026-11-24')).toHaveLength(1);
+  });
+
+  it('keeps an entry whose question is cancelled, an estimate asked about without the protein it does not state', async () => {
+    // Given Today open on an estimate, asked to be deleted
+    const entries = new InMemoryEntryStore();
+    await entries.add(estimatedEntry({ label: 'pub lunch', calories: 850 }, '2026-11-24'));
+    const ask = new ScriptedAsk();
+    await openToday(entries, atNoon(), ask);
+    await userEvent.press(await screen.findByRole('button', { name: /^Delete Pub lunch/ }));
+    expect(ask.question?.message?.replace(/\s/g, ' ')).toMatch(
+      /^Pub lunch, about 850 kcal will be removed/,
+    );
+
+    // When the user cancels
+    await act(async () => ask.answer(false));
+
+    // Then it is there
+    expect(screen.getByText('Pub lunch')).toBeOnTheScreen();
+    expect(await entries.listOn('2026-11-24')).toHaveLength(1);
+  });
+
+  it('leaves an entry whose delete fails, says so over its name, and is an empty day once it works', async () => {
+    // Given Today open on one estimate whose delete failed, and now can be written
+    const entries = new InMemoryEntryStore();
+    await entries.add(estimatedEntry({ label: 'pub lunch', calories: 850 }, '2026-11-24'));
+    entries.unwritable = true;
+    const ask = new ScriptedAsk();
+    await openToday(entries, atNoon(), ask);
+    const user = userEvent.setup();
+    await user.press(await screen.findByRole('button', { name: /^Delete Pub lunch/ }));
+    await act(async () => ask.answer(true));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Could not delete entry');
+    const met = await screen.findAllByText(/^(Could not delete entry|Pub lunch)$/);
+    expect(met.map((text) => text.children[0])).toEqual(['Could not delete entry', 'Pub lunch']);
+    entries.unwritable = false;
+    await user.press(screen.getByRole('button', { name: /^Delete Pub lunch/ }));
+    expect(screen.queryByRole('alert')).not.toBeOnTheScreen();
+
+    // When the user says to delete it again
+    await act(async () => ask.answer(true));
+
+    // Then the day is an empty one, its zeros known
+    expect(await screen.findByText('Nothing logged yet')).toBeOnTheScreen();
+    expect(screen.getByText('0 kcal')).toBeOnTheScreen();
+    expect(screen.queryByRole('alert')).not.toBeOnTheScreen();
   });
 
   it('says an empty day is known zeros, and offers Log', async () => {

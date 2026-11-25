@@ -30,8 +30,8 @@ export function totalsWords({ calories, protein: stated, proteinStated, estimate
   };
 }
 
-/** An entry just logged, as Log says it: an estimate without the protein it does not state. */
-export function loggedWords(entry: Entry) {
+/** An entry's figures in a line: an estimate's without the protein it does not state. */
+export function entryFigures(entry: Entry) {
   const estimated = isEstimated(entry);
   const { shown, spoken } = calorieWords(entry.calories, estimated);
   const stated = entry.protein !== undefined;
