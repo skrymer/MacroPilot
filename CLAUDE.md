@@ -8,7 +8,7 @@ MacroPilot is a personal macro and calorie tracker for **iOS and Android**. Ever
 
 ## Status
 
-**Epic 1 is being built.** Every gate is wired and green. Four tabs: Today (the day’s totals and entries), Log (a weighed food), Foods (a list, and Add food) and Developer (development builds only). The EAS project is `@skrymer/macropilot`; its first iOS development build is being made.
+**Epic 1 is being built.** Every gate is wired and green. Four tabs: Today (the day’s totals and entries), Log (a weighed food, or an estimate), Foods (a list, and Add food) and Developer (development builds only). The EAS project is `@skrymer/macropilot`; its first iOS development build is being made.
 
 ## Communication
 

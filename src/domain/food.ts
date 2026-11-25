@@ -19,7 +19,8 @@ export function inNameOrder(foods: readonly Food[]): Food[] {
 
 export const isFoodName = (name: string) => name.trim() !== '';
 
-export const isMacro = (grams: number) => Number.isFinite(grams) && grams >= 0;
+/** Of grams or calories: none is an amount. */
+export const isAmount = (figure: number) => Number.isFinite(figure) && figure >= 0;
 
 /** The name is kept as typed. */
 export function newFood(food: NewFood): NewFood {
@@ -27,7 +28,7 @@ export function newFood(food: NewFood): NewFood {
   // Not stated is judged as nothing wrong for these two alone: the others are always stated.
   const { fibre = 0, alcohol = 0 } = food.macros;
   for (const [macro, grams] of Object.entries({ ...food.macros, fibre, alcohol })) {
-    if (!isMacro(grams)) throw new Error(`${macro} must be 0 or more`);
+    if (!isAmount(grams)) throw new Error(`${macro} must be 0 or more`);
   }
   return food;
 }

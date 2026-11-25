@@ -1,4 +1,4 @@
-import { weighedEntry } from '@/domain/entry';
+import { estimatedEntry, weighedEntry } from '@/domain/entry';
 
 import { BetterSqliteDatabase } from './BetterSqliteDatabase';
 import { SqliteEntryStore } from './SqliteEntryStore';
@@ -31,6 +31,26 @@ describe('SqliteEntryStore', () => {
     expect(entries).toEqual([{ ...entry, id: 1, name: 'rolled OATS' }]);
   });
 
+  it('gives back estimates as they were logged among weighed entries, protein not stated or none', async () => {
+    // Given a weighed entry between an estimate that states no protein and one that states 0
+    const { db, food } = await withFood(OATS);
+    const store = new SqliteEntryStore(db);
+    const lunch = estimatedEntry({ label: ' pub LUNCH ', calories: 850.5 }, '2026-11-24');
+    const oats = weighedEntry(food, 80, '2026-11-24');
+    const broth = estimatedEntry({ label: 'broth', calories: 0, protein: 0 }, '2026-11-24');
+    for (const entry of [lunch, oats, broth]) await store.add(entry);
+
+    // When their day is listed
+    const entries = await new SqliteEntryStore(db).listOn('2026-11-24');
+
+    // Then each is there in order, an estimate under its own label, and with no food's figures
+    expect(entries).toStrictEqual([
+      { ...lunch, id: 1, name: ' pub LUNCH ' },
+      { ...oats, id: 2, name: 'rolled OATS' },
+      { ...broth, id: 3, name: 'broth' },
+    ]);
+  });
+
   it('lists one day alone, oldest first, with a zero still zero', async () => {
     // Given a food of no calories logged on three days, twice on one
     const nothing = { protein: 0, carbohydrate: 0, fat: 0 };
@@ -50,7 +70,12 @@ describe('SqliteEntryStore', () => {
 
     // Then it has its own two, in the order they were logged
     expect(
-      entries.map(({ id, grams, calories, protein }) => [id, grams, calories, protein]),
+      entries.map((entry) => [
+        entry.id,
+        'grams' in entry && entry.grams,
+        entry.calories,
+        entry.protein,
+      ]),
     ).toEqual([
       [1, 250, 0, 0],
       [3, 90, 0, 0],
@@ -70,6 +95,29 @@ describe('SqliteEntryStore', () => {
 
     // Then it has the food's name now, and the figures it was logged with
     expect(listed).toEqual({ ...entry, id: 1, name: 'porridge' });
+  });
+
+  it.each([
+    ['both a food and a label', "1, 80, 'lunch', 100, 10"],
+    ['neither', 'NULL, NULL, NULL, 100, 10'],
+    ['a food and no grams', '1, NULL, NULL, 100, 10'],
+    ['a label and grams', "NULL, 80, 'lunch', 100, 10"],
+    ['a food and no protein', '1, 80, NULL, 100, NULL'],
+  ])('keeps no entry of %s, whoever writes it', async (_, values) => {
+    // Given a database with a food in it
+    const { db } = await withFood(OATS);
+    const store = new SqliteEntryStore(db);
+    await store.listOn('2026-11-24');
+
+    // When such an entry is written past the store
+    const writing = db.runAsync(
+      `INSERT INTO entries (day, food_id, grams, label, calories, protein) VALUES ('2026-11-24', ${values})`,
+      [],
+    );
+
+    // Then the table refuses it
+    await expect(writing).rejects.toThrow('CHECK');
+    expect(await store.listOn('2026-11-24')).toEqual([]);
   });
 
   it('finds nothing on a phone that has kept nothing', async () => {

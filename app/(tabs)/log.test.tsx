@@ -9,6 +9,7 @@ import { InMemoryEntryStore } from '@/storage/InMemoryEntryStore';
 import { InMemoryFoodStore } from '@/storage/InMemoryFoodStore';
 
 import AddFood from '../add-food';
+import LogEstimate from '../log-estimate';
 import LogFood from '../log-food';
 import TabsLayout from './_layout';
 import Developer from './developer';
@@ -47,6 +48,7 @@ const openLog = (
       '(tabs)/foods': Foods,
       '(tabs)/developer': Developer,
       'log-food': LogFood,
+      'log-estimate': LogEstimate,
       'add-food': AddFood,
     },
     {
@@ -83,6 +85,91 @@ describe('Log', () => {
     expect(await stores.entries.listOn('2026-11-24')).toMatchObject([
       { name: 'rolled OATS', grams: 80 },
     ]);
+  });
+
+  it('logs an estimate where nothing is kept, and says so without the protein it does not state', async () => {
+    // Given Log open with no foods, and an estimate filled but for its protein
+    const stores = await storesOf();
+    await openLog(stores);
+    const user = userEvent.setup();
+    await user.press(await screen.findByRole('button', { name: 'Log an estimate instead' }));
+    await user.type(await screen.findByLabelText('Label'), 'pub LUNCH');
+    await user.type(screen.getByLabelText('Calories'), '850');
+
+    // When the user logs it
+    await user.press(screen.getByRole('button', { name: 'Log estimated entry' }));
+
+    // Then Log says so, and it is kept on the phone's day, with no protein
+    expect(await screen.findByText('Logged: Pub lunch')).toBeOnTheScreen();
+    expect(screen.getByText('about 850 kcal')).toBeOnTheScreen();
+    expect(screen.getByLabelText('Logged: Pub lunch, about 850 calories')).toBeOnTheScreen();
+    expect(screen).toHavePathname('/log');
+    expect(await stores.entries.listOn('2026-11-24')).toEqual([
+      { id: 1, day: '2026-11-24', label: 'pub LUNCH', name: 'pub LUNCH', calories: 850 },
+    ]);
+  });
+
+  it.each([
+    ['30', 'about 0 kcal, 30 g protein', 'about 0 calories, 30 grams of protein'],
+    ['0', 'about 0 kcal, 0 g protein', 'about 0 calories, 0 grams of protein'],
+  ])('says the %s g of protein an estimate states', async (typed, shown, spoken) => {
+    // Given an estimate of no calories, with its protein
+    await openLog(await storesOf());
+    const user = userEvent.setup();
+    await user.press(await screen.findByRole('button', { name: 'Log an estimate instead' }));
+    await user.type(await screen.findByLabelText('Label'), 'broth');
+    await user.type(screen.getByLabelText('Calories'), '0');
+    await user.type(screen.getByLabelText('Protein (optional)'), typed);
+
+    // When the user logs it
+    await user.press(screen.getByRole('button', { name: 'Log estimated entry' }));
+
+    // Then Log says it, a zero as any figure
+    expect(await screen.findByLabelText(`Logged: Broth, ${spoken}`)).toBeOnTheScreen();
+    expect(screen.getByText(shown)).toBeOnTheScreen();
+  });
+
+  it('says what a label is like, and gives no figure the user did not', async () => {
+    // Given Log
+    await openLog(await storesOf());
+
+    // When the user opens an estimate
+    await userEvent.press(await screen.findByRole('button', { name: 'Log an estimate instead' }));
+
+    // Then its label has an example, and every field is empty
+    expect(await screen.findByPlaceholderText('e.g. Lunch at restaurant')).toHaveDisplayValue('');
+    expect(screen.getByLabelText('Calories')).toHaveDisplayValue('');
+    expect(screen.getByLabelText('Protein (optional)')).toHaveDisplayValue('');
+  });
+
+  it('refuses an estimate beside each field that is wrong, and logs nothing', async () => {
+    // Given an estimate with a label of spaces, no calories and negative protein
+    const stores = await storesOf();
+    await openLog(stores);
+    const user = userEvent.setup();
+    await user.press(await screen.findByRole('button', { name: 'Log an estimate instead' }));
+    await user.type(await screen.findByLabelText('Label'), '  ');
+    await user.type(screen.getByLabelText('Protein (optional)'), '-1');
+
+    // When the user logs it
+    await user.press(screen.getByRole('button', { name: 'Log estimated entry' }));
+
+    // Then each says what is wrong, in words and to a screen reader, and nothing is logged
+    expect(await screen.findByText('Enter a label for this entry')).toBeOnTheScreen();
+    expect(screen.getByText('Not saved. A field above needs changing.')).toBeOnTheScreen();
+    expect(screen.getByLabelText('Label')).toHaveProp(
+      'accessibilityHint',
+      'Enter a label for this entry',
+    );
+    expect(screen.getByLabelText('Calories')).toHaveProp(
+      'accessibilityHint',
+      'Enter an estimated calorie figure',
+    );
+    expect(screen.getByLabelText('Protein (optional)')).toHaveProp(
+      'accessibilityHint',
+      'Protein can’t be negative',
+    );
+    expect(await stores.entries.listOn('2026-11-24')).toHaveLength(0);
   });
 
   it('asks for the grams of the food pressed, with none stated yet', async () => {
@@ -381,6 +468,32 @@ describe('Log', () => {
 
     // Then Add food is open
     expect(await screen.findByRole('button', { name: 'Save food' })).toBeOnTheScreen();
+  });
+
+  it('keeps an estimate when the save fails, says so, and logs one when its button is pressed twice', async () => {
+    // Given an estimate that could not be saved, with the store now able to, a while later
+    const stores = await storesOf();
+    stores.entries.unwritable = true;
+    await openLog(stores);
+    const user = userEvent.setup();
+    await user.press(await screen.findByRole('button', { name: 'Log an estimate instead' }));
+    await user.type(await screen.findByLabelText('Label'), 'pub lunch');
+    await user.type(screen.getByLabelText('Calories'), '850');
+    await user.press(screen.getByRole('button', { name: 'Log estimated entry' }));
+    await screen.findByText('Could not save entry. What you typed is still here.');
+    expect(screen.getByLabelText('Label')).toHaveDisplayValue('pub lunch');
+    expect(screen.getByLabelText('Calories')).toHaveDisplayValue('850');
+    stores.entries.unwritable = false;
+    const written = stores.entries.holdWrites();
+    await user.press(screen.getByRole('button', { name: 'Log estimated entry' }));
+
+    // When the user presses the button again
+    await user.press(screen.getByRole('button', { name: 'Log estimated entry' }));
+
+    // Then it is logged, once
+    await act(async () => written());
+    expect(await screen.findByText('Logged: Pub lunch')).toBeOnTheScreen();
+    expect(await stores.entries.listOn('2026-11-24')).toHaveLength(1);
   });
 
   it('keeps the grams when the save fails, says so, and logs when tried again', async () => {

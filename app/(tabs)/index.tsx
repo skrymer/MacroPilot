@@ -3,41 +3,33 @@ import { useCallback } from 'react';
 import { FlatList, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { grams, kcal, spokenGrams, spokenKcal } from '@/components/figures';
+import { entryWords, totalsWords } from '@/components/entryWords';
+import { FIGURE_SET } from '@/components/figureSet';
 import { Hairline } from '@/components/Hairline';
 import { Notice } from '@/components/Notice';
 import { Row } from '@/components/Row';
 import { Text } from '@/components/Text';
 import { totalsOf } from '@/domain/dailyLog';
-import { dayOf } from '@/domain/day';
 import { shownName } from '@/domain/shownName';
 import { useClock, useNow } from '@/lifecycle/ClockContext';
+import { dayAt } from '@/lifecycle/dayAt';
 import type { LoggedEntry } from '@/storage/EntryStore';
 import { useEntryStore } from '@/storage/EntryStoreContext';
 import { useReading } from '@/storage/useReading';
 
 function EntryRow({ entry }: { entry: LoggedEntry }) {
   const name = shownName(entry.name);
-  return (
-    <Row
-      name={name}
-      detail={`${grams(entry.grams)}, ${grams(entry.protein)} protein`}
-      figure={kcal(entry.calories)}
-      spoken={`${name}, ${spokenGrams(entry.grams)}, ${spokenKcal(entry.calories)}, ${spokenGrams(entry.protein)} of protein`}
-    />
-  );
+  return <Row name={name} {...entryWords(name, entry)} />;
 }
 
+const PROTEIN_SET = { ...FIGURE_SET, weighed: 'font-language text-ink-mid' };
+
 function Totals({ entries }: { entries: LoggedEntry[] }) {
-  const { calories, protein } = totalsOf(entries);
+  const { calories, caloriesKind, protein, proteinKind, spoken } = totalsWords(totalsOf(entries));
   return (
-    <View
-      accessible
-      accessibilityLabel={`${spokenKcal(calories)}, ${spokenGrams(protein)} of protein today`}
-      className="rounded-2xl bg-surface p-4"
-    >
-      <Text className="font-weighed text-title text-ink">{kcal(calories)}</Text>
-      <Text className="font-language text-label text-ink-mid">{`${grams(protein)} protein`}</Text>
+    <View accessible accessibilityLabel={`${spoken} today`} className="rounded-2xl bg-surface p-4">
+      <Text className={`text-title ${FIGURE_SET[caloriesKind]}`}>{calories}</Text>
+      <Text className={`text-label ${PROTEIN_SET[proteinKind]}`}>{protein}</Text>
     </View>
   );
 }
@@ -47,7 +39,7 @@ export default function Today() {
   const store = useEntryStore();
   const clock = useClock();
   const now = useNow();
-  const day = dayOf(now, clock.utcOffsetMinutes(now));
+  const day = dayAt(clock, now);
   const list = useCallback(() => store.listOn(day), [store, day]);
   const { found, readAgain } = useReading(list);
   return (

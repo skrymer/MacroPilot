@@ -5,6 +5,8 @@ import type { SqlDatabase } from './SqlDatabase';
  * delete. A food's macros are grams per 100 g, and NULL is not stated, which is not zero. A phone's
  * engine holds to its keys only where it is told to, on each connection.
  *
+ * An entry is of a food, with its grams, or has a label of its own, and never half of each.
+ *
  * Nothing is migrated in development (ADR 0008): after a change here, the app is deleted from the
  * phone before it is installed again.
  */
@@ -22,10 +24,15 @@ const SCHEMA = `
   CREATE TABLE IF NOT EXISTS entries (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     day TEXT NOT NULL,
-    food_id INTEGER NOT NULL REFERENCES foods (id),
-    grams REAL NOT NULL,
+    food_id INTEGER REFERENCES foods (id),
+    grams REAL,
+    label TEXT,
     calories REAL NOT NULL,
-    protein REAL NOT NULL
+    protein REAL,
+    CHECK (
+      (label IS NULL AND food_id IS NOT NULL AND grams IS NOT NULL AND protein IS NOT NULL)
+      OR (label IS NOT NULL AND food_id IS NULL AND grams IS NULL)
+    )
   );
   CREATE INDEX IF NOT EXISTS entries_by_day ON entries (day);
 `;

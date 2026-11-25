@@ -8,6 +8,8 @@ type FormFieldProps<Typed extends FieldValues, Said> = {
   control: Control<Typed, unknown, Said>;
   name: Path<Typed>;
   label: string;
+  /** An example of what goes in it, gone as soon as anything does. */
+  placeholder?: string;
   keyboardType?: KeyboardTypeOptions;
   /** For a form of one field, which takes focus as it opens. */
   autoFocus?: boolean;
@@ -22,6 +24,7 @@ export function FormField<Typed extends FieldValues, Said>({
   control,
   name,
   label,
+  placeholder,
   keyboardType,
   autoFocus,
 }: FormFieldProps<Typed, Said>) {
@@ -45,6 +48,7 @@ export function FormField<Typed extends FieldValues, Said>({
             {...field}
             accessibilityLabel={label}
             accessibilityHint={error?.message}
+            placeholder={placeholder}
             keyboardType={keyboardType}
             autoFocus={autoFocus}
             onChangeText={onChange}

@@ -1,18 +1,12 @@
 import { z } from 'zod';
 
 import { alcoholPer100g, isAbv, MAX_ABV } from '@/domain/abv';
-import { isFoodName, isMacro, type NewFood } from '@/domain/food';
+import { isFoodName, type NewFood } from '@/domain/food';
 
-import { optionalFigure } from './figureText';
-
-const optionalMacro = (name: string) =>
-  optionalFigure.refine((figure) => figure === undefined || isMacro(figure), {
-    error: `${name} can’t be negative`,
-    abort: true,
-  });
+import { optionalAmount } from './figureText';
 
 const macro = (name: string) =>
-  optionalMacro(name).pipe(z.number(`Enter ${name.toLowerCase()} per 100 g`));
+  optionalAmount(name).pipe(z.number(`Enter ${name.toLowerCase()} per 100 g`));
 
 /** A food as it is typed: grams per 100 g, with alcohol in percent by volume as a label gives it. */
 export const foodForm = z.object({
@@ -20,8 +14,8 @@ export const foodForm = z.object({
   protein: macro('Protein'),
   carbohydrate: macro('Carbohydrate'),
   fat: macro('Fat'),
-  fibre: optionalMacro('Fibre'),
-  abv: optionalMacro('Alcohol').refine(
+  fibre: optionalAmount('Fibre'),
+  abv: optionalAmount('Alcohol').refine(
     (abv) => abv === undefined || isAbv(abv),
     `ABV can’t be over ${MAX_ABV}%`,
   ),
