@@ -67,7 +67,11 @@ export default function Log() {
         renderItem={({ item }) => <FoodRow food={item} onLog={() => openForm(item.id)} />}
         contentContainerClassName="px-4 pb-4"
         ItemSeparatorComponent={Hairline}
-        ListEmptyComponent={<FoodsNotice foods={foods} readAgain={readAgain} />}
+        ListEmptyComponent={
+          <View className="pt-3">
+            <FoodsNotice foods={foods} readAgain={readAgain} />
+          </View>
+        }
         ListHeaderComponent={
           <View className="gap-3">
             <Text accessibilityRole="header" className="font-language-bold text-title text-ink">
