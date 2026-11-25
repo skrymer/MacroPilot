@@ -258,6 +258,26 @@ describe('Log', () => {
     expect(screen.getByLabelText('Weight (g)')).toHaveDisplayValue('250');
   });
 
+  it('is on Today once it is written, where the user had gone there by then', async () => {
+    // Given an entry still being written, with the user gone back and on to Today
+    const stores = await storesOf(OATS);
+    const written = stores.entries.holdWrites();
+    await openLog(stores);
+    const user = userEvent.setup();
+    await weigh(user, /^Log Rolled oats/, '80');
+    await user.press(screen.getByRole('button', { name: 'Log entry' }));
+    await act(() => router.back());
+    await act(() => router.navigate('/'));
+    expect(await screen.findByText('Nothing logged yet')).toBeOnTheScreen();
+
+    // When it is written
+    await act(async () => written());
+
+    // Then Today has it
+    expect(await screen.findByText('80 g, 10 g protein')).toBeOnTheScreen();
+    expect(screen.queryByText('Nothing logged yet')).not.toBeOnTheScreen();
+  });
+
   it('is on the phone’s day when it is saved, not when its form was opened', async () => {
     // Given a phone ten hours ahead of UTC, a form opened a minute before its midnight, and two gone by
     const clock = new ScriptedClock();

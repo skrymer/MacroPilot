@@ -20,6 +20,15 @@ const atNoon = () => {
   return clock;
 };
 
+/** Estimates of 100 kcal each on the 24th, under those labels. */
+const withLunches = async (...labels: string[]) => {
+  const entries = new InMemoryEntryStore();
+  for (const label of labels) {
+    await entries.add(estimatedEntry({ label, calories: 100 }, '2026-11-24'));
+  }
+  return entries;
+};
+
 /** Opens the app on Today, over `entries`. */
 const openToday = (entries: InMemoryEntryStore, clock = atNoon(), ask?: ScriptedAsk) =>
   renderRouter(
@@ -225,6 +234,211 @@ describe('Today', () => {
     expect(await screen.findByText('Nothing logged yet')).toBeOnTheScreen();
     expect(screen.getByText('0 kcal')).toBeOnTheScreen();
     expect(screen.queryByRole('alert')).not.toBeOnTheScreen();
+  });
+
+  it('moves on at the phone’s midnight, with yesterday’s entries off it', async () => {
+    // Given a phone ten hours ahead of UTC with Today open at its 23:59, and an entry on either day
+    const clock = new ScriptedClock();
+    clock.setUtcOffset(600);
+    clock.advance(Date.UTC(2026, 10, 24, 13, 59));
+    const entries = new InMemoryEntryStore([OATS, COFFEE]);
+    await entries.add(weighedEntry(OATS, 80, '2026-11-24'));
+    await entries.add(weighedEntry(COFFEE, 250, '2026-11-25'));
+    await openToday(entries, clock);
+    expect(await screen.findByText('Rolled oats')).toBeOnTheScreen();
+
+    // When midnight comes there, which in UTC it is not
+    await act(async () => clock.advance(60_000));
+
+    // Then the day is the new one, and what was eaten yesterday is not on it
+    expect(await screen.findByText('Coffee')).toBeOnTheScreen();
+    expect(screen.queryByText('Rolled oats')).not.toBeOnTheScreen();
+    expect(screen.getByLabelText('0 calories, 0 grams of protein today')).toBeOnTheScreen();
+  });
+
+  it('moves on at midnight and not later, whatever second Today was opened at', async () => {
+    // Given Today open at 23:59:30 on an entry
+    const clock = new ScriptedClock();
+    clock.advance(Date.UTC(2026, 10, 24, 23, 59, 30));
+    const entries = await withLunches('lunch');
+    await openToday(entries, clock);
+    expect(await screen.findByText('Lunch')).toBeOnTheScreen();
+
+    // When midnight comes, half a minute on
+    await act(async () => clock.advance(30_000));
+
+    // Then the new day is there, and it is empty
+    expect(await screen.findByText('Nothing logged yet')).toBeOnTheScreen();
+    expect(screen.queryByText('Lunch')).not.toBeOnTheScreen();
+  });
+
+  it('shows the last three of a new day, though all of yesterday was asked for', async () => {
+    // Given all of a day of four asked for, at 23:59, and a longer day after it
+    const clock = new ScriptedClock();
+    clock.advance(Date.UTC(2026, 10, 24, 23, 59));
+    const entries = await withLunches('first', 'second', 'third', 'fourth');
+    for (const label of ['fifth', 'sixth', 'seventh', 'eighth', 'ninth']) {
+      await entries.add(estimatedEntry({ label, calories: 100 }, '2026-11-25'));
+    }
+    await openToday(entries, clock);
+    await userEvent.press(await screen.findByRole('button', { name: 'Show all 4' }));
+    expect(screen.getByText('First')).toBeOnTheScreen();
+
+    // When midnight comes
+    await act(async () => clock.advance(60_000));
+
+    // Then the new day's last three are there, and the rest can be asked for
+    expect(await screen.findByRole('button', { name: 'Show all 5' })).toBeOnTheScreen();
+    expect(screen.queryByText('Fifth')).not.toBeOnTheScreen();
+    expect(screen.getByText('Ninth')).toBeOnTheScreen();
+  });
+
+  it('claims nothing of the new day until it is read', async () => {
+    // Given Today open at 23:59 on an entry, over a store that takes a while to read the next day
+    const clock = new ScriptedClock();
+    clock.advance(Date.UTC(2026, 10, 24, 23, 59));
+    const entries = new InMemoryEntryStore([OATS]);
+    await entries.add(weighedEntry(OATS, 80, '2026-11-24'));
+    await openToday(entries, clock);
+    expect(await screen.findByText('Rolled oats')).toBeOnTheScreen();
+    const read = entries.holdNextRead();
+
+    // When midnight comes
+    await act(async () => clock.advance(60_000));
+
+    // Then yesterday's entry and figures are gone at once, and the empty day said when it is read
+    expect(screen.queryByText('Rolled oats')).not.toBeOnTheScreen();
+    expect(screen.queryByText(/kcal/)).not.toBeOnTheScreen();
+    expect(screen.queryByText('Nothing logged yet')).not.toBeOnTheScreen();
+    await act(async () => read());
+    expect(screen.getByText('Nothing logged yet')).toBeOnTheScreen();
+  });
+
+  it('deletes yesterday’s entry when answered after midnight, and stays on the new day', async () => {
+    // Given an entry asked about at 23:59, and midnight gone by with the question up
+    const clock = new ScriptedClock();
+    clock.advance(Date.UTC(2026, 10, 24, 23, 59));
+    const entries = new InMemoryEntryStore([OATS, COFFEE]);
+    await entries.add(weighedEntry(OATS, 80, '2026-11-24'));
+    await entries.add(weighedEntry(OATS, 20, '2026-11-24'));
+    await entries.add(weighedEntry(COFFEE, 250, '2026-11-25'));
+    const ask = new ScriptedAsk();
+    await openToday(entries, clock, ask);
+    const name = 'Delete Rolled oats, 80 grams, 235 calories, 10 grams of protein';
+    await userEvent.press(await screen.findByRole('button', { name }));
+    await act(async () => clock.advance(60_000));
+    expect(await screen.findByText('Coffee')).toBeOnTheScreen();
+
+    // When the user says to delete it
+    await act(async () => ask.answer(true));
+
+    // Then it is gone from its own day, and what is shown is the new one's
+    expect(await entries.listOn('2026-11-24')).toHaveLength(1);
+    expect(screen.getByText('Coffee')).toBeOnTheScreen();
+    expect(screen.queryByText('Rolled oats')).not.toBeOnTheScreen();
+  });
+
+  it('is the new day where midnight went by with the app behind another, and no timer ran', async () => {
+    // Given Today open on an entry of the 24th
+    const clock = atNoon();
+    const entries = new InMemoryEntryStore([OATS, COFFEE]);
+    await entries.add(weighedEntry(OATS, 80, '2026-11-24'));
+    await entries.add(weighedEntry(COFFEE, 250, '2026-11-25'));
+    await openToday(entries, clock);
+    expect(await screen.findByText('Rolled oats')).toBeOnTheScreen();
+
+    // When the app is come back to the next noon, and two seconds have gone by
+    clock.sleep(24 * 60 * 60_000);
+    await act(async () => clock.advance(2_000));
+
+    // Then it is the 25th, with what was eaten then alone
+    expect(await screen.findByText('Coffee')).toBeOnTheScreen();
+    expect(screen.queryByText('Rolled oats')).not.toBeOnTheScreen();
+  });
+
+  it('is the new day two seconds after the phone is moved to another zone', async () => {
+    // Given Today open on the evening of the 24th in Auckland, and an entry of that day
+    const clock = new ScriptedClock();
+    clock.setUtcOffset(780);
+    clock.advance(Date.UTC(2026, 10, 24, 7));
+    const entries = new InMemoryEntryStore([OATS, COFFEE]);
+    await entries.add(weighedEntry(OATS, 80, '2026-11-24'));
+    await entries.add(weighedEntry(COFFEE, 250, '2026-11-23'));
+    await openToday(entries, clock);
+    expect(await screen.findByText('Rolled oats')).toBeOnTheScreen();
+
+    clock.setUtcOffset(-480);
+    await act(async () => clock.advance(1_999));
+    expect(screen.getByText('Rolled oats')).toBeOnTheScreen();
+
+    // When it has been in Los Angeles, where it is still the 23rd, for two seconds and not less
+    await act(async () => clock.advance(1));
+
+    // Then it is that day, and the entry has kept its own
+    expect(await screen.findByText('Coffee')).toBeOnTheScreen();
+    expect(screen.queryByText('Rolled oats')).not.toBeOnTheScreen();
+    expect(await entries.listOn('2026-11-24')).toHaveLength(1);
+  });
+
+  it.each([
+    [1, '1 entry · 500 kcal', '1 entry, 500 calories'],
+    [3, '3 entries · 1,500 kcal', '3 entries, 1500 calories'],
+  ])('heads the day’s entries with its date and tallies %d', async (count, tally, spoken) => {
+    // Given a day's weighed entries of 500 kcal each
+    const entries = new InMemoryEntryStore([OATS]);
+    const eaten = { ...weighedEntry(OATS, 80, '2026-11-24'), calories: 500 };
+    for (let logged = 0; logged < count; logged++) await entries.add(eaten);
+
+    // When the user opens Today
+    await openToday(entries);
+
+    // Then they are under the day, and how many there are, to the eye and the ear
+    expect(await screen.findByRole('header', { name: 'Today · Tue 24 Nov' })).toBeOnTheScreen();
+    expect(screen.getByText(tally)).toBeOnTheScreen();
+    expect(screen.getByLabelText(spoken)).toBeOnTheScreen();
+  });
+
+  it('shows the last three of a longer day, the one just logged among them, and tallies every one', async () => {
+    // Given a day of four entries
+    const entries = await withLunches('first', 'second', 'third', 'fourth');
+
+    // When the user opens Today
+    await openToday(entries);
+
+    // Then the last three are there, oldest first, and the rest can be asked for
+    const met = await screen.findAllByText(/^(First|Second|Third|Fourth)$/);
+    expect(met.map((text) => text.children[0])).toEqual(['Second', 'Third', 'Fourth']);
+    expect(screen.getByRole('button', { name: 'Show all 4' })).toBeOnTheScreen();
+    expect(screen.getByText('4 entries · about 400 kcal')).toBeOnTheScreen();
+  });
+
+  it('shows all of a longer day when asked, and the last three again', async () => {
+    // Given a day of four entries, all of them asked for and seen
+    await openToday(await withLunches('first', 'second', 'third', 'fourth'));
+    const user = userEvent.setup();
+    await user.press(await screen.findByRole('button', { name: 'Show all 4' }));
+    expect(screen.getByText('First')).toBeOnTheScreen();
+    expect(screen.queryByRole('button', { name: 'Show all 4' })).not.toBeOnTheScreen();
+
+    // When the user asks for less
+    await user.press(screen.getByRole('button', { name: 'Show less' }));
+
+    // Then the first is off it, and can be asked for
+    expect(screen.queryByText('First')).not.toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Show all 4' })).toBeOnTheScreen();
+  });
+
+  it('shows a day of three whole, with nothing to ask for', async () => {
+    // Given a day of three entries
+    const entries = await withLunches('first', 'second', 'third');
+
+    // When the user opens Today
+    await openToday(entries);
+
+    // Then they are all there, oldest first, with no control
+    const met = await screen.findAllByText(/^(First|Second|Third)$/);
+    expect(met.map((text) => text.children[0])).toEqual(['First', 'Second', 'Third']);
+    expect(screen.queryByRole('button', { name: /^Show/ })).not.toBeOnTheScreen();
   });
 
   it('says an empty day is known zeros, and offers Log', async () => {

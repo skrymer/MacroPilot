@@ -27,6 +27,12 @@ export class ScriptedClock implements Clock {
     };
   }
 
+  /** Time goes by with the phone asleep, and does not count towards any call. */
+  sleep(ms: number): void {
+    this.time += ms;
+    for (const scheduled of this.scheduled) scheduled.at += ms;
+  }
+
   /** Moves the clock on, running each call that falls due on the way at the time it was due. */
   advance(ms: number): void {
     const until = this.time + ms;

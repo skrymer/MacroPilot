@@ -1,16 +1,8 @@
 import { inNameOrder, newFood, type Food, type NewFood } from '@/domain/food';
 
 import type { FoodStore } from './FoodStore';
+import { held } from './held';
 import type { InMemoryEntryStore } from './InMemoryEntryStore';
-
-/** A wait that ends when it is told to. */
-const held = () => {
-  let release = () => {};
-  const until = new Promise<void>((resolve) => {
-    release = resolve;
-  });
-  return { until, release };
-};
 
 /** For tests: a `FoodStore` that forgets, and can be made to fail or wait as a phone's storage would. */
 export class InMemoryFoodStore implements FoodStore {
