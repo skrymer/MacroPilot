@@ -86,9 +86,11 @@ these hold. It then needs no failing test:
   - Its only effect is what is drawn: a colour, a decoration, an appearance, a platform component's
     own drawing, a render or remount made only to draw it again, or
     the space between things or inside one (a padding, a margin, a gap).
-    The space inside what is pressed is its touch target, and is not this.
+    The space inside what is pressed is this only where
+    its touch target is measured too, and is made no smaller.
   - It leaves alone a value, a word, a role, a label, navigation, state or a computation, and
-    a size, a touch target, what is shown or what can be pressed.
+    a size, a touch target, what is shown or what can be pressed. A target that only grows, by the
+    space inside it, is left alone.
   - The session shows, before the write, the fault on the emulator, as
     a pixel measurement in a command's output. For space that is the gap in pixels,
     which is measured again once the write has been made.

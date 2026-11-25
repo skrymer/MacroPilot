@@ -51,17 +51,16 @@ describe("probity's rules", () => {
     expect(told).toContain('a size, a touch target, what is shown or what can be pressed');
   });
 
-  it('let the space between things be driven so, and never what makes a touch target larger or smaller', () => {
+  it('let the space between things be driven so, and inside what is pressed where its target is no smaller', () => {
     // Given the config's rule
 
     // When it judges a write
     const told = prompt();
 
-    // Then space is among what is drawn, measured like it, with the space inside what is pressed left out
+    // Then space is among what is drawn, measured like it, and no target is made smaller by it
     expect(told).toContain('the space between things or inside one (a padding, a margin, a gap)');
     expect(told).toContain('For space that is the gap in pixels,');
-    expect(told).toContain(
-      'The space inside what is pressed is its touch target, and is not this.',
-    );
+    expect(told).toContain('The space inside what is pressed is this only where');
+    expect(told).toContain('its touch target is measured too, and is made no smaller');
   });
 });
