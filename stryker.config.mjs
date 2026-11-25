@@ -35,7 +35,11 @@ export default {
     projectType: 'custom',
     configFile: 'jest.config.js',
     config: {
-      projects: jestConfig.projects.filter((project) => project.displayName !== 'tooling'),
+      // Jest names its cache after where it runs, and a sandbox is somewhere new each time: in the
+      // machine's temporary directory each run left one of thousands of files.
+      projects: jestConfig.projects
+        .filter((project) => project.displayName !== 'tooling')
+        .map((project) => ({ ...project, cacheDirectory: '<rootDir>/.jest-cache' })),
     },
   },
   // The json report is what the mutation-test skill reads survivors from; the console is only progress.
