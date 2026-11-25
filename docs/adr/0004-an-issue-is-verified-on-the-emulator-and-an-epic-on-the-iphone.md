@@ -7,11 +7,13 @@ The app ships on iOS and Android. The development machine runs Linux: it has no 
 | Level | Who | What | Result |
 | --- | --- | --- | --- |
 | **Issue** | The agent, on the Android emulator | A walk-through of the acceptance criteria, then a comparison with the running reference app, then a break-it tester exploring beyond the criteria. No iPhone and no user | The pull request merges to `main` when CI is green |
-| **Epic** (a PRD) | The agent on the emulator, then the user on the iPhone | The agent walks the epic whole, including flows that cross issues, and the break-it tester explores its whole diff. The user then tests it by hand on iOS, from a short written script on an EAS dev build | Findings become issues in the same epic. It closes when the user passes it |
+| **Epic** (a PRD) | The agent on the emulator, then the user on the iPhone | The agent walks the epic whole, including flows that cross issues, and the break-it tester explores its whole diff. The user then runs its happy paths by hand on iOS from a fresh install, and looks at their styling, from a short written script on an EAS dev build | Findings become issues in the same epic. It closes when the user passes it |
 
 **The epic blocks, the issue does not.** The next epic may be grilled and its issues written while the user tests, but building it starts only once the current one has passed, so an iOS-only fault does not spread. Epics are kept to around five to eight issues, because that fault is found at their end.
 
-**What the emulator cannot prove is listed, never dropped.** Each issue records it under *Needs a phone*: iOS's text input and keyboard, VoiceOver, the life cycle, the camera, notifications, haptics, system UI. The lists make the user's script, so the user tests only what they alone can. An acceptance criterion the emulator cannot show is covered by a named Jest test or put on the list.
+**What the emulator cannot prove is listed, never dropped.** Each issue records it under *Needs a phone*: iOS's text input and keyboard, VoiceOver, the life cycle, the camera, notifications, haptics, system UI. They stay on the epic's record, and the user's script names what of them it leaves out. An acceptance criterion the emulator cannot show is covered by a named Jest test or put on the list.
+
+**The user's script is the happy paths, and their styling.** From a fresh install, the user runs through what the epic lets them do, each feature once and the way it is meant to be used, and looks at every screen on the way: in light and dark, at the default text and the largest, with the keyboard up and the iOS sheets showing. The logic is the same code on both platforms and its edge cases were verified on the emulator, so they are not tested by hand: a real midnight, a clock set back, a failure or a race cannot be made on a phone, and nothing in them is iOS's own. What an iPhone shows that the emulator cannot is how the app is drawn there. The script is short enough to run in about ten minutes. (Decided by the user on 26 November 2026, at the end of epic 1, whose first script was built from the *Needs a phone* lists and asked for a real midnight.)
 
 **One iOS build per epic.** Its native packages are chosen while it is grilled and added in its first issue.
 
@@ -31,6 +33,7 @@ The app ships on iOS and Android. The development machine runs Linux: it has no 
 
 - **The iPhone on every issue.** It finds iOS faults sooner, and makes a person the gate on every merge.
 - **The iPhone never.** A field that flickers as its user types, or a *Save* that needs two taps because the keyboard took the first, is a fault only one platform's text field produces. The emulator passes both.
+- **The user's script built from the *Needs a phone* lists.** It aims the user at what only an iPhone can show, and it asks for what a person cannot do by hand (a real midnight, a night asleep, a sheet interrupted) or checks logic the emulator already proved. It also leaves the ordinary use of the app unwalked on iOS.
 - **A screenshot for every claim.** Where the claim is about navigation it proves nothing a snapshot does not, and it has to be looked at, where a snapshot is text a command can assert on.
 - **A snapshot for every claim.** It cannot see colour, clipping or a figure the screen draws differently from the tree.
 - **One agent for both parts.** It explores where it already looked.
@@ -39,6 +42,7 @@ The app ships on iOS and Android. The development machine runs Linux: it has no 
 ## Consequences
 
 - An iOS-only bug lives until the end of its epic.
+- iOS behaviour off the happy paths (VoiceOver, the life cycle, an interrupted sheet) is tested by nobody until a fault is met. The *Needs a phone* lists say where to look then.
 - An agent merges to `main` without the user, so CI and the gates are what stands between a change and the epic.
 - Stryker at `concurrency: 8` takes about 16 GB and the emulator about 4. With the emulator up, Stryker runs at `--concurrency 4`.
 - The emulator draws Android. A pass there says nothing about iOS.
