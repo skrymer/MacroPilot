@@ -36,6 +36,22 @@ describe('ScriptedClock', () => {
     expect(calls).toEqual([60_000]);
   });
 
+  it('counts no time it slept towards a call, as a phone in deep sleep does not', () => {
+    // Given a call due in a minute, and an hour slept through
+    const clock = new ScriptedClock();
+    const calls: number[] = [];
+    clock.after(60_000, () => calls.push(clock.now()));
+    clock.sleep(3_600_000);
+    clock.advance(59_999);
+    expect(calls).toEqual([]);
+
+    // When the rest of its minute goes by
+    clock.advance(1);
+
+    // Then the call ran, an hour late
+    expect(calls).toEqual([3_660_000]);
+  });
+
   it('runs the calls that fall due in the order they fall due, and leaves the rest', () => {
     // Given calls scheduled two minutes, one minute and five minutes ahead
     const clock = new ScriptedClock();
