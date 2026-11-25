@@ -36,7 +36,7 @@ Run `s=.claude/skills/break-it/scripts` and `e=.claude/skills/drive-emulator/scr
    ```
 
    Its contract is in its definition. Add nothing that says what passed, and no time limit. If it is slow, read its charters and send it where the risk is. Settle here, on the emulator, whether the diff caused what it found.
-3. **Check:** `node $s/charters.mjs check <issue>`. When it fails, send the tester back to what it names.
+3. **Check:** `node $s/charters.mjs check <issue>`. When it fails, send the tester back to what it names. After a fix, `head` again and have the charters registered afresh, but for one whose only fail is now filed: that goes under *Already filed*, and is not driven again.
 4. **Report** each charter's result as `check` printed it, then the tester's findings in its own words.
 
 ## On an epic

@@ -20,6 +20,7 @@ List the issue's criteria. Give each evidence: the exact expectation checked on 
 
 - **Unknowns.** A fresh install, an empty day, a food with a missing figure. A number or a dash there is a FAIL; so is a known zero that is hidden.
 - **Every size**: run `drive-emulator`'s `sizes.sh` on its route and look at every photo. Figures hold, text stops at double, nothing clips, no word breaks, no figure is parted from its unit ([`0007`](../../../docs/adr/0007-figures-are-fixed-size-and-text-scales-to-double.md)).
+- **Every edge of a list** that scrolls, or that says something in a row: a row cut by the top, one cut by the tab bar, the last with the list at its end, and one in the middle that must not move, at the default size and at the worst, on each page. Again after every change to it: a fix that narrows when something happens drops what the wider rule covered.
 - **Both appearances**, the light one at the default size included.
 - **Persistence.** Kill and reopen.
 
