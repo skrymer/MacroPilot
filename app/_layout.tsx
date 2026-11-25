@@ -8,7 +8,9 @@ import { openDatabaseAsync } from 'expo-sqlite';
 import { StatusBar } from 'expo-status-bar';
 import { View } from 'react-native';
 
+import { AskProvider } from '@/components/AskContext';
 import { LoggedProvider } from '@/components/LoggedContext';
+import { SystemAsk } from '@/components/SystemAsk';
 import { ClockProvider } from '@/lifecycle/ClockContext';
 import { SystemClock } from '@/lifecycle/SystemClock';
 import { EntryStoreProvider } from '@/storage/EntryStoreContext';
@@ -23,6 +25,7 @@ const clock = new SystemClock();
 const database = new LazyDatabase(() => openDatabaseAsync('macropilot.db'));
 const foodStore = new SqliteFoodStore(database);
 const entryStore = new SqliteEntryStore(database);
+const ask = new SystemAsk();
 
 /**
  * Stands in a release build for a page of a development one, since Expo Router ships every route
@@ -44,20 +47,22 @@ export default function RootLayout() {
     <ClockProvider clock={clock}>
       <FoodStoreProvider store={foodStore}>
         <EntryStoreProvider store={entryStore}>
-          <LoggedProvider>
-            <View className="flex-1 bg-ground">
-              <StatusBar style="auto" />
-              <Stack
-                screenOptions={{
-                  headerShown: false,
-                  contentStyle: { backgroundColor: 'transparent' },
-                }}
-                screenLayout={({ route, children }) =>
-                  !__DEV__ && route.name === 'design' ? <BackToToday /> : children
-                }
-              />
-            </View>
-          </LoggedProvider>
+          <AskProvider ask={ask}>
+            <LoggedProvider>
+              <View className="flex-1 bg-ground">
+                <StatusBar style="auto" />
+                <Stack
+                  screenOptions={{
+                    headerShown: false,
+                    contentStyle: { backgroundColor: 'transparent' },
+                  }}
+                  screenLayout={({ route, children }) =>
+                    !__DEV__ && route.name === 'design' ? <BackToToday /> : children
+                  }
+                />
+              </View>
+            </LoggedProvider>
+          </AskProvider>
         </EntryStoreProvider>
       </FoodStoreProvider>
     </ClockProvider>

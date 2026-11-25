@@ -17,7 +17,8 @@ export class InMemoryFoodStore implements FoodStore {
   unwritable = false;
   private writable: Promise<void> = Promise.resolve();
   private readable: Promise<void> = Promise.resolve();
-  private readonly foods: Food[] = [];
+  private foods: Food[] = [];
+  private lastId = 0;
 
   /** Every write waits from here until what this gives back is called. */
   holdWrites(): () => void {
@@ -36,7 +37,13 @@ export class InMemoryFoodStore implements FoodStore {
   async add(food: NewFood): Promise<void> {
     await this.writable;
     if (this.unwritable) throw new Error('The foods cannot be written');
-    this.foods.push({ id: this.foods.length + 1, ...newFood(food) });
+    this.foods.push({ id: ++this.lastId, ...newFood(food) });
+  }
+
+  async delete(id: number): Promise<void> {
+    await this.writable;
+    if (this.unwritable) throw new Error('The foods cannot be written');
+    this.foods = this.foods.filter((food) => food.id !== id);
   }
 
   async list(): Promise<Food[]> {

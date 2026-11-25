@@ -1,20 +1,23 @@
-import { screen, userEvent } from '@testing-library/react-native';
+import { act, screen, userEvent } from '@testing-library/react-native';
 import { renderRouter } from 'expo-router/testing-library';
 import type { ReactNode } from 'react';
 
+import { ScriptedAsk } from '@/components/ScriptedAsk';
 import { TestProviders } from '@/components/TestProviders';
 import { InMemoryFoodStore } from '@/storage/InMemoryFoodStore';
 
 import Foods from './foods';
 
 /** Opens the app on Foods, over `foods`. */
-const openFoods = (foods: InMemoryFoodStore) =>
+const openFoods = (foods: InMemoryFoodStore, ask?: ScriptedAsk) =>
   renderRouter(
     { '(tabs)/foods': Foods },
     {
       initialUrl: '/foods',
       wrapper: ({ children }: { children: ReactNode }) => (
-        <TestProviders foods={foods}>{children}</TestProviders>
+        <TestProviders foods={foods} ask={ask}>
+          {children}
+        </TestProviders>
       ),
     },
   );
@@ -71,6 +74,115 @@ describe('Foods', () => {
     ).toBeOnTheScreen();
   });
 
+  it('deletes the food it asked about, once told to', async () => {
+    // Given Foods open on two, and one asked to be deleted
+    const foods = new InMemoryFoodStore();
+    const macros = { protein: 13, carbohydrate: 56, fat: 6 };
+    for (const name of ['rolled OATS', 'milk']) await foods.add({ name, macros });
+    const ask = new ScriptedAsk();
+    await openFoods(foods, ask);
+    await userEvent.press(await screen.findByRole('button', { name: 'Delete Rolled oats' }));
+    expect(ask.question).toEqual({
+      title: 'Delete this food?',
+      message: 'Rolled oats will be removed from your catalog.',
+      loses: 'Delete',
+    });
+
+    // When the user says to
+    await act(async () => ask.answer(true));
+
+    // Then it is gone, and nothing more is said
+    expect(await screen.findByText('Milk')).toBeOnTheScreen();
+    expect(screen.queryByText('Rolled oats')).not.toBeOnTheScreen();
+    expect(screen.queryByRole('alert')).not.toBeOnTheScreen();
+    expect((await foods.list()).map(({ name }) => name)).toEqual(['milk']);
+  });
+
+  it('keeps a food whose question is cancelled', async () => {
+    // Given Foods open on one, asked to be deleted
+    const foods = new InMemoryFoodStore();
+    await foods.add({ name: 'milk', macros: { protein: 3, carbohydrate: 5, fat: 3 } });
+    const ask = new ScriptedAsk();
+    await openFoods(foods, ask);
+    await userEvent.press(await screen.findByRole('button', { name: 'Delete Milk' }));
+
+    // When the user cancels
+    await act(async () => ask.answer(false));
+
+    // Then it is there
+    expect(screen.getByText('Milk')).toBeOnTheScreen();
+    expect(await foods.list()).toHaveLength(1);
+  });
+
+  it('leaves a food whose delete fails, says so in its row, and deletes it when asked again', async () => {
+    // Given Foods open on a food whose delete failed, and now can be written
+    const foods = new InMemoryFoodStore();
+    await foods.add({ name: 'milk', macros: { protein: 3, carbohydrate: 5, fat: 3 } });
+    foods.unwritable = true;
+    const ask = new ScriptedAsk();
+    await openFoods(foods, ask);
+    const user = userEvent.setup();
+    await user.press(await screen.findByRole('button', { name: 'Delete Milk' }));
+    await act(async () => ask.answer(true));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Could not delete food');
+    expect(screen.getByText('Milk')).toBeOnTheScreen();
+    foods.unwritable = false;
+    await user.press(screen.getByRole('button', { name: 'Delete Milk' }));
+    expect(screen.queryByText('Could not delete food')).not.toBeOnTheScreen();
+
+    // When the user says to delete it again
+    await act(async () => ask.answer(true));
+
+    // Then it is gone, and nothing says it was not
+    expect(await screen.findByText('Build your food catalog')).toBeOnTheScreen();
+    expect(screen.queryByText('Could not delete food')).not.toBeOnTheScreen();
+  });
+
+  it('says a food was not deleted over its name, since what is under the lowest row is out of view', async () => {
+    // Given Foods open on a food that cannot be deleted, asked about
+    const foods = new InMemoryFoodStore();
+    await foods.add({ name: 'milk', macros: { protein: 3, carbohydrate: 5, fat: 3 } });
+    foods.unwritable = true;
+    const ask = new ScriptedAsk();
+    await openFoods(foods, ask);
+    await userEvent.press(await screen.findByRole('button', { name: 'Delete Milk' }));
+
+    // When the user says to
+    await act(async () => ask.answer(true));
+
+    // Then the words are met before the food's name
+    const met = await screen.findAllByText(/^(Could not delete food|Milk)$/);
+    expect(met.map((text) => text.children[0])).toEqual(['Could not delete food', 'Milk']);
+  });
+
+  it('asks nothing more while it asks, or while it deletes', async () => {
+    // Given Foods open on two, with one asked about, and the other's Delete pressed over the question
+    const foods = new InMemoryFoodStore();
+    const macros = { protein: 3, carbohydrate: 5, fat: 3 };
+    for (const name of ['milk', 'oats']) await foods.add({ name, macros });
+    const deleted = foods.holdWrites();
+    const ask = new ScriptedAsk();
+    await openFoods(foods, ask);
+    const user = userEvent.setup();
+    await user.press(await screen.findByRole('button', { name: 'Delete Milk' }));
+    await user.press(screen.getByRole('button', { name: 'Delete Oats' }));
+    expect(ask.question?.message).toBe('Milk will be removed from your catalog.');
+    await act(async () => ask.answer(true));
+
+    // When it is pressed again while the first is being deleted
+    await user.press(screen.getByRole('button', { name: 'Delete Oats' }));
+
+    // Then nothing is asked, nor while the list is read again, and the first alone goes
+    expect(ask.question).toBeUndefined();
+    const read = foods.holdNextRead();
+    await act(async () => deleted());
+    await user.press(screen.getByRole('button', { name: 'Delete Milk' }));
+    expect(ask.question).toBeUndefined();
+    await act(async () => read());
+    expect(screen.getByText('Oats')).toBeOnTheScreen();
+    expect(screen.queryByText('Milk')).not.toBeOnTheScreen();
+  });
+
   it('says what to do where there are no foods, and shows no figure', async () => {
     // Given no foods
     const foods = new InMemoryFoodStore();
@@ -81,6 +193,7 @@ describe('Foods', () => {
     // Then the page says so and offers the way on
     expect(await screen.findByText('Build your food catalog')).toBeOnTheScreen();
     expect(screen.getByRole('button', { name: 'Add your first food' })).toBeOnTheScreen();
+    expect(screen.queryByRole('button', { name: 'Add food' })).not.toBeOnTheScreen();
     expect(screen.queryByText(/kcal/)).not.toBeOnTheScreen();
   });
 

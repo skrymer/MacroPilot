@@ -7,6 +7,6 @@ import { useReading } from './useReading';
 export function useFoods() {
   const store = useFoodStore();
   const list = useCallback(() => store.list(), [store]);
-  const { found: foods, readAgain } = useReading(list);
-  return { foods, readAgain };
+  const { found: foods, ...reading } = useReading(list);
+  return { foods, ...reading };
 }

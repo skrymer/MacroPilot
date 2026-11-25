@@ -1,4 +1,7 @@
+import { weighedEntry } from '@/domain/entry';
+
 import { BetterSqliteDatabase } from './BetterSqliteDatabase';
+import { SqliteEntryStore } from './SqliteEntryStore';
 import { SqliteFoodStore } from './SqliteFoodStore';
 
 describe('SqliteFoodStore', () => {
@@ -50,6 +53,41 @@ describe('SqliteFoodStore', () => {
 
     // Then they are in order
     expect(foods.map(({ name }) => name)).toEqual(['apple', 'Milk', 'oats', 'Zucchini']);
+  });
+
+  it('deletes one food for good, and never gives its id to another', async () => {
+    // Given three foods of one name, on a database opened again after
+    const db = new BetterSqliteDatabase();
+    const store = new SqliteFoodStore(db);
+    const macros = { protein: 1, carbohydrate: 2, fat: 3 };
+    for (const name of ['oats', 'oats', 'oats']) await store.add({ name, macros });
+
+    // When the last is deleted
+    await store.delete(3);
+
+    // Then it alone is gone, and a food added after has an id of its own
+    const reopened = new SqliteFoodStore(db);
+    await reopened.add({ name: 'oats', macros });
+    expect((await reopened.list()).map(({ id }) => id)).toEqual([1, 2, 4]);
+  });
+
+  it('keeps a food that has an entry, on an engine that does not hold to its keys unasked', async () => {
+    // Given a logged food, in a database that starts as a phone's does
+    const db = new BetterSqliteDatabase();
+    const store = new SqliteFoodStore(db);
+    await store.add({ name: 'oats', macros: { protein: 1, carbohydrate: 2, fat: 3 } });
+    const [food] = await store.list();
+    if (food === undefined) throw new Error('The food was not kept');
+    await new SqliteEntryStore(db).add(weighedEntry(food, 80, '2026-11-24'));
+    await db.execAsync('PRAGMA foreign_keys = OFF');
+
+    // When it is deleted
+    const deleting = store.delete(food.id);
+
+    // Then it is refused, and is there, as is its entry
+    await expect(deleting).rejects.toThrow();
+    expect(await store.list()).toHaveLength(1);
+    expect(await new SqliteEntryStore(db).listOn('2026-11-24')).toHaveLength(1);
   });
 
   it('keeps nothing of a food the domain refuses', async () => {
