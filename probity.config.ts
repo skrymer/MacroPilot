@@ -84,11 +84,14 @@ This takes precedence over the red and green rules above, for a production write
 these hold. It then needs no failing test:
 
   - Its only effect is what is drawn: a colour, a decoration, an appearance, a platform component's
-    own drawing, or a render or remount made only to draw it again.
+    own drawing, a render or remount made only to draw it again, or
+    the space between things or inside one (a padding, a margin, a gap).
+    The space inside what is pressed is its touch target, and is not this.
   - It leaves alone a value, a word, a role, a label, navigation, state or a computation, and
     a size, a touch target, what is shown or what can be pressed.
   - The session shows, before the write, the fault on the emulator, as
-    a pixel measurement in a command's output.
+    a pixel measurement in a command's output. For space that is the gap in pixels,
+    which is measured again once the write has been made.
   - It is the least that could repair that fault, and the tests of the file pass.
 
 Anything else in the same write is judged by the rules above.`;
