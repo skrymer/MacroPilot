@@ -33,9 +33,12 @@ export class SqliteFoodStore implements FoodStore {
     );
   }
 
-  async delete(id: number): Promise<void> {
+  async delete(id: number): Promise<'deleted' | 'logged'> {
     const db = await withSchema(this.db);
+    const entries = await db.getAllAsync('SELECT id FROM entries WHERE food_id = ? LIMIT 1', [id]);
+    if (entries.length > 0) return 'logged';
     await db.runAsync('DELETE FROM foods WHERE id = ?', [id]);
+    return 'deleted';
   }
 
   async list(): Promise<Food[]> {

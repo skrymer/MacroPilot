@@ -6,6 +6,8 @@ export type LoggedEntry = Entry & { id: number; name: string };
 /** What the user has eaten. A call that fails rejects, and has changed nothing. */
 export interface EntryStore {
   add(entry: Entry): Promise<void>;
+  /** One that is not there is gone already. */
+  delete(id: number): Promise<void>;
   /** Oldest first. */
   listOn(day: string): Promise<LoggedEntry[]>;
 }

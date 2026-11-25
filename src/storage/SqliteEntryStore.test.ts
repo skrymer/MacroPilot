@@ -120,6 +120,25 @@ describe('SqliteEntryStore', () => {
     expect(await store.listOn('2026-11-24')).toEqual([]);
   });
 
+  it('deletes one entry for good, and never gives its id to another', async () => {
+    // Given three entries of a day
+    const { db, food } = await withFood(OATS);
+    const store = new SqliteEntryStore(db);
+    const lunch = estimatedEntry({ label: 'lunch', calories: 850 }, '2026-11-24');
+    for (const entry of [weighedEntry(food, 80, '2026-11-24'), lunch, lunch]) {
+      await store.add(entry);
+    }
+
+    // When the last is deleted, and deleted again
+    await store.delete(3);
+    await store.delete(3);
+
+    // Then the others are there, and the next has an id of its own
+    await store.add(lunch);
+    const entries = await new SqliteEntryStore(db).listOn('2026-11-24');
+    expect(entries.map(({ id }) => id)).toEqual([1, 2, 4]);
+  });
+
   it('finds nothing on a phone that has kept nothing', async () => {
     // Given a database nothing was ever kept in
     const store = new SqliteEntryStore(new BetterSqliteDatabase());

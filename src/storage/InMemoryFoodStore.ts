@@ -1,6 +1,7 @@
 import { inNameOrder, newFood, type Food, type NewFood } from '@/domain/food';
 
 import type { FoodStore } from './FoodStore';
+import type { InMemoryEntryStore } from './InMemoryEntryStore';
 
 /** A wait that ends when it is told to. */
 const held = () => {
@@ -18,6 +19,7 @@ export class InMemoryFoodStore implements FoodStore {
   private writable: Promise<void> = Promise.resolve();
   private readable: Promise<void> = Promise.resolve();
   private foods: Food[] = [];
+  private entries?: InMemoryEntryStore;
   private lastId = 0;
 
   /** Every write waits from here until what this gives back is called. */
@@ -40,10 +42,17 @@ export class InMemoryFoodStore implements FoodStore {
     this.foods.push({ id: ++this.lastId, ...newFood(food) });
   }
 
-  async delete(id: number): Promise<void> {
+  /** Its foods are logged in `entries`, and one that is stays. */
+  loggedIn(entries: InMemoryEntryStore): void {
+    this.entries = entries;
+  }
+
+  async delete(id: number): Promise<'deleted' | 'logged'> {
     await this.writable;
     if (this.unwritable) throw new Error('The foods cannot be written');
+    if (this.entries?.hasEntryOf(id)) return 'logged';
     this.foods = this.foods.filter((food) => food.id !== id);
+    return 'deleted';
   }
 
   async list(): Promise<Food[]> {

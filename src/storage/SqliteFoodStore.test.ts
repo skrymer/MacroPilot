@@ -1,4 +1,4 @@
-import { weighedEntry } from '@/domain/entry';
+import { estimatedEntry, weighedEntry } from '@/domain/entry';
 
 import { BetterSqliteDatabase } from './BetterSqliteDatabase';
 import { SqliteEntryStore } from './SqliteEntryStore';
@@ -82,12 +82,49 @@ describe('SqliteFoodStore', () => {
     await db.execAsync('PRAGMA foreign_keys = OFF');
 
     // When it is deleted
-    const deleting = store.delete(food.id);
+    const answer = await store.delete(food.id);
 
     // Then it is refused, and is there, as is its entry
-    await expect(deleting).rejects.toThrow();
+    expect(answer).toBe('logged');
     expect(await store.list()).toHaveLength(1);
     expect(await new SqliteEntryStore(db).listOn('2026-11-24')).toHaveLength(1);
+  });
+
+  it('holds a logged food’s row to its entries, whoever deletes it', async () => {
+    // Given a logged food, in a database that starts as a phone's does
+    const db = new BetterSqliteDatabase();
+    const store = new SqliteFoodStore(db);
+    await store.add({ name: 'oats', macros: { protein: 1, carbohydrate: 2, fat: 3 } });
+    const [food] = await store.list();
+    if (food === undefined) throw new Error('The food was not kept');
+    await new SqliteEntryStore(db).add(weighedEntry(food, 80, '2026-11-24'));
+
+    // When it is deleted past the store
+    const deleting = db.runAsync('DELETE FROM foods WHERE id = ?', [food.id]);
+
+    // Then the table refuses it
+    await expect(deleting).rejects.toThrow('FOREIGN KEY');
+  });
+
+  it('says a food is kept because it is logged, until its only entry is deleted', async () => {
+    // Given a logged food that was not deleted, for that reason
+    const db = new BetterSqliteDatabase();
+    const store = new SqliteFoodStore(db);
+    const entries = new SqliteEntryStore(db);
+    await store.add({ name: 'oats', macros: { protein: 1, carbohydrate: 2, fat: 3 } });
+    const [food] = await store.list();
+    if (food === undefined) throw new Error('The food was not kept');
+    await entries.add(estimatedEntry({ label: 'oats', calories: 1 }, '2026-11-24'));
+    await entries.add(weighedEntry(food, 80, '2026-11-24'));
+    expect(await store.delete(food.id)).toBe('logged');
+    await entries.delete(2);
+
+    // When it is deleted again
+    const answer = await store.delete(food.id);
+
+    // Then it is gone
+    expect(answer).toBe('deleted');
+    expect(await store.list()).toEqual([]);
   });
 
   it('keeps nothing of a food the domain refuses', async () => {

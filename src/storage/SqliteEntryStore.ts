@@ -44,6 +44,11 @@ export class SqliteEntryStore implements EntryStore {
     );
   }
 
+  async delete(id: number): Promise<void> {
+    const db = await withSchema(this.db);
+    await db.runAsync('DELETE FROM entries WHERE id = ?', [id]);
+  }
+
   async listOn(day: string): Promise<LoggedEntry[]> {
     const db = await withSchema(this.db);
     const rows = await db.getAllAsync<Row>(ON_DAY, [day]);
