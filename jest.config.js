@@ -19,6 +19,8 @@ const NODE_PROJECT = {
 };
 
 module.exports = {
+  globalSetup: './tests/ownTmpdir.js',
+  globalTeardown: './tests/removeOwnTmpdir.js',
   projects: [
     {
       ...NODE_PROJECT,
