@@ -45,7 +45,7 @@ app/             Expo Router screens: present values, judge nothing
 
 Then commit on a feature branch, push, open a PR, and merge when CI is green, without asking. Small slices of one PRD may share a PR and a sign-off.
 
-**The user tests an epic, never an issue** ([`0004`](./docs/adr/0004-an-issue-is-verified-on-the-emulator-and-an-epic-on-the-iphone.md)). The agent verifies each issue on the Android emulator, break-it tester included. When a PRD's last issue merges, the agent walks the whole epic there, runs the break-it tester over it, and hands the user a short script to test by hand on iOS. Building the next epic starts once the user passes it.
+**The user tests an epic, never an issue** ([`0004`](./docs/adr/0004-an-issue-is-verified-on-the-emulator-and-an-epic-on-the-iphone.md)). The agent verifies each issue on the Android emulator, break-it tester included. When a PRD's last issue merges, the agent walks the whole epic there, runs the break-it tester over it, and hands the user a short script for iOS: the epic's happy paths from a fresh install, and their styling. Building the next epic starts once the user passes it.
 
 ## Testing
 
