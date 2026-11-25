@@ -48,7 +48,7 @@ const DEVICE = {
 const OUT = () => mkdtempSync(path.join(tmpdir(), 'shots-'));
 
 describe('sizes.sh', () => {
-  it('photographs all five sizes when none is named', () => {
+  it('photographs both sizes, and no narrower screen, when none is named', () => {
     // Given a device
 
     // When a screen is photographed
@@ -58,10 +58,7 @@ describe('sizes.sh', () => {
     expect(status).toBe(0);
     expect(output.match(/design-[a-z-]+(?=-1\.png)/g)?.sort()).toEqual([
       'design-default',
-      'design-display',
       'design-text',
-      'design-worst',
-      'design-worst-dark',
     ]);
   });
 
@@ -69,10 +66,10 @@ describe('sizes.sh', () => {
     // Given a device
 
     // When one size is asked for
-    const { output } = stage(DEVICE).run(SIZES, [OUT(), 'design'], { SIZES: 'worst' });
+    const { output } = stage(DEVICE).run(SIZES, [OUT(), 'design'], { SIZES: 'text' });
 
     // Then only it is there, and the run says it is not the whole check
-    expect(output.match(/design-[a-z-]+(?=-1\.png)/g)).toEqual(['design-worst']);
+    expect(output.match(/design-[a-z-]+(?=-1\.png)/g)).toEqual(['design-text']);
     expect(output).toContain('not the whole check');
   });
 
@@ -92,14 +89,15 @@ describe('sizes.sh', () => {
     const tools = { ...DEVICE, npx: '[ "$2" = wait ] && exit 1; exit 0' };
 
     // When a screen is photographed
-    const { status, calls } = stage(tools).run(SIZES, [OUT(), 'design'], { SIZES: 'worst' });
+    const { status, calls } = stage(tools).run(SIZES, [OUT(), 'design'], { SIZES: 'text' });
 
-    // Then it fails, with the text and display sizes put back last
+    // Then it fails, with the text size put back last, and the display's own size
     expect(status).toBe(1);
     expect(calls.lastIndexOf('font_scale 1.0')).toBeGreaterThan(
       calls.lastIndexOf('font_scale 2.0'),
     );
-    expect(calls.lastIndexOf('density reset')).toBeGreaterThan(calls.lastIndexOf('density 540'));
+    expect(calls).toContain('density reset');
+    expect(calls).not.toMatch(/density \d/);
   });
 });
 

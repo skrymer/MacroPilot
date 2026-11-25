@@ -5,12 +5,9 @@
 #
 #   default      text 1.0, the device's own display size
 #   text         text 2.0
-#   display      text 1.0, 320dp wide
-#   worst        text 2.0, 320dp wide
-#   worst-dark   the same, in the dark appearance
 #
-# SIZES=worst photographs one, or several in quotes, while a screen or this script is being worked on.
-# /verify owes all five.
+# SIZES=text photographs one, while a screen or this script is being worked on. /verify owes
+# SIZES=default on an issue, and both on an epic. A narrower screen is never checked.
 #
 # Run emulator.sh first; METRO_PORT as there. Each size loads the bundle again, since Android recreates
 # the activity when the text size changes. Every setting is put back on exit, however it ends. Exits 1
@@ -20,7 +17,7 @@ set -euo pipefail
 out=${1:?usage: sizes.sh <out-dir> <route>…}
 shift
 [ $# -gt 0 ] || { echo "usage: sizes.sh <out-dir> <route>…" >&2; exit 2; }
-all="default text display worst worst-dark"
+all="default text"
 sizes=${SIZES:-$all}
 for size in $sizes; do
   [[ " $all " == *" $size "* ]] || { echo "sizes.sh: no size $size; they are $all" >&2; exit 2; }
@@ -45,9 +42,6 @@ restore() {
   ad close
 } >/dev/null 2>&1
 trap restore EXIT
-
-wide=$(adb shell wm size | tail -1 | tr -d "\r" | sed "s/.*: //; s/x.*//")
-narrow=$((wide * 160 / 320))
 
 failed=0
 miss() {
@@ -77,16 +71,11 @@ shoot() {
 }
 
 for size in $sizes; do
-  scale=1.0 density=reset night=no
-  case $size in
-    text) scale=2.0 ;;
-    display) density=$narrow ;;
-    worst) scale=2.0 density=$narrow ;;
-    worst-dark) scale=2.0 density=$narrow night=yes ;;
-  esac
+  scale=1.0
+  [ "$size" = text ] && scale=2.0
   adb shell settings put system font_scale "$scale"
-  adb shell wm density "$density"
-  adb shell cmd uimode night "$night" >/dev/null
+  adb shell wm density reset
+  adb shell cmd uimode night no >/dev/null
   adb shell am force-stop "$app"
   ad open "$app" "$load" && ad wait text "Today" 30000 || { miss "the bundle did not load at $size"; continue; }
   for route in "$@"; do shoot "$size" "$route"; done

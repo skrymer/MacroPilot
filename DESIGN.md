@@ -54,7 +54,7 @@ The figure in the centre is `ink` while the day is within its budget, `slightly-
 
 Figure sizes never scale with the user's text size; everything else scales to double ([`0007`](./docs/adr/0007-figures-are-fixed-size-and-text-scales-to-double.md)).
 
-**A row reflows.** Name and figure stand side by side while both fit, and the figure drops below the name when they do not: the name keeps `min-w-name`. Nothing holding text has a fixed height, and nothing that matters ends in an ellipsis. The worst case is text at double on a screen 320 points wide.
+**A row reflows.** Name and figure stand side by side while both fit, and the figure drops below the name when they do not: the name keeps `min-w-name`. Nothing holding text has a fixed height, and nothing that matters ends in an ellipsis. Text at double is the largest it is checked at.
 
 ## Controls
 

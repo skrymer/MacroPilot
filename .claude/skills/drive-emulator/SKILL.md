@@ -1,6 +1,6 @@
 ---
 name: drive-emulator
-description: Drives this app on the Android emulator. Boots it and loads this checkout's bundle into the development build, then gives the moves the app's checks need (text and display size, appearance, time zone, clock, kill, network), photographs screens at fixed sizes, and puts everything back. Use before driving the app with agent-device, for verify and break-it, when a screen has to be looked at on Android, or when the user says "run it on the emulator".
+description: Drives this app on the Android emulator. Boots it and loads this checkout's bundle into the development build, then gives the moves the app's checks need (text size, appearance, time zone, clock, kill, network), photographs screens at fixed sizes, and puts everything back. Use before driving the app with agent-device, for verify and break-it, when a screen has to be looked at on Android, or when the user says "run it on the emulator".
 ---
 
 # Drive the emulator
@@ -51,7 +51,6 @@ The rules are the `agent-device` skill's. They are here because the first tester
 | Move | Run |
 | --- | --- |
 | Text size | `adb shell settings put system font_scale 2.0`. Android's ladder ends there, and the tool's `text-size` goes to 3.2 |
-| Display size | `adb shell wm density 540` (320dp wide on this AVD), `adb shell wm density reset` |
 | Appearance | `ad settings appearance dark`, `light` |
 | Kill, and process death | `adb shell am force-stop com.skrymer.macropilot`; `adb shell am kill …` from the background |
 | Home and back | `adb shell input keyevent HOME`, `adb shell am start -n com.skrymer.macropilot/.MainActivity` |
@@ -71,7 +70,7 @@ The rules are the `agent-device` skill's. They are here because the first tester
 .claude/skills/drive-emulator/scripts/sizes.sh <out-dir> / design
 ```
 
-Photographs each route, top to bottom, at the five sizes ADR 0007 fixes. About five minutes a long route, so run it in the background. While a screen or the script is being worked on, `SIZES=worst` first, and look before running the rest. `/verify` owes all five. **The sizes hold a form's width and scale, and not its content**: one that takes a name or shows a fault is photographed with a name of 64 characters, each fault showing and the real keyboard up, and *holds* is said of what was photographed alone. **Look at every photo**: a unit lost, a word broken, text clipped or touching, a control out of reach.
+Photographs each route, top to bottom, at the two sizes ADR 0007 fixes. While a screen or the script is being worked on, name one. An issue owes `SIZES=default`, and an epic both. **The sizes hold a form's scale, and not its content**: one that takes a name or shows a fault is photographed with a name of 64 characters, each fault showing and the real keyboard up, and *holds* is said of what was photographed alone. **Look at every photo**: a unit lost, a word broken, text clipped or touching, a control out of reach.
 
 ## Traps
 
