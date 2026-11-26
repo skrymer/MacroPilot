@@ -521,12 +521,6 @@ type Told = 'card' | 'tick' | 'line';
  * Q15, telling what worked on another page: epic 1's card; the card with a green tick, as a valid
  * field has; or one quiet line with the tick, no card.
  */
-const TOLDS: Chip<Told>[] = [
-  { label: 'Card', value: 'card' },
-  { label: 'Card and tick', value: 'tick' },
-  { label: 'Line and tick', value: 'line' },
-];
-
 function Logged({ told, palette }: { told: Told; palette: Palette }) {
   const tick =
     told === 'card' ? null : (
@@ -774,7 +768,8 @@ export default function ColoursPrototype() {
   const [failure, setFailure] = useState<Failure>('none');
   // Decided 26 November 2026: a failure anywhere takes a field fault's red and its sign.
   const failureLook: FailureLook = 'red';
-  const [told, setTold] = useState<Told>('tick');
+  // Decided 26 November 2026: what worked is told in a card with a green tick.
+  const told: Told = 'tick';
   // Decided 26 November 2026: a secondary button outlined, and the platform's press on every button.
   const secondary: Secondary = 'outlined';
   const press: Press = 'platform';
@@ -800,7 +795,6 @@ export default function ColoursPrototype() {
           <Chips chips={FAILURES} chosen={failure} onChoose={setFailure} />
         </>
       ) : null}
-      {screen === 'log' ? <Chips chips={TOLDS} chosen={told} onChoose={setTold} /> : null}
       <Chips
         chips={APPEARANCES}
         chosen={appearance}
