@@ -419,8 +419,11 @@ export default function ColoursPrototype() {
           headerLargeTitleShadowVisible: false,
           headerShadowVisible: false,
           headerBackVisible: false,
-          headerStyle: { backgroundColor: palette.ground },
-          headerLargeStyle: { backgroundColor: palette.ground },
+          // iOS draws its own bar: clear over the large title, glass once the page scrolls under it,
+          // as Health's. A colour of ours would make it opaque. Android's bar takes the ground.
+          ...(Platform.OS === 'ios'
+            ? { headerTransparent: true }
+            : { headerStyle: { backgroundColor: palette.ground } }),
           headerTitleStyle: face,
           headerLargeTitleStyle: face,
           headerTintColor: palette.ink,
