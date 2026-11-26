@@ -52,5 +52,6 @@ export default {
     '!**/*.test.tsx',
     // One to a line: the prototype skill's exempt.sh adds its own after this one.
     '!app/design.tsx',
+    '!app/prototype/**',
   ],
 };

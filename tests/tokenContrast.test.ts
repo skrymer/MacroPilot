@@ -37,6 +37,13 @@ const PAIRS: { text: string; on: string; size: 'body' | 'large' }[] = [
   { text: 'within', on: 'surface', size: 'body' },
   { text: 'slightly-over', on: 'surface', size: 'body' },
   { text: 'over', on: 'surface', size: 'body' },
+  // A fault is said on a card, and above a form's button on the ground.
+  { text: 'fault', on: 'surface', size: 'body' },
+  { text: 'fault', on: 'ground', size: 'body' },
+  // A field's placeholder, on the field.
+  { text: 'ink-mid', on: 'surface-lift', size: 'body' },
+  // A tick and a valid field's outline are not text: WCAG's 3:1 for a graphic, the `large` floor.
+  { text: 'valid', on: 'surface', size: 'large' },
 ];
 
 const FLOOR = { body: 4.5, large: 3 };
@@ -51,6 +58,17 @@ describe('token contrast', () => {
 
     // Then it is the maximum WCAG defines
     expect(ratio).toBeCloseTo(21);
+  });
+
+  it('keeps a stated absence apart from secondary text', () => {
+    // Given the two softer inks of each appearance
+    const pairs = [tokens.light, tokens.dark].map((p) => [p['ink-mid']!, p['ink-dim']!] as const);
+
+    // When their contrast with each other is measured
+    const ratios = pairs.map(([mid, dim]) => contrast(mid, dim));
+
+    // Then each is at least epic 1's 1.4:1, so `ink-dim` is told from `ink-mid` without its italics
+    expect(Math.min(...ratios)).toBeGreaterThanOrEqual(1.4);
   });
 
   it('defines the same tokens in both appearances', () => {
@@ -96,7 +114,9 @@ describe('token contrast', () => {
         .filter((token) => token in tokens.light),
     );
 
-    // Then each one has its contrast checked above
-    expect([...used].sort()).toEqual([...new Set(PAIRS.map((p) => p.text))].sort());
+    // Then each one has its contrast checked above (`valid` tints a symbol, and is no text class)
+    expect([...used].sort()).toEqual(
+      [...new Set(PAIRS.map((p) => p.text))].filter((token) => token !== 'valid').sort(),
+    );
   });
 });
