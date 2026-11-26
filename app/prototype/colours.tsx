@@ -284,14 +284,6 @@ function Log() {
 
 type FaultStyle = 'words' | 'marked' | 'below' | 'colour' | 'colour-one';
 
-const FAULT_STYLES: Chip<FaultStyle>[] = [
-  { label: 'Words above', value: 'words' },
-  { label: 'Marked, above', value: 'marked' },
-  { label: 'Marked, below', value: 'below' },
-  { label: 'Red and green', value: 'colour' },
-  { label: 'Red and green, one card', value: 'colour-one' },
-];
-
 type Palette = (typeof CANDIDATES)[number]['light'];
 
 /**
@@ -443,7 +435,8 @@ export default function ColoursPrototype() {
   const [screen, setScreen] = useState<Screen>('today');
   const [standing, setStanding] = useState<Standing>('within');
   const [barShown, setBarShown] = useState(true);
-  const [faultStyle, setFaultStyle] = useState<FaultStyle>('words');
+  // Decided 26 November 2026: red and green, the fault's words above its field, one card.
+  const faultStyle: FaultStyle = 'colour-one';
   const appearance = useColorScheme() === 'dark' ? 'dark' : 'light';
   const palette = CHOSEN[appearance];
   // The native header takes colours as values, not classes: the variant's own, at run time.
@@ -461,9 +454,6 @@ export default function ColoursPrototype() {
       </View>
       {screen === 'today' ? (
         <Chips chips={STANDINGS} chosen={standing} onChoose={setStanding} />
-      ) : null}
-      {screen === 'form' ? (
-        <Chips chips={FAULT_STYLES} chosen={faultStyle} onChoose={setFaultStyle} />
       ) : null}
       <Chips
         chips={APPEARANCES}
