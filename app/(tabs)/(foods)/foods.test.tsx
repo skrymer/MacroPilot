@@ -1,4 +1,4 @@
-import { act, screen, userEvent } from '@testing-library/react-native';
+import { act, fireEvent, screen, userEvent } from '@testing-library/react-native';
 import { router } from 'expo-router';
 import { renderRouter } from 'expo-router/testing-library';
 import type { ReactNode } from 'react';
@@ -33,6 +33,14 @@ const openFoods = (foods: InMemoryFoodStore, ask?: ScriptedAsk, entries?: InMemo
       ),
     },
   );
+
+/** Deletes a food the way a screen reader does, in place of the swipe: the row's Delete action. */
+const deleteFrom = async (name: string) => {
+  const row = await screen.findByLabelText(new RegExp(`^${name}, `));
+  await act(async () => {
+    fireEvent(row, 'accessibilityAction', { nativeEvent: { actionName: 'delete' } });
+  });
+};
 
 describe('Foods', () => {
   it('says a food’s calories and protein per 100 g, worked out from its macros', async () => {
@@ -93,7 +101,7 @@ describe('Foods', () => {
     for (const name of ['rolled OATS', 'milk']) await foods.add({ name, macros });
     const ask = new ScriptedAsk();
     await openFoods(foods, ask);
-    await userEvent.press(await screen.findByRole('button', { name: 'Delete Rolled oats' }));
+    await deleteFrom('Rolled oats');
     expect(ask.question).toEqual({
       title: 'Delete this food?',
       message:
@@ -111,13 +119,72 @@ describe('Foods', () => {
     expect((await foods.list()).map(({ name }) => name)).toEqual(['milk']);
   });
 
+  it('asks about a food deleted from its row’s actions, as a screen reader does in place of a swipe', async () => {
+    // Given Foods open on a food
+    const foods = new InMemoryFoodStore();
+    await foods.add({ name: 'milk', macros: { protein: 3, carbohydrate: 5, fat: 3 } });
+    const ask = new ScriptedAsk();
+    await openFoods(foods, ask);
+    const row = await screen.findByLabelText(/^Milk, /);
+
+    // When a screen reader takes the row's Delete action (userEvent has none to take)
+    fireEvent(row, 'accessibilityAction', { nativeEvent: { actionName: 'delete' } });
+
+    // Then the system asks about that food
+    expect(row).toHaveProp('accessibilityActions', [{ name: 'delete', label: 'Delete' }]);
+    expect(ask.question?.title).toBe('Delete this food?');
+  });
+
+  it('asks nothing for a row’s action that is not Delete', async () => {
+    // Given Foods open on a food
+    const foods = new InMemoryFoodStore();
+    await foods.add({ name: 'milk', macros: { protein: 3, carbohydrate: 5, fat: 3 } });
+    const ask = new ScriptedAsk();
+    await openFoods(foods, ask);
+    const row = await screen.findByLabelText(/^Milk, /);
+
+    // When the system dispatches another action to the row (userEvent has none to take)
+    fireEvent(row, 'accessibilityAction', { nativeEvent: { actionName: 'activate' } });
+
+    // Then nothing is asked
+    expect(ask.question).toBeUndefined();
+  });
+
+  it('ends a food’s row in its figures, with nothing beside them to delete it', async () => {
+    // Given a food
+    const foods = new InMemoryFoodStore();
+    await foods.add({ name: 'milk', macros: { protein: 3, carbohydrate: 5, fat: 3 } });
+
+    // When the user opens Foods
+    await openFoods(foods);
+
+    // Then its row has no button of its own: it is swiped, or a screen reader takes its action
+    expect(await screen.findByLabelText(/^Milk, /)).toBeOnTheScreen();
+    expect(screen.queryByRole('button', { name: /Delete/ })).not.toBeOnTheScreen();
+    expect(screen.queryByText('Delete')).not.toBeOnTheScreen();
+  });
+
+  // The swipe itself is a gesture Jest cannot make; its flow is e2e/delete-food-by-swipe.yaml (ADR 0011).
+  it('keeps the swipe’s Delete under a row and from a screen reader, which has the row’s action', async () => {
+    // Given a food
+    const foods = new InMemoryFoodStore();
+    await foods.add({ name: 'milk', macros: { protein: 3, carbohydrate: 5, fat: 3 } });
+
+    // When the user opens Foods
+    await openFoods(foods);
+
+    // Then Delete lies under the row, and a screen reader is not sent to it
+    expect(await screen.findByText('Delete', { includeHiddenElements: true })).toBeTruthy();
+    expect(screen.queryByText('Delete')).not.toBeOnTheScreen();
+  });
+
   it('keeps a food whose question is cancelled', async () => {
     // Given Foods open on one, asked to be deleted
     const foods = new InMemoryFoodStore();
     await foods.add({ name: 'milk', macros: { protein: 3, carbohydrate: 5, fat: 3 } });
     const ask = new ScriptedAsk();
     await openFoods(foods, ask);
-    await userEvent.press(await screen.findByRole('button', { name: 'Delete Milk' }));
+    await deleteFrom('Milk');
 
     // When the user cancels
     await act(async () => ask.answer(false));
@@ -134,13 +201,12 @@ describe('Foods', () => {
     foods.unwritable = true;
     const ask = new ScriptedAsk();
     await openFoods(foods, ask);
-    const user = userEvent.setup();
-    await user.press(await screen.findByRole('button', { name: 'Delete Milk' }));
+    await deleteFrom('Milk');
     await act(async () => ask.answer(true));
     expect(await screen.findByRole('alert')).toHaveTextContent('Could not delete food');
     expect(screen.getByText('Milk')).toBeOnTheScreen();
     foods.unwritable = false;
-    await user.press(screen.getByRole('button', { name: 'Delete Milk' }));
+    await deleteFrom('Milk');
     expect(screen.queryByText('Could not delete food')).not.toBeOnTheScreen();
 
     // When the user says to delete it again
@@ -158,7 +224,7 @@ describe('Foods', () => {
     foods.unwritable = true;
     const ask = new ScriptedAsk();
     await openFoods(foods, ask);
-    await userEvent.press(await screen.findByRole('button', { name: 'Delete Milk' }));
+    await deleteFrom('Milk');
 
     // When the user says to
     await act(async () => ask.answer(true));
@@ -179,7 +245,7 @@ describe('Foods', () => {
     await entries.add(weighedEntry(oats as NonNullable<typeof oats>, 80, '2026-11-24'));
     const ask = new ScriptedAsk();
     await openFoods(foods, ask, entries);
-    await userEvent.press(await screen.findByRole('button', { name: 'Delete Rolled oats' }));
+    await deleteFrom('Rolled oats');
     expect(ask.question?.message).toBe(
       'Rolled oats will be removed from your catalog. A food you’ve logged entries against can’t be deleted — your entries depend on it.',
     );
@@ -201,7 +267,7 @@ describe('Foods', () => {
     foods.unwritable = true;
     const ask = new ScriptedAsk();
     await openFoods(foods, ask);
-    await userEvent.press(await screen.findByRole('button', { name: 'Delete Milk' }));
+    await deleteFrom('Milk');
     await act(async () => ask.answer(true));
     expect(await screen.findByRole('alert')).toBeOnTheScreen();
     await act(() => router.navigate('/'));
@@ -222,20 +288,19 @@ describe('Foods', () => {
     const deleted = foods.holdWrites();
     const ask = new ScriptedAsk();
     await openFoods(foods, ask);
-    const user = userEvent.setup();
-    await user.press(await screen.findByRole('button', { name: 'Delete Milk' }));
-    await user.press(screen.getByRole('button', { name: 'Delete Oats' }));
+    await deleteFrom('Milk');
+    await deleteFrom('Oats');
     expect(ask.question?.message).toMatch(/^Milk will be removed from your catalog\./);
     await act(async () => ask.answer(true));
 
     // When it is pressed again while the first is being deleted
-    await user.press(screen.getByRole('button', { name: 'Delete Oats' }));
+    await deleteFrom('Oats');
 
     // Then nothing is asked, nor while the list is read again, and the first alone goes
     expect(ask.question).toBeUndefined();
     const read = foods.holdNextRead();
     await act(async () => deleted());
-    await user.press(screen.getByRole('button', { name: 'Delete Milk' }));
+    await deleteFrom('Milk');
     expect(ask.question).toBeUndefined();
     await act(async () => read());
     expect(screen.getByText('Oats')).toBeOnTheScreen();
@@ -254,6 +319,18 @@ describe('Foods', () => {
     expect(screen.getByRole('button', { name: 'Add your first food' })).toBeOnTheScreen();
     expect(screen.queryByRole('button', { name: 'Add food' })).not.toBeOnTheScreen();
     expect(screen.queryByText(/kcal/)).not.toBeOnTheScreen();
+  });
+
+  it('announces that it could not read the foods', async () => {
+    // Given foods that cannot be read
+    const foods = new InMemoryFoodStore();
+    foods.unreadable = true;
+
+    // When the user opens Foods
+    await openFoods(foods);
+
+    // Then a screen reader is told at once
+    expect(await screen.findByRole('alert')).toHaveTextContent('Couldn’t load your foods');
   });
 
   it('says it could not read the foods, rather than that there are none', async () => {

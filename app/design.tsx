@@ -5,6 +5,7 @@ import { Appearance, Pressable, ScrollView, useColorScheme, View } from 'react-n
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle } from 'react-native-svg';
 
+import { Failure } from '@/components/Failure';
 import { Link } from '@/components/Link';
 import { Text } from '@/components/Text';
 import { useRipple } from '@/components/useRipple';
@@ -43,16 +44,12 @@ type Sign = { ios: SFSymbol; android: AndroidSymbol };
 const WARNING: Sign = { ios: 'exclamationmark.triangle.fill', android: 'warning' };
 const TICK: Sign = { ios: 'checkmark.circle.fill', android: 'check_circle' };
 
-/** What failed, where it failed: `fault`, with the warning sign, so the hue is never alone. */
-const Failure = ({ words }: { words: string }) => {
-  const tint = useTint();
-  return (
-    <View className="mb-3 flex-row items-center gap-2">
-      <SymbolView name={WARNING} size={18} tintColor={tint.fault} />
-      <Text className="flex-1 font-language-bold text-body text-fault">{words}</Text>
-    </View>
-  );
-};
+/** What failed, where it failed: the app's own `Failure`, `fault` with the warning sign. */
+const Failed = ({ words }: { words: string }) => (
+  <View className="mb-3">
+    <Failure words={words} />
+  </View>
+);
 
 /** A form's field: its label, a fault's words above it, and its state at its end. */
 const Field = ({
@@ -93,38 +90,37 @@ const Field = ({
   );
 };
 
-/** A row of a list in its card, with its quiet bin at the end. */
-const ListRow = ({ name, detail, figure, estimated = false }: ListRowProps) => {
-  const tint = useTint();
-  const bin = { ...useRipple('page'), borderless: true };
-  return (
-    <View className="flex-row flex-wrap items-center justify-between gap-x-2">
-      <View className="min-w-name flex-1 flex-row flex-wrap items-center justify-between gap-x-4 py-3">
-        <View className="min-w-name flex-1">
-          <Text className="font-language text-body text-ink">{name}</Text>
-          <Text className="font-language text-label text-ink-mid">{detail}</Text>
-        </View>
-        <Text
-          className={`text-body ${estimated ? 'font-estimated text-ink-mid' : 'font-weighed text-ink'}`}
-        >
-          {figure}
-        </Text>
-      </View>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={`Delete ${name}`}
-        android_ripple={bin}
-        className="min-h-target min-w-target items-center justify-center ios:active:opacity-60"
-      >
-        <SymbolView
-          name={{ ios: 'trash', android: 'delete' }}
-          size={22}
-          tintColor={tint['ink-mid']}
-        />
-      </Pressable>
+/** A row of a list in its card, its figures at its end: it is deleted by a swipe, nothing drawn for it. */
+const ListRow = ({ name, detail, figure, estimated = false }: ListRowProps) => (
+  <View className="flex-row flex-wrap items-center justify-between gap-x-2 py-3">
+    <View className="min-w-name flex-1">
+      <Text className="font-language text-body text-ink">{name}</Text>
+      <Text className="font-language text-label text-ink-mid">{detail}</Text>
     </View>
-  );
-};
+    <Text
+      className={`text-body ${estimated ? 'font-estimated text-ink-mid' : 'font-weighed text-ink'}`}
+    >
+      {figure}
+    </Text>
+  </View>
+);
+
+/** A row swiped to the left: *Delete* in `fault`, reaching the card's rounded edge. */
+const SwipedRow = () => (
+  <View className="flex-row">
+    <View className="flex-1 py-3 pl-page">
+      <Text numberOfLines={1} className="font-language text-body text-ink">
+        Black coffee
+      </Text>
+      <Text numberOfLines={1} className="font-language text-label text-ink-mid">
+        {`250${NBSP}g, 0${NBSP}g protein`}
+      </Text>
+    </View>
+    <View className="items-center justify-center bg-fault px-5">
+      <Text className="font-language-bold text-body text-ground">Delete</Text>
+    </View>
+  </View>
+);
 
 type ListRowProps = { name: string; detail: string; figure: string; estimated?: boolean };
 
@@ -510,7 +506,7 @@ export default function Design() {
 
         <Section
           title="A list"
-          note="Its rows in one card, a quiet bin at each and a swipe beside it. The tally's calories are a figure. The rest of a long day is the card's last row."
+          note="Its rows in one card. A row is deleted by a swipe to the left, which asks once open; a screen reader has Delete among its actions. The tally's calories are a figure. The rest of a long day is the card's last row."
         >
           <View className="mb-1 flex-row flex-wrap items-baseline justify-between gap-x-4">
             <Text accessibilityRole="header" className="font-language-bold text-body text-ink">
@@ -536,6 +532,9 @@ export default function Design() {
             />
             <View className="border-t border-line" />
             <ShowAll />
+          </View>
+          <View className="mb-3 overflow-hidden rounded-card bg-surface">
+            <SwipedRow />
           </View>
         </Section>
 
@@ -566,7 +565,7 @@ export default function Design() {
             />
             <Field label="Protein (optional)" value="" />
           </View>
-          <Failure words="Not saved. A field above needs changing." />
+          <Failed words="Not saved. A field above needs changing." />
           <Action solid label="Log estimated entry" />
         </Section>
 
@@ -589,11 +588,11 @@ export default function Design() {
         >
           <Logged />
           <Card>
-            <Failure words="Could not save entry. What you typed is still here." />
+            <Failed words="Could not save entry. What you typed is still here." />
             <Action solid label="Log entry" />
           </Card>
           <Card>
-            <Failure words={'Couldn\u2019t load today\u2019s summary'} />
+            <Failed words={'Couldn\u2019t load today\u2019s summary'} />
             <Action label="Retry" />
           </Card>
           <View className="rounded-card bg-surface px-page py-1">

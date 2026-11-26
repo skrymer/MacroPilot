@@ -43,7 +43,9 @@ module.exports = {
     {
       displayName: 'app',
       preset: 'jest-expo',
-      setupFiles: ['<rootDir>/tests/systemHeader.ts'],
+      // Reanimated's own, which loads its web code where its native code needs a phone.
+      resolver: require.resolve('react-native-reanimated/jest/resolver'),
+      setupFiles: ['<rootDir>/tests/systemHeader.ts', '<rootDir>/tests/gestures.ts'],
       testMatch: [
         '<rootDir>/app/**/*.test.tsx',
         '<rootDir>/src/components/**/*.test.{ts,tsx}',

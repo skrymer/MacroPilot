@@ -167,3 +167,6 @@ reports/mutation/
 
 # Stryker's sandbox, a copy of the repo it mutates; a run killed before it cleans up leaves it behind
 .stryker-tmp/
+
+# agent-device test runs: artifacts per run (ADR 0011).
+.agent-device/

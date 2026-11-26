@@ -9,32 +9,36 @@ const protein = (stated?: number) =>
 const spokenProtein = (stated?: number) =>
   stated === undefined ? 'protein not stated' : `${spokenGrams(stated)} of protein`;
 
-/** An estimate's says that it is one. */
+/** An estimate's says that it is one, and is set as one (DESIGN.md, *Figures*). */
 const calorieWords = (calories: number, estimated: boolean, show = kcal) => ({
   shown: `${estimated ? 'about ' : ''}${show(calories)}`,
   spoken: `${estimated ? 'about ' : ''}${spokenKcal(calories)}`,
+  kind: (estimated ? 'estimated' : 'weighed') as 'weighed' | 'estimated',
 });
 
 /** A day's totals as its card shows them, and as a screen reader says them. */
 export function totalsWords({ calories, protein: stated, proteinStated, estimated }: Totals) {
   const atLeast = proteinStated === 'some' ? 'at least ' : '';
+  const { shown, kind } = calorieWords(calories, estimated);
   // The kinds of figure in DESIGN.md, *Figures*.
-  const caloriesKind: 'weighed' | 'estimated' = estimated ? 'estimated' : 'weighed';
   const proteinKind: 'weighed' | 'notStated' = stated === undefined ? 'notStated' : 'weighed';
   return {
-    caloriesKind,
+    caloriesKind: kind,
     proteinKind,
-    calories: calorieWords(calories, estimated).shown,
+    calories: shown,
     protein: `${atLeast}${protein(stated)}`,
     spoken: `${estimated ? 'About ' : ''}${spokenKcal(calories)}, ${atLeast}${spokenProtein(stated)}`,
   };
 }
 
-/** How many entries a day has and what they come to, as it is headed and as a screen reader says it. */
+/**
+ * How many entries a day has and what they come to, as it is headed and as a screen reader says it. The
+ * calories stand apart, to be set as a total is, by the surest kind in them.
+ */
 export function tallyWords(count: number, { calories, estimated }: Totals) {
   const entries = `${count} ${count === 1 ? 'entry' : 'entries'}`;
-  const { shown, spoken } = calorieWords(calories, estimated, talliedKcal);
-  return { shown: `${entries} · ${shown}`, spoken: `${entries}, ${spoken}` };
+  const { shown, spoken, kind } = calorieWords(calories, estimated, talliedKcal);
+  return { count: entries, calories: shown, caloriesKind: kind, spoken: `${entries}, ${spoken}` };
 }
 
 /** An entry's figures in a line: an estimate's without the protein it does not state. */

@@ -6,7 +6,8 @@ import { useFonts } from 'expo-font';
 import { Stack, useFocusEffect, useRouter } from 'expo-router';
 import { openDatabaseAsync } from 'expo-sqlite';
 import { StatusBar } from 'expo-status-bar';
-import { View } from 'react-native';
+import { LogBox, View } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { AskProvider } from '@/components/AskContext';
 import { LoggedProvider } from '@/components/LoggedContext';
@@ -20,6 +21,10 @@ import { SqliteEntryStore } from '@/storage/SqliteEntryStore';
 import { SqliteFoodStore } from '@/storage/SqliteFoodStore';
 
 import '../global.css';
+
+// NativeWind's runtime registers ImageBackground as it loads, which React Native warns of on every
+// launch; its toast lies over the foot of a form. Not ours to fix, so this one message alone is let go.
+LogBox.ignoreLogs(['ImageBackground is deprecated']);
 
 const clock = new SystemClock();
 const database = new LazyDatabase(() => openDatabaseAsync('macropilot.db'));
@@ -49,21 +54,24 @@ export default function RootLayout() {
         <EntryStoreProvider store={entryStore}>
           <AskProvider ask={ask}>
             <LoggedProvider>
-              <View className="flex-1 bg-ground">
-                <StatusBar style="auto" />
-                <Stack
-                  screenOptions={{
-                    headerShown: false,
-                    contentStyle: { backgroundColor: 'transparent' },
-                  }}
-                  screenLayout={({ route, children }) =>
-                    !__DEV__ && route.name === 'design' ? <BackToToday /> : children
-                  }
-                >
-                  {/* DESIGN.md: Add food is a full-height modal page (the user's word, 26 November 2026). */}
-                  <Stack.Screen name="add-food" options={{ presentation: 'fullScreenModal' }} />
-                </Stack>
-              </View>
+              {/* Gestures are seen only under this root, the swipe on a row and the list's scroll as one. */}
+              <GestureHandlerRootView style={{ flex: 1 }}>
+                <View className="flex-1 bg-ground">
+                  <StatusBar style="auto" />
+                  <Stack
+                    screenOptions={{
+                      headerShown: false,
+                      contentStyle: { backgroundColor: 'transparent' },
+                    }}
+                    screenLayout={({ route, children }) =>
+                      !__DEV__ && route.name === 'design' ? <BackToToday /> : children
+                    }
+                  >
+                    {/* DESIGN.md: Add food is a full-height modal page (the user's word, 26 November 2026). */}
+                    <Stack.Screen name="add-food" options={{ presentation: 'fullScreenModal' }} />
+                  </Stack>
+                </View>
+              </GestureHandlerRootView>
             </LoggedProvider>
           </AskProvider>
         </EntryStoreProvider>

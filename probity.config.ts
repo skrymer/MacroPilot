@@ -86,6 +86,8 @@ these hold. It then needs no failing test:
   - Its only effect is what is drawn: a colour, a decoration, an appearance, a platform component's
     own drawing, a render or remount made only to draw it again, or
     the space between things or inside one (a padding, a margin, a gap).
+    A sign beside words that already say what it says (a chevron, a warning sign, a tick, an empty
+    state's sign) is a decoration: measured like a colour, as its token's pixels where it is drawn.
     The space inside what is pressed is this only where
     its touch target is measured too, and is made no smaller.
   - It leaves alone a value, a word, a role, a label, navigation, state or a computation, and
@@ -122,8 +124,27 @@ these hold. It then needs no failing test:
 
 Anything else in the same write is judged by the rules above.`;
 
+/**
+ * What Jest cannot drive (a gesture, what the system draws) is tested by a Maestro flow on the emulator,
+ * and its failing run is the red (ADR 0011).
+ */
+const FLOW_RULE = `### Behaviour Jest cannot drive
+
+For a production write whose behaviour Jest cannot drive (a gesture such as a swipe, what the system
+draws such as a page's title or its question, how a page is presented, focus and the keyboard as a
+page opens, where a page is scrolled to, a cold start or a link), a failing run of a flow under e2e/,
+printed by \`agent-device test\` in the session before the write, is the observed failing test, and
+the same flow passing after it is the green. The flow must fail for the behaviour the write adds, on
+an assertion of what is on the screen, and the write is the least that makes it pass. Anything Jest
+can drive keeps its Jest test.`;
+
 function testFirstRules(defaults: string) {
-  return [scopeObservedFailureToProductionWrites(defaults), PIXELS_RULE, DEVICE_RULE].join('\n\n');
+  return [
+    scopeObservedFailureToProductionWrites(defaults),
+    PIXELS_RULE,
+    DEVICE_RULE,
+    FLOW_RULE,
+  ].join('\n\n');
 }
 
 export default defineConfig({
