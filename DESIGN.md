@@ -28,7 +28,7 @@ The reading condition: a kitchen, one hand, a few seconds, about ten times a day
 
 **The outcome hues** share their values with `within` and `over` for now. They are separate tokens so that a field and a day can part later without touching either.
 
-Both appearances are in `design-tokens.js`, and every text pair is held to WCAG 4.5:1 in both by `tests/tokenContrast.test.ts`. `ink-dim` was darkened from the palette's first values to pass it.
+Both appearances are in `design-tokens.js`, and every text pair is held to WCAG 4.5:1 in both by `tests/tokenContrast.test.ts`. `ink-dim` was darkened from the palette's first values to pass it, and `ink-mid` moved away from it, so that a stated absence is told from secondary text by more than its italics: the two are held at least 1.4:1 apart, as epic 1's were.
 
 ## Signature: the rings
 
@@ -63,7 +63,7 @@ Where the rings stand on Today is epic 2's to settle (#6).
 
 **An entry's row** has its calories at the right and its grams and protein under its name.
 
-**A figure and its unit are joined by a no-break space.** Android can break the line at an ordinary one and clip the second half: "0 kcal" was drawn as "0". In code it is written ` `, or comes from `figures.ts`, never typed as the character: one typed was lost unseen in a rewrite of its line, and `no-irregular-whitespace` refuses it.
+**A figure and its unit are joined by a no-break space.** Android can break the line at an ordinary one and clip the second half: "0 kcal" was drawn as "0". In code it is written `\u00a0`, or comes from `figures.ts`, never typed as the character: one typed was lost unseen in a rewrite of its line, and `no-irregular-whitespace` refuses it.
 
 **A name is shown in sentence case**, whatever case it was typed in (`shownName`): *COFFEE* is *Coffee*, *Big COFFee* is *Big coffee*. A word with a digit stays as typed, and so does an initialism of up to three letters where the rest of the name is not shouted (*UHT milk*). What was typed is what is kept.
 

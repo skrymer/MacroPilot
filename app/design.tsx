@@ -117,7 +117,8 @@ const ListRow = ({ name, detail, figure, estimated = false }: ListRowProps) => {
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={`Delete ${name}`}
-        className="min-h-target min-w-target items-center justify-center active:opacity-60"
+        android_ripple={{ borderless: true }}
+        className="min-h-target min-w-target items-center justify-center ios:active:opacity-60"
       >
         <SymbolView
           name={{ ios: 'trash', android: 'delete' }}
@@ -137,7 +138,8 @@ const ShowAll = () => {
   return (
     <Pressable
       accessibilityRole="button"
-      className="min-h-target min-w-target flex-row items-center justify-between py-3 active:opacity-60"
+      android_ripple={{ foreground: true }}
+      className="min-h-target min-w-target flex-row items-center justify-between py-3 ios:active:opacity-60"
     >
       <Text className="font-language-bold text-body text-ink">Show all 5</Text>
       <SymbolView
@@ -538,7 +540,8 @@ export default function Design() {
             </Text>
             <Pressable
               accessibilityRole="button"
-              className="min-h-target min-w-target items-center justify-center active:opacity-60"
+              android_ripple={{ borderless: true }}
+              className="min-h-target min-w-target items-center justify-center ios:active:opacity-60"
             >
               <Text className="font-language-bold text-body text-ink">Log</Text>
             </Pressable>
