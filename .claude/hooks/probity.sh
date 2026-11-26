@@ -39,9 +39,13 @@ if [ ! -x node_modules/.bin/probity ]; then
 fi
 # Claude Code lets a write through on any exit but 2, so a probity that crashed would wave every
 # edit through unjudged. Only its own verdicts, allow (0) and refuse (2), pass as they are.
-node_modules/.bin/probity --agent claude-code <<<"$input"
+verdict="$(node_modules/.bin/probity --agent claude-code <<<"$input")"
 status=$?
-if [ "$status" = 2 ] && [ -n "$refused" ] && [ -f "$transcript" ]; then
+printf '%s' "$verdict"
+# Probity refuses with exit 0 and a deny on stdout, not with exit 2: Claude Code reads either.
+denied=""
+if [ "$status" = 2 ] || grep -q '"permissionDecision": *"deny"' <<<"$verdict"; then denied=1; fi
+if [ -n "$denied" ] && [ -n "$refused" ] && [ -f "$transcript" ]; then
   # Claude Code writes each block of a message as a line of its own, under the message's id.
   message="$(jq -r --arg id "$id" 'select(.type == "assistant") | select(any(.message.content[]?; .type == "tool_use" and .id == $id)) | .message.id' "$transcript" | head -1)"
   [ -n "$message" ] && jq -r --arg m "$message" 'select(.message.id? == $m) | .message.content[]? | select(.type == "tool_use") | .id' "$transcript" >"$refused"
