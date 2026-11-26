@@ -282,27 +282,54 @@ function Log() {
 
 /* A form ------------------------------------------------------------------------------------ */
 
+type FaultStyle = 'words' | 'marked' | 'below';
+
+const FAULT_STYLES: Chip<FaultStyle>[] = [
+  { label: 'Words above', value: 'words' },
+  { label: 'Marked, above', value: 'marked' },
+  { label: 'Marked, below', value: 'below' },
+];
+
+/** Q6: a field's fault as words alone, or with the field outlined in ink and a warning sign. */
 function Field({
   label,
   value,
   fault,
   placeholder,
+  faultStyle,
+  ink,
 }: {
   label: string;
   value?: string;
   fault?: string;
   placeholder?: string;
+  faultStyle: FaultStyle;
+  ink: string;
 }) {
+  const marked = fault && faultStyle !== 'words';
+  const words = fault ? (
+    <View className="flex-row items-center gap-1">
+      {marked ? (
+        <SymbolView
+          name={{ ios: 'exclamationmark.triangle.fill', android: 'warning' }}
+          size={16}
+          tintColor={ink}
+        />
+      ) : null}
+      <Text className="flex-1 font-language-bold text-label text-ink">{fault}</Text>
+    </View>
+  ) : null;
   return (
     <View className="gap-1">
       <Text className="font-language text-label text-ink-mid">{label}</Text>
-      {fault ? <Text className="font-language-bold text-label text-ink">{fault}</Text> : null}
+      {faultStyle === 'below' ? null : words}
       <Input
         accessibilityLabel={label}
         defaultValue={value}
         placeholder={placeholder}
-        className="font-language text-body"
+        className={`font-language text-body ${marked ? 'border-2 border-ink' : ''}`}
       />
+      {faultStyle === 'below' ? words : null}
     </View>
   );
 }
@@ -325,7 +352,8 @@ function HeaderCancel({ ink }: { ink: string }) {
   );
 }
 
-function Form() {
+function Form({ faultStyle, ink }: { faultStyle: FaultStyle; ink: string }) {
+  const style = { faultStyle, ink };
   return (
     <KeyboardAvoidingView behavior="padding" className="flex-1">
       <ScrollView
@@ -333,9 +361,9 @@ function Form() {
         keyboardShouldPersistTaps="handled"
         contentContainerClassName="gap-4 px-4 pb-4"
       >
-        <Field label="Label" value="Lunch at the canteen" />
-        <Field label="Calories" value="six hundred" fault="Enter calories as a number" />
-        <Field label="Protein (optional)" placeholder="e.g. 30" />
+        <Field label="Label" value="Lunch at the canteen" {...style} />
+        <Field label="Calories" value="six hundred" fault="Enter calories as a number" {...style} />
+        <Field label="Protein (optional)" placeholder="e.g. 30" {...style} />
       </ScrollView>
       <View className="gap-2 px-4 py-2">
         <Text className="font-language-bold text-body text-ink">
@@ -361,6 +389,7 @@ export default function ColoursPrototype() {
   const [screen, setScreen] = useState<Screen>('today');
   const [standing, setStanding] = useState<Standing>('within');
   const [barShown, setBarShown] = useState(true);
+  const [faultStyle, setFaultStyle] = useState<FaultStyle>('words');
   const appearance = useColorScheme() === 'dark' ? 'dark' : 'light';
   const palette = CHOSEN[appearance];
   // The native header takes colours as values, not classes: the variant's own, at run time.
@@ -378,6 +407,9 @@ export default function ColoursPrototype() {
       </View>
       {screen === 'today' ? (
         <Chips chips={STANDINGS} chosen={standing} onChoose={setStanding} />
+      ) : null}
+      {screen === 'form' ? (
+        <Chips chips={FAULT_STYLES} chosen={faultStyle} onChoose={setFaultStyle} />
       ) : null}
       <Chips
         chips={APPEARANCES}
@@ -426,7 +458,7 @@ export default function ColoursPrototype() {
       <View style={theme} className="flex-1 bg-ground">
         {header}
         <SafeAreaView className="flex-1" edges={['bottom']}>
-          <Form />
+          <Form faultStyle={faultStyle} ink={palette.ink} />
           {bar}
         </SafeAreaView>
       </View>
