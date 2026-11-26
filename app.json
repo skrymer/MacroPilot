@@ -42,7 +42,8 @@
         }
       ],
       "expo-sqlite",
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      "./plugins/withSentenceCaseDialogs"
     ],
     "experiments": {
       "typedRoutes": true,

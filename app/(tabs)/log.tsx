@@ -27,7 +27,7 @@ function LoggedLine({ logged: { name, entry } }: { logged: Logged }) {
       accessible
       accessibilityLabel={spoken}
       accessibilityLiveRegion="polite"
-      className="rounded-2xl bg-surface p-4"
+      className="rounded-card bg-surface p-grid-2"
     >
       <Text className="font-language-bold text-body text-ink">{title}</Text>
       <Text className="font-language text-label text-ink-mid">{words.shown}</Text>
@@ -65,15 +65,15 @@ export default function Log() {
         data={listed}
         keyExtractor={({ id }) => String(id)}
         renderItem={({ item }) => <FoodRow food={item} onLog={() => openForm(item.id)} />}
-        contentContainerClassName="px-4 pb-4"
+        contentContainerClassName="px-page pb-grid-2"
         ItemSeparatorComponent={Hairline}
         ListEmptyComponent={
-          <View className="pt-3">
+          <View className="pt-grid-2">
             <FoodsNotice foods={foods} readAgain={readAgain} />
           </View>
         }
         ListHeaderComponent={
-          <View className="gap-3">
+          <View className="gap-grid-2">
             <Text accessibilityRole="header" className="font-language-bold text-title text-ink">
               Log
             </Text>

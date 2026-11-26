@@ -16,7 +16,7 @@ export function Notice({
   onAction: () => void;
 }) {
   return (
-    <View className="gap-4 rounded-2xl bg-surface p-4">
+    <View className="gap-grid-2 rounded-card bg-surface p-grid-2">
       <View>
         <Text className="font-language-bold text-body text-ink">{title}</Text>
         {detail ? <Text className="font-language text-label text-ink-mid">{detail}</Text> : null}

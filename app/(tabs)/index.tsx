@@ -27,7 +27,11 @@ const PROTEIN_SET = { ...FIGURE_SET, weighed: 'font-language text-ink-mid' };
 function Totals({ totals }: { totals: DayTotals }) {
   const { calories, caloriesKind, protein, proteinKind, spoken } = totalsWords(totals);
   return (
-    <View accessible accessibilityLabel={`${spoken} today`} className="rounded-2xl bg-surface p-4">
+    <View
+      accessible
+      accessibilityLabel={`${spoken} today`}
+      className="rounded-card bg-surface p-grid-2"
+    >
       <Text className={`text-title ${FIGURE_SET[caloriesKind]}`}>{calories}</Text>
       <Text className={`text-label ${PROTEIN_SET[proteinKind]}`}>{protein}</Text>
     </View>
@@ -37,7 +41,7 @@ function Totals({ totals }: { totals: DayTotals }) {
 function DayHeading({ day, count, totals }: { day: string; count: number; totals: DayTotals }) {
   const { shown, spoken } = tallyWords(count, totals);
   return (
-    <View className="flex-row flex-wrap items-baseline justify-between gap-x-4 pt-3">
+    <View className="flex-row flex-wrap items-baseline justify-between gap-x-grid-2 pt-grid-1">
       <Text accessibilityRole="header" className="font-language-bold text-body text-ink">
         {`Today · ${dayWords(day)}`}
       </Text>
@@ -89,7 +93,7 @@ export default function Today() {
         data={shown}
         ListFooterComponent={
           listed.length > LAST ? (
-            <View className="pt-3">
+            <View className="pt-grid-2">
               <Button
                 label={all ? 'Show less' : `Show all ${listed.length}`}
                 onPress={() => setAll(!all)}
@@ -113,7 +117,7 @@ export default function Today() {
             </DeletableRow>
           );
         }}
-        contentContainerClassName="px-4 pb-4"
+        contentContainerClassName="px-page pb-grid-2"
         ItemSeparatorComponent={Hairline}
         ListEmptyComponent={
           Array.isArray(found) ? (
@@ -125,7 +129,7 @@ export default function Today() {
           ) : undefined
         }
         ListHeaderComponent={
-          <View className="gap-3 pb-3">
+          <View className="gap-grid-2 pb-grid-1">
             <Text accessibilityRole="header" className="font-language-bold text-title text-ink">
               Today
             </Text>

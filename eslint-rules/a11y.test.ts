@@ -23,6 +23,10 @@ describe('a11y/touch-target', () => {
   it.each([
     ['the target floor', `const c = <Pressable className="min-h-target min-w-target px-4" />;`],
     ['a hitSlop', `const c = <Pressable hitSlop={12} />;`],
+    [
+      "a two-line row's height, never under the floor",
+      `const c = <Pressable className="min-h-two-line min-w-target" />;`,
+    ],
   ])('accepts a Pressable with %s', (_, code) => {
     // Given a Pressable guaranteed its platform's floor
     const source = code;

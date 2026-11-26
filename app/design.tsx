@@ -7,6 +7,8 @@ import Svg, { Circle } from 'react-native-svg';
 
 import { Link } from '@/components/Link';
 import { Text } from '@/components/Text';
+import { useRipple } from '@/components/useRipple';
+import { useTint } from '@/components/useTint';
 
 /**
  * Trim, the living design reference. Every token and treatment in DESIGN.md renders here; if the
@@ -35,13 +37,6 @@ const Card = ({ children }: { children: ReactNode }) => (
 
 /** The no-break space between a figure and its unit (DESIGN.md, *Figures*). */
 const NBSP = String.fromCharCode(0xa0);
-
-type Palette = Record<string, string>;
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const TOKENS: { light: Palette; dark: Palette } = require('../design-tokens');
-
-/** A symbol takes its tint as a value: the token's, in the appearance in force. */
-const useTint = () => TOKENS[useColorScheme() === 'dark' ? 'dark' : 'light'];
 
 type Sign = { ios: SFSymbol; android: AndroidSymbol };
 
@@ -101,6 +96,7 @@ const Field = ({
 /** A row of a list in its card, with its quiet bin at the end. */
 const ListRow = ({ name, detail, figure, estimated = false }: ListRowProps) => {
   const tint = useTint();
+  const bin = { ...useRipple('page'), borderless: true };
   return (
     <View className="flex-row flex-wrap items-center justify-between gap-x-2">
       <View className="min-w-name flex-1 flex-row flex-wrap items-center justify-between gap-x-4 py-3">
@@ -117,7 +113,7 @@ const ListRow = ({ name, detail, figure, estimated = false }: ListRowProps) => {
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={`Delete ${name}`}
-        android_ripple={{ borderless: true }}
+        android_ripple={bin}
         className="min-h-target min-w-target items-center justify-center ios:active:opacity-60"
       >
         <SymbolView
@@ -132,13 +128,24 @@ const ListRow = ({ name, detail, figure, estimated = false }: ListRowProps) => {
 
 type ListRowProps = { name: string; detail: string; figure: string; estimated?: boolean };
 
+/** The way on from an empty list, at the end of its one line. */
+const LogAction = () => (
+  <Pressable
+    accessibilityRole="button"
+    android_ripple={useRipple('page')}
+    className="min-h-target min-w-target items-center justify-center ios:active:opacity-60"
+  >
+    <Text className="font-language-bold text-body text-ink">Log</Text>
+  </Pressable>
+);
+
 /** The rest of a long day, asked for by the card's own last row. */
 const ShowAll = () => {
   const tint = useTint();
   return (
     <Pressable
       accessibilityRole="button"
-      android_ripple={{ foreground: true }}
+      android_ripple={useRipple('page')}
       className="min-h-target min-w-target flex-row items-center justify-between py-3 ios:active:opacity-60"
     >
       <Text className="font-language-bold text-body text-ink">Show all 5</Text>
@@ -344,7 +351,7 @@ const Entry = ({ name, detail, first = false, children }: EntrySpecimen) => (
 const Action = ({ label, solid = false }: { label: string; solid?: boolean }) => (
   <Pressable
     accessibilityRole="button"
-    android_ripple={{ foreground: true }}
+    android_ripple={useRipple(solid ? 'ink' : 'page')}
     className={`mb-3 min-h-target min-w-target items-center justify-center overflow-hidden rounded-full px-5 ios:active:opacity-60 ${
       solid ? 'bg-ink' : 'border border-ink'
     }`}
@@ -365,6 +372,7 @@ const APPEARANCES = [
 /** Shows the appearance in force, and switches the whole app's until it is next launched. */
 const AppearanceSwitch = () => {
   const inForce = useColorScheme();
+  const ripple = { ink: useRipple('ink'), page: useRipple('page') };
   return (
     <View className="mt-6 flex-row flex-wrap gap-2">
       {APPEARANCES.map(([label, value]) => (
@@ -373,7 +381,8 @@ const AppearanceSwitch = () => {
           accessibilityRole="button"
           accessibilityState={{ selected: inForce === value }}
           onPress={() => Appearance.setColorScheme(value)}
-          className={`min-h-target min-w-target grow items-center justify-center rounded-full border border-ink px-4 ${
+          android_ripple={ripple[inForce === value ? 'ink' : 'page']}
+          className={`min-h-target min-w-target grow items-center justify-center overflow-hidden rounded-full border border-ink px-4 ios:active:opacity-60 ${
             inForce === value ? 'bg-ink' : ''
           }`}
         >
@@ -538,13 +547,7 @@ export default function Design() {
             <Text className="font-language text-body text-ink-mid">
               Log a weighed food, or an estimate.
             </Text>
-            <Pressable
-              accessibilityRole="button"
-              android_ripple={{ borderless: true }}
-              className="min-h-target min-w-target items-center justify-center ios:active:opacity-60"
-            >
-              <Text className="font-language-bold text-body text-ink">Log</Text>
-            </Pressable>
+            <LogAction />
           </View>
           <QuietEmpty />
         </Section>

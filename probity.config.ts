@@ -90,7 +90,8 @@ these hold. It then needs no failing test:
     its touch target is measured too, and is made no smaller.
   - It leaves alone a value, a word, a role, a label, navigation, state or a computation, and
     a size, a touch target, what is shown or what can be pressed. A target that only grows, by the
-    space inside it, is left alone.
+    space inside it, is left alone. So is one that only grows by a minimum height raised to a token
+    DESIGN.md names, its height measured as a fault against the token before the write and again after.
   - The session shows, before the write, the fault on the emulator, as
     a pixel measurement in a command's output. For space that is the gap in pixels,
     which is measured again once the write has been made.
