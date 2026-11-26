@@ -14,7 +14,11 @@ describe('estimateForm', () => {
   it.each([
     ['protein left blank', {}, { label: 'pub lunch', calories: 850, protein: undefined }],
     ['protein none', { protein: '0' }, { label: 'pub lunch', calories: 850, protein: 0 }],
-    ['the fewest calories', { calories: '1' }, { label: 'pub lunch', calories: 1, protein: undefined }],
+    [
+      'the fewest calories',
+      { calories: '1' },
+      { label: 'pub lunch', calories: 1, protein: undefined },
+    ],
     ['a comma', { protein: '30,5' }, { label: 'pub lunch', calories: 850, protein: 30.5 }],
   ])('says an estimate with %s', (_, typed, estimate) => {
     // Given what was typed in the fields
