@@ -61,7 +61,9 @@ module.exports = {
       // A card's corner, in px so the rem cannot move it.
       borderRadius: { card: '20px' },
       // `name` is the least a name keeps beside its figure: the longest word of one, at double. With
-      // less, the figure drops below it. A basis does not do this: Yoga shrinks past it.
+      // less, the figure drops below it. A basis does not do this: Yoga shrinks past it. Measured
+      // again inside a card at double (27 November 2026): *Strawberries* is 163dp, held whole; beside
+      // it *about 650 kcal* (204dp) does not fit the card's 347dp row and drops, as it should.
       minWidth: { target, name: '170px' },
       colors: Object.fromEntries(
         Object.keys(tokens.light).map((name) => [

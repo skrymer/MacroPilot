@@ -1,6 +1,9 @@
 import { totalsOf } from '@/domain/dailyLog';
 
-import { totalsWords } from './entryWords';
+import { tallyWords, totalsWords } from './entryWords';
+
+/** The no-break space between a figure and its unit (DESIGN.md, *Figures*). */
+const NBSP = String.fromCharCode(0xa0);
 
 describe('totalsWords', () => {
   it.each([
@@ -32,4 +35,33 @@ describe('totalsWords', () => {
     expect(words.caloriesKind).toBe(calories);
     expect(words.proteinKind).toBe(protein);
   });
+});
+
+describe('tallyWords', () => {
+  it.each([
+    [
+      'a weighed entry beside an estimate',
+      [
+        { calories: 1000, protein: 1 },
+        { label: 'x', calories: 425 },
+      ],
+      `1,425${NBSP}kcal`,
+      'weighed',
+    ],
+    ['estimates alone', [{ label: 'x', calories: 850 }], `about 850${NBSP}kcal`, 'estimated'],
+  ])(
+    'gives the calories of %s apart, as a figure of the surest kind in them',
+    (_, entries, calories, kind) => {
+      // Given a day's totals
+      const totals = totalsOf(entries);
+
+      // When they are tallied
+      const words = tallyWords(entries.length, totals);
+
+      // Then the calories stand apart from the count, to be set as a total is
+      expect(words.calories).toBe(calories);
+      expect(words.caloriesKind).toBe(kind);
+      expect(words.count).toBe(entries.length === 1 ? '1 entry' : `${entries.length} entries`);
+    },
+  );
 });

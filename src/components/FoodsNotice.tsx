@@ -4,13 +4,14 @@ import type { Food } from '@/domain/food';
 import type { Reading } from '@/storage/useReading';
 
 import { Notice } from './Notice';
+import { Unreadable } from './Unreadable';
 
 /** What a list of the user's foods says in place of them. */
 export function FoodsNotice({ foods, readAgain }: { foods: Reading<Food>; readAgain: () => void }) {
   const router = useRouter();
   if (foods === 'unread') return null;
   if (foods === 'unreadable') {
-    return <Notice title="Couldn’t load your foods" action="Retry" onAction={readAgain} />;
+    return <Unreadable words="Couldn’t load your foods" onRetry={readAgain} />;
   }
   return (
     <Notice

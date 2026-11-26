@@ -1,0 +1,21 @@
+# The app from a fresh install, on this checkout's bundle (ADR 0011). A cleared development build opens
+# on its launcher, which the link passes, and shows its menu's introduction once.
+appId: com.skrymer.macropilot
+env:
+  METRO_PORT: '8081'
+---
+- launchApp:
+    clearState: true
+- openLink: 'macropilot://expo-development-client/?url=http%3A%2F%2Flocalhost%3A${METRO_PORT}'
+- extendedWaitUntil:
+    visible: 'Continue'
+    timeout: 60000
+- tapOn: 'Continue'
+- back
+- extendedWaitUntil:
+    visible: 'Nothing logged yet'
+    timeout: 30000
+# No warning raised as the app loads: the development build's toast for one lies over the foot of a
+# form, where its button is.
+- waitForAnimationToEnd
+- assertNotVisible: '!, .*'
