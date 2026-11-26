@@ -1,6 +1,7 @@
 import { Pressable } from 'react-native';
 
 import { Text } from './Text';
+import { useRipple } from './useRipple';
 
 /** The way out of a full-height page, at its top. */
 export function CancelButton({ onPress }: { onPress: () => void }) {
@@ -8,7 +9,8 @@ export function CancelButton({ onPress }: { onPress: () => void }) {
     <Pressable
       accessibilityRole="button"
       onPress={onPress}
-      className="min-h-target min-w-target items-center justify-center self-start"
+      android_ripple={useRipple('page')}
+      className="min-h-target min-w-target items-center justify-center self-start ios:active:opacity-60"
     >
       <Text className="font-language text-body text-ink">Cancel</Text>
     </Pressable>

@@ -81,7 +81,7 @@ Figure sizes never scale with the user's text size; everything else scales to do
 
 A primary action is `ink` filled, a secondary one **outlined in `ink`**. No hue. A tonal secondary, filled with `surface-lift`, was tried and refused: on the ground in light it is barely told from the page, short of the 3:1 a control's edge needs. The platform's own component comes first ([`0005`](./docs/adr/0005-styling-is-nativewind-and-components-are-copied-in.md)). A button names what it does: *Log entry*, *Save food*, *Delete*, never *OK* or *Done*.
 
-**Every button shows the platform's press**: iOS dims it, Android ripples. A press that shows nothing leaves a person unsure the tap landed.
+**Every button shows the platform's press**: iOS dims it, Android ripples. A press that shows nothing leaves a person unsure the tap landed. Android's ripple is Material 3's pressed state layer, the colour of what the control holds at 10% over its label: `ground` on a filled button, `ink` on the page or a card (`useRipple`). The system's own is dark over a filled button in light and shows nothing, and at full strength one hides the label.
 
 A target is at least 44pt on iOS and 48dp on Android, each platform's own floor, in one token: `min-h-target min-w-target`.
 

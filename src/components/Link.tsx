@@ -2,6 +2,7 @@ import { Link as RouterLink, type LinkProps as RouterLinkProps } from 'expo-rout
 import { Pressable } from 'react-native';
 
 import { Text } from './Text';
+import { useRipple } from './useRipple';
 
 /**
  * Where a link goes and how, plus its label. The router's own props extend
@@ -24,7 +25,11 @@ export type LinkProps = Pick<
 export function Link({ className, children, ...props }: LinkProps) {
   return (
     <RouterLink {...props} asChild>
-      <Pressable accessibilityRole="link" className="min-h-target min-w-target justify-center">
+      <Pressable
+        accessibilityRole="link"
+        android_ripple={useRipple('page')}
+        className="min-h-target min-w-target justify-center ios:active:opacity-60"
+      >
         <Text className={className}>{children}</Text>
       </Pressable>
     </RouterLink>
