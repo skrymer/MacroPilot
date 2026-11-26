@@ -62,7 +62,7 @@ export function Chips<T extends string>({
 }
 
 type Screen = 'today' | 'log' | 'form';
-type Standing = 'within' | 'slightly-over' | 'over';
+type Standing = 'empty' | 'within' | 'slightly-over' | 'over';
 
 const SCREENS: Chip<Screen>[] = [
   { label: 'Today', value: 'today' },
@@ -71,6 +71,7 @@ const SCREENS: Chip<Screen>[] = [
 ];
 
 const STANDINGS: Chip<Standing>[] = [
+  { label: 'Empty', value: 'empty' },
   { label: 'Within', value: 'within' },
   { label: 'Slightly over', value: 'slightly-over' },
   { label: 'Over', value: 'over' },
@@ -110,14 +111,17 @@ function Arc({
   return (
     <>
       <Circle {...shape} className="stroke-line" />
-      <Circle
-        {...shape}
-        className={stroke}
-        strokeLinecap={nearlyClosed ? 'butt' : 'round'}
-        strokeDasharray={filled < 1 ? `${around * filled} ${around}` : undefined}
-        rotation={-90}
-        origin={`${SIZE / 2}, ${SIZE / 2}`}
-      />
+      {/* An empty day is an empty track: a round cap on nothing would draw a dot. */}
+      {filled > 0 ? (
+        <Circle
+          {...shape}
+          className={stroke}
+          strokeLinecap={nearlyClosed ? 'butt' : 'round'}
+          strokeDasharray={filled < 1 ? `${around * filled} ${around}` : undefined}
+          rotation={-90}
+          origin={`${SIZE / 2}, ${SIZE / 2}`}
+        />
+      ) : null}
     </>
   );
 }
@@ -154,6 +158,15 @@ const DAYS: Record<
     wordsHue: string;
   }
 > = {
+  empty: {
+    centre: '2200',
+    unit: 'kcal left',
+    words: 'Nothing logged yet',
+    calories: 0,
+    figure: 'text-ink',
+    stroke: 'stroke-within',
+    wordsHue: 'text-ink-mid',
+  },
   within: {
     centre: '880',
     unit: 'kcal left',
@@ -187,6 +200,73 @@ const DAYS: Record<
 
 type Deletion = 'word' | 'bin' | 'bin-mid' | 'swipe';
 
+type Empty = 'card' | 'quiet' | 'in-list';
+
+/**
+ * Q13, what an empty list says: epic 1's card (a bold line, a detail and a primary button); a quiet
+ * empty state, centred, with a sign and an outlined button, as Health's *No Data* and Material's empty
+ * state; or one line in the list's own card, with its way on at the right.
+ */
+export const EMPTIES: Chip<Empty>[] = [
+  { label: 'Card', value: 'card' },
+  { label: 'Quiet', value: 'quiet' },
+  { label: 'In the list', value: 'in-list' },
+];
+
+function EmptyList({
+  empty,
+  title,
+  detail,
+  action,
+  sign,
+  palette,
+}: {
+  empty: Empty;
+  title: string;
+  detail: string;
+  action: string;
+  sign: { ios: 'fork.knife'; android: 'restaurant' };
+  palette: Palette;
+}) {
+  const look: ButtonLook = { secondary: 'outlined', press: 'platform', palette };
+  if (empty === 'in-list') {
+    return (
+      <View
+        className={`${LIST} min-h-target flex-row flex-wrap items-center justify-between gap-x-4 py-2`}
+      >
+        <Text className="font-language text-body text-ink-mid">{title}</Text>
+        <Pressable
+          accessibilityRole="button"
+          className="min-h-target min-w-target items-center justify-center active:opacity-60"
+        >
+          <Text className="font-language-bold text-body text-ink">{action}</Text>
+        </Pressable>
+      </View>
+    );
+  }
+  if (empty === 'quiet') {
+    return (
+      <View className="items-center gap-2 px-4 py-8">
+        <SymbolView name={sign} size={32} tintColor={palette['ink-mid']} />
+        <Text className="text-center font-language-bold text-body text-ink">{title}</Text>
+        <Text className="text-center font-language text-label text-ink-mid">{detail}</Text>
+        <View className="mt-2 self-stretch">
+          <TrialButton label={action} look={look} />
+        </View>
+      </View>
+    );
+  }
+  return (
+    <View className="gap-4 rounded-2xl bg-surface p-4">
+      <View>
+        <Text className="font-language-bold text-body text-ink">{title}</Text>
+        <Text className="font-language text-label text-ink-mid">{detail}</Text>
+      </View>
+      <TrialButton label={action} primary look={look} />
+    </View>
+  );
+}
+
 /** What a swipe to the left shows. */
 const SwipedDelete = ({ name }: { name: string }) => (
   <Pressable
@@ -201,10 +281,12 @@ const SwipedDelete = ({ name }: { name: string }) => (
 function Today({
   standing,
   deletion,
+  empty,
   palette,
 }: {
   standing: Standing;
   deletion: Deletion;
+  empty: Empty;
   palette: Palette;
 }) {
   const day = DAYS[standing];
@@ -222,7 +304,12 @@ function Today({
         >
           <Svg width={SIZE} height={SIZE}>
             <Arc radius={110} width={14} filled={day.calories} stroke={day.stroke} />
-            <Arc radius={88} width={8} filled={0.4} stroke="stroke-within" />
+            <Arc
+              radius={88}
+              width={8}
+              filled={standing === 'empty' ? 0 : 0.4}
+              stroke="stroke-within"
+            />
           </Svg>
           <View className="absolute items-center">
             <Text className={`font-weighed text-figure ${day.figure}`}>{day.centre}</Text>
@@ -233,9 +320,40 @@ function Today({
           {day.words}
         </Text>
         <Text className="text-center font-language text-label text-ink-mid">
-          {`at least 56${nbsp}g protein, 84${nbsp}g to go`}
+          {standing === 'empty'
+            ? `140${nbsp}g protein to go`
+            : `at least 56${nbsp}g protein, 84${nbsp}g to go`}
         </Text>
       </View>
+      {standing === 'empty' ? (
+        <EmptyList
+          empty={empty}
+          title="Nothing logged yet"
+          detail="Log a weighed food, or an estimate."
+          action="Log"
+          sign={{ ios: 'fork.knife', android: 'restaurant' }}
+          palette={palette}
+        />
+      ) : (
+        <TodayList entries={entries} total={total} deletion={deletion} palette={palette} />
+      )}
+    </>
+  );
+}
+
+function TodayList({
+  entries,
+  total,
+  deletion,
+  palette,
+}: {
+  entries: (typeof ENTRIES)[number][];
+  total: number;
+  deletion: Deletion;
+  palette: Palette;
+}) {
+  return (
+    <>
       <View className="flex-row flex-wrap items-baseline justify-between gap-x-4 pt-3">
         <Text accessibilityRole="header" className="font-language-bold text-body text-ink">
           Today · Thu 26 Nov
@@ -551,6 +669,7 @@ export default function ColoursPrototype() {
   const [barShown, setBarShown] = useState(true);
   // Decided 26 November 2026: the quiet bin, and a swipe to delete beside it.
   const deletion: Deletion = 'swipe';
+  const [empty, setEmpty] = useState<Empty>('quiet');
   // Decided 26 November 2026: a secondary button outlined, and the platform's press on every button.
   const secondary: Secondary = 'outlined';
   const press: Press = 'platform';
@@ -571,7 +690,12 @@ export default function ColoursPrototype() {
         />
       </View>
       {screen === 'today' ? (
-        <Chips chips={STANDINGS} chosen={standing} onChoose={setStanding} />
+        <>
+          <Chips chips={STANDINGS} chosen={standing} onChoose={setStanding} />
+          {standing === 'empty' ? (
+            <Chips chips={EMPTIES} chosen={empty} onChoose={setEmpty} />
+          ) : null}
+        </>
       ) : null}
       <Chips
         chips={APPEARANCES}
@@ -615,7 +739,7 @@ export default function ColoursPrototype() {
         contentContainerClassName="gap-3 px-4 pb-8"
       >
         {screen === 'today' ? (
-          <Today standing={standing} deletion={deletion} palette={palette} />
+          <Today standing={standing} deletion={deletion} empty={empty} palette={palette} />
         ) : (
           <Log look={{ secondary, press, palette }} />
         )}
