@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, utimesSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
@@ -320,5 +320,96 @@ describe('charters.mjs', () => {
       encoding: 'utf8',
     });
     expect(status.stdout).toBe('?? b.ts\n');
+  });
+});
+
+describe('charters.mjs gates', () => {
+  const ALL = ['simplify', 'mutation-test', 'code-review', 'check-adrs', 'verify'];
+  /** A repo whose five gates were each recorded on the code as it stands. */
+  const gated = () => {
+    const made = repo();
+    for (const gate of ALL) run(made.root, 'gate', '8', gate);
+    return made;
+  };
+
+  it('fails, naming each gate, when none was recorded', () => {
+    // Given an issue no gate was recorded for
+    const { root } = repo();
+
+    // When its gates are checked
+    const { status, output } = run(root, 'gates', '8');
+
+    // Then it fails, and names every gate as missing
+    expect(status).toBe(1);
+    for (const gate of ALL) expect(output).toContain(`${gate} missing`);
+  });
+
+  it('passes when every gate was recorded on the code as it stands', () => {
+    // Given an issue whose five gates were recorded on this code
+    const { root } = gated();
+
+    // When its gates are checked
+    const { status, output } = run(root, 'gates', '8');
+
+    // Then it passes
+    expect(status).toBe(0);
+    expect(output).toContain('5 gates, every one on this code');
+  });
+
+  it('fails a gate recorded before the code changed, naming it', () => {
+    // Given five gates recorded, then a fix made after them
+    const { root } = gated();
+    writeFileSync(path.join(root, 'a.ts'), 'export const a = 2;\n');
+    run(root, 'gate', '8', 'verify');
+
+    // When its gates are checked
+    const { status, output } = run(root, 'gates', '8');
+
+    // Then the four run before the fix are to run again, and verify is not
+    expect(status).toBe(1);
+    expect(output).toContain('code-review stale');
+    expect(output).toContain('verify ok');
+  });
+
+  it('refuses a gate it does not know', () => {
+    // Given a repo
+    const { root } = repo();
+
+    // When a gate of another name is recorded
+    const { status, output } = run(root, 'gate', '8', 'review');
+
+    // Then it is refused, with the names it takes
+    expect(status).toBe(1);
+    expect(output).toContain('check-adrs');
+  });
+
+  it('refuses verify on photographs older than the code they are of', () => {
+    // Given a photograph taken, then the code changed
+    const { root, shot } = repo();
+    const old = new Date(Date.now() - 60_000);
+    utimesSync(shot, old, old);
+    writeFileSync(path.join(root, 'a.ts'), 'export const a = 2;\n');
+
+    // When verify is recorded on that photograph's folder
+    const { status, output } = run(root, 'gate', '8', 'verify', '--photos', path.dirname(shot));
+
+    // Then it is refused, naming the photograph
+    expect(status).toBe(1);
+    expect(output).toContain('shot.png');
+  });
+
+  it('takes verify on photographs newer than the code', () => {
+    // Given the code changed, then a photograph taken
+    const { root, shot } = repo();
+    const old = new Date(Date.now() - 60_000);
+    writeFileSync(path.join(root, 'a.ts'), 'export const a = 2;\n');
+    utimesSync(path.join(root, 'a.ts'), old, old);
+    writeFileSync(shot, 'png');
+
+    // When verify is recorded on its folder
+    const { status } = run(root, 'gate', '8', 'verify', '--photos', path.dirname(shot));
+
+    // Then it is taken
+    expect(status).toBe(0);
   });
 });

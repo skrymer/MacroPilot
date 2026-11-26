@@ -11,7 +11,7 @@ Run it from a working tree where the behaviour is done **and the suite is green*
 
 ## The five gates, in order
 
-Address what each surfaces *before* starting the next. If a later fix changes behaviour, loop back.
+Address what each surfaces *before* starting the next. When a gate is done, record it on the code as it stands: `node .claude/skills/break-it/scripts/charters.mjs gate <issue> <gate>` (`verify` with `--photos <dir>`, which refuses photographs older than the last edit). A later fix drops the stamps of the gates before it, and `charters.mjs gates <issue>` names each one to run again.
 
 1. **`/simplify` — clean it up.** Apply reuse, simplification, efficiency and altitude cleanups to the changed code. It *edits* the tree, so run it before the bug hunt — the reviewer then reads the code you are actually shipping. Re-run the tests after.
 
@@ -41,9 +41,9 @@ Address what each surfaces *before* starting the next. If a later fix changes be
 
 Only once the five gates are green, or every non-green item is fixed or explicitly justified:
 
-1. Re-run the suite if any gate changed code: `npm run lint && npm run typecheck && npm test`.
+1. `node .claude/skills/break-it/scripts/charters.mjs gates <issue>` passes, on its own and before anything is written about the gates. Re-run the suite if any gate changed code: `npm run lint && npm run typecheck && npm test`.
 2. **Commit on a feature branch, never straight to `main`.** Group commits by concern.
-3. **Push the branch and open a PR.** Its body names the gates that passed and carries the *Needs a phone* list.
+3. **Push the branch and open a PR.** Its body names only the gates `charters.mjs gates` printed as `ok`, and carries the *Needs a phone* list.
 4. **Merge when CI is green**, without asking. When it was the epic's last issue, `/verify` the epic.
 
 ## Reporting
@@ -65,7 +65,7 @@ Suite green. Committed and pushed to <branch>.
 
 ## Notes
 
-- **Order is load-bearing.** Simplify before mutation-test and review, so both read the shipping code. Mutation-test before review, because it writes tests the reviewer then reads. check-adrs after review, judging the final diff. Verify last, on the device, so what was verified is what ships.
+- **Order is load-bearing**: each gate reads what the one before it changed, and verify is last so what was verified ships. `charters.mjs gates` holds it.
 - **`/simplify` and `/code-review medium` are complementary.** Simplify owns cleanup and *applies* it; code-review owns the correctness hunt and *reports* it. They only overlap if you run code-review high.
 - **Don't rubber-stamp.** A gate that found nothing is a result worth stating; a gate skipped is a gap. Name any skip and why.
 - **Fix-or-justify is the bar.** An unaddressed finding means the sign-off is not done.

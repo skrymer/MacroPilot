@@ -6,11 +6,16 @@
 //   charters.mjs charter <issue> <charter>  registers "explore … with … to discover …", prints its key
 //   charters.mjs record <key> pass|fail|blocked [--snapshot <file>] [--screenshot <file>] --note <text>
 //   charters.mjs check <issue>              exits 1 on no charter, or on one with no result
+//   charters.mjs gate <issue> <gate> [--photos <dir>]
+//                                           records a sign-off gate as run on the code as it stands;
+//                                           verify's photographs must be newer than the last edit
+//   charters.mjs gates <issue>              exits 1 unless every gate ran on the code as it stands
 import { execFileSync } from 'node:child_process';
 import {
   existsSync,
   mkdirSync,
   mkdtempSync,
+  readdirSync,
   readFileSync,
   rmSync,
   statSync,
@@ -154,6 +159,64 @@ function record(key, status, { note, ...files }) {
   save(issue, state);
 }
 
+/** feature-sign-off's gates, in order. */
+const GATES = ['simplify', 'mutation-test', 'code-review', 'check-adrs', 'verify'];
+const gatesFile = (issue) => path.join(dirOf(issue), 'gates.json');
+const loadGates = (issue) =>
+  existsSync(gatesFile(issue)) ? JSON.parse(readFileSync(gatesFile(issue), 'utf8')) : {};
+
+/** When the change was last edited: the newest of the files it touches, untracked ones included. */
+function lastEdit() {
+  const files = [
+    ...git(['diff', '--name-only', branchPoint()]).split('\n'),
+    ...git(['ls-files', '--others', '--exclude-standard']).split('\n'),
+  ].filter(Boolean);
+  const top = git(['rev-parse', '--show-toplevel']);
+  return Math.max(
+    0,
+    ...files
+      .map((file) => path.join(top, file))
+      .filter(existsSync)
+      .map((file) => statSync(file).mtimeMs),
+  );
+}
+
+/** Photographs taken before the last edit are of other code. */
+function stalePhotos(dir) {
+  const edited = lastEdit();
+  return readdirSync(dir)
+    .filter((name) => name.endsWith('.png'))
+    .filter((name) => statSync(path.join(dir, name)).mtimeMs < edited);
+}
+
+function gate(issue, name, { photos }) {
+  if (!GATES.includes(name)) throw new Stop(`a gate is one of ${GATES.join(', ')}`);
+  if (photos) {
+    const stale = stalePhotos(photos);
+    if (stale.length > 0) {
+      throw new Stop(`older than the code they are of, so take them again: ${stale.join(', ')}`);
+    }
+  }
+  mkdirSync(dirOf(issue), { recursive: true });
+  const gates = loadGates(issue);
+  gates[name] = codeNow();
+  writeFileSync(gatesFile(issue), JSON.stringify(gates, null, 2));
+}
+
+/** Every gate on the code as it stands: a fix made after one sends it round again. */
+function checkGates(issue) {
+  const gates = loadGates(issue);
+  const code = codeNow();
+  const states = GATES.map((name) => [
+    name,
+    !gates[name] ? 'missing' : gates[name] === code ? 'ok' : 'stale',
+  ]);
+  for (const [name, state] of states) console.log(`${name} ${state}`);
+  const owed = states.filter(([, state]) => state !== 'ok').length;
+  if (owed > 0) throw new Stop(`INCOMPLETE: ${owed} of ${GATES.length} gates to run on this code`);
+  console.log(`${GATES.length} gates, every one on this code`);
+}
+
 function check(issue) {
   const { charters } = loadOnThisCode(issue);
   for (const { key, text, result } of charters) {
@@ -174,6 +237,7 @@ try {
       screenshot: { type: 'string' },
       note: { type: 'string' },
       base: { type: 'string' },
+      photos: { type: 'string' },
     },
   });
   const [command, first, second] = positionals;
@@ -181,7 +245,9 @@ try {
   else if (command === 'charter') charter(issueOf(first), second);
   else if (command === 'record') record(first, second, values);
   else if (command === 'check') check(issueOf(first));
-  else throw new Stop('usage: charters.mjs head | charter | record | check');
+  else if (command === 'gate') gate(issueOf(first), second, values);
+  else if (command === 'gates') checkGates(issueOf(first));
+  else throw new Stop('usage: charters.mjs head | charter | record | check | gate | gates');
 } catch (error) {
   console.error(error instanceof Stop ? error.message : error);
   process.exitCode = 1;
