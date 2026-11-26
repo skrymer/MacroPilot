@@ -18,9 +18,10 @@ import jestConfig from './jest.config.js';
  * both to know which tests cover a mutant.
  *
  * The `tooling` project is left out. Its suites — the lint rules, the resolved
- * Expo config, the token contrast — cannot kill a mutant in `src/` or `app/`,
- * and the config test spawns the Expo CLI, so including them is pure cost on
- * every run. Stryker merges `config` over the file shallowly, so `projects`
+ * Expo config, the token contrast — cannot kill a mutant in `src/` or `app/`
+ * while no function of `src/` is tested there, which `tests/noSourceUnitsHere.test.ts`
+ * holds; and the config test spawns the Expo CLI, so including them is pure cost
+ * on every run. Stryker merges `config` over the file shallowly, so `projects`
  * here replaces the list rather than adding to it.
  *
  * @type {import('@stryker-mutator/api/core').PartialStrykerOptions}

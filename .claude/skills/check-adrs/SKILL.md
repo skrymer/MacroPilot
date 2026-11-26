@@ -44,6 +44,7 @@ Every trap here produces a **plausible wrong number** rather than an error: an u
 - **A day judged outside the `Clock` port and its offset.** `0001`, `0002`.
 - **Domain logic in a screen.** `0002`. ESLint catches a forbidden import but not a total derived inline from props.
 - **A backend, an owner or an account creeping in.** `0003`. So is a micronutrient.
+- **Text moved out of `Text`.** A title the system draws, or text sized some other way, left 0007's cap behind. "It is the system's, not our token" is a FAIL, not a reason: 0007 caps it too.
 - **A colour decided in a component.** `0005`: no `dark:`, no hex.
 - **A refused term.** `CONTEXT.md` names the synonyms to avoid; one in code is a FAIL even when the code works.
 

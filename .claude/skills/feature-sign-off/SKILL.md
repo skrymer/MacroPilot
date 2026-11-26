@@ -19,7 +19,7 @@ Address what each surfaces *before* starting the next. When a gate is done, reco
 
    It runs here for two reasons: after gate 1, because `/simplify` edits the tree and mutating pre-simplify code wastes time on survivors that have moved; before gate 3, because this gate *writes tests* the reviewer should read.
 
-3. **`/code-review medium` — hunt correctness bugs.** Review the now-simplified diff. **Medium, not high**: at medium it focuses on correctness and drops the reuse and simplification angles gate 1 just applied. Triage every finding — fix the genuine ones, and for each you do not fix, say why. No unexplained findings. **One reproduced, by a test or on the device, is genuine**: keep its failing test or measurement, reproduce it once more, say who meets it, and leaving it is the user's call. **A finding that asks for a test is checked against [`0001`](../../../docs/adr/0001-a-unit-owes-its-own-test-when-it-owns-something.md) before it is written**: a unit that owns nothing gets none, and the finding is answered with that reason.
+3. **`/code-review medium` — hunt correctness bugs.** Review the now-simplified diff. **Medium, not high**: at medium it focuses on correctness and drops the reuse and simplification angles gate 1 just applied. Triage every finding — fix the genuine ones, and for each you do not fix, say why. No unexplained findings. **One reproduced, by a test or on the device, is genuine**: keep its failing test or measurement, reproduce it once more, say who meets it, and leaving it is the user's call. **A finding that asks for a test is checked against [`0001`](../../../docs/adr/0001-a-unit-owes-its-own-test-when-it-owns-something.md) before it is written**: a unit that owns nothing gets none, and the finding is answered with that reason. **On a repeat run**, after a fix, the reviewer is given the triaged list from `gates/code-review.md` and asked for new findings, or an old one with new evidence (the user's word, 26 November 2026, on #85's post-mortem).
 
 4. **`/check-adrs` — honour the recorded decisions.** Judge the final diff against `docs/adr/` and the language in `CONTEXT.md`. A FAIL is either a code fix or a same-PR doc fix — the user's call, surfaced rather than decided quietly.
 
@@ -29,7 +29,7 @@ Address what each surfaces *before* starting the next. When a gate is done, reco
 
 ## What this repo's gates bite on
 
-- **An unknown shown as a figure.** An unlogged day is not a day at 0 kcal, and a food with no protein figure is not 0 g. `/verify` and the screen test's sibling case.
+- **What is Not stated shown as a figure.** A food with no protein figure is not 0 g; how each case is shown is `DESIGN.md`'s *Figures* (an empty day is 0 kcal, which is known). `/verify` and the screen test's sibling case.
 - **A dash standing in for an unknown.** A dash reads as zero. FAIL, not a nitpick.
 - **A known zero hidden as if unknown.** The other direction of the same trap: 0 g of protein is a fact. Stryker has no truthiness mutator, so the explicit zero case is caught by discipline.
 - **A day decided in UTC**, or by adding 24 hours across a summer-time change. `/code-review` and `/mutation-test`; a test puts the phone outside UTC.
