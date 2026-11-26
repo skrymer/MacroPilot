@@ -56,7 +56,7 @@ export default function LogFood() {
   // A link can put another food on this page, and what was typed is not of it.
   if (food) return <GramsForm key={food.id} food={food} />;
   return (
-    <SafeAreaView className="flex-1 bg-ground px-4">
+    <SafeAreaView className="flex-1 bg-ground px-page">
       <CancelButton onPress={() => router.dismissTo('/log')} />
       {foods === 'unreadable' ? <FoodsNotice foods={foods} readAgain={readAgain} /> : null}
       {Array.isArray(foods) ? (

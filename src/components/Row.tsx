@@ -2,6 +2,7 @@ import { Pressable, View } from 'react-native';
 
 import { FIGURE_SET } from './figureSet';
 import { Text } from './Text';
+import { useRipple } from './useRipple';
 
 /**
  * A name with its detail under it and its figure at the right, read out as one thing, and pressed where
@@ -23,6 +24,7 @@ export function Row({
   estimated?: boolean;
   onPress?: () => void;
 }) {
+  const ripple = useRipple('page');
   const said = (
     <>
       <View className="min-w-name flex-1">
@@ -39,7 +41,8 @@ export function Row({
       accessibilityRole="button"
       accessibilityLabel={spoken}
       onPress={onPress}
-      className="min-h-target min-w-target flex-row flex-wrap items-center justify-between gap-x-4 py-3"
+      android_ripple={ripple}
+      className="min-h-two-line min-w-target flex-row flex-wrap items-center justify-between gap-x-grid-2 py-3 ios:active:opacity-60"
     >
       {said}
     </Pressable>
@@ -47,7 +50,7 @@ export function Row({
     <View
       accessible
       accessibilityLabel={spoken}
-      className="min-h-target flex-row flex-wrap items-center justify-between gap-x-4 py-3"
+      className="min-h-two-line flex-row flex-wrap items-center justify-between gap-x-grid-2 py-3"
     >
       {said}
     </View>

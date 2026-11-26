@@ -10,7 +10,7 @@ import { Link } from '@/components/Link';
 export default function Developer() {
   if (!__DEV__) return <Redirect href="/" />;
   return (
-    <SafeAreaView className="flex-1 bg-ground px-4" edges={['top']}>
+    <SafeAreaView className="flex-1 bg-ground px-page" edges={['top']}>
       <Link href="/design" className="text-body text-ink underline">
         Design reference
       </Link>

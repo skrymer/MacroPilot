@@ -52,7 +52,7 @@ export default function Foods() {
             <FoodRow food={item} />
           </DeletableRow>
         )}
-        contentContainerClassName="px-4 pb-4"
+        contentContainerClassName="px-page pb-grid-2"
         ItemSeparatorComponent={Hairline}
         ListHeaderComponent={
           <View className="min-h-target flex-row flex-wrap items-center justify-between gap-x-4">

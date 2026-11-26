@@ -34,7 +34,7 @@ export function FormPage({
         <ScrollView
           ref={scroll}
           keyboardShouldPersistTaps="handled"
-          contentContainerClassName="gap-4 px-4 pb-4"
+          contentContainerClassName="gap-grid-2 px-page pb-grid-2"
         >
           <View className="items-start">
             <CancelButton onPress={onCancel} />
@@ -45,7 +45,7 @@ export function FormPage({
           {children}
         </ScrollView>
         {/* Out of the scroll view, so that the keyboard never hides them. */}
-        <View className="gap-2 px-4 py-2">
+        <View className="gap-grid-1 px-page py-grid-1">
           {fault ? (
             <Text accessibilityRole="alert" className="font-language-bold text-body text-ink">
               {fault}

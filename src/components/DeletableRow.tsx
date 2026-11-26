@@ -20,7 +20,7 @@ export function DeletableRow({
   children: ReactNode;
 }) {
   return (
-    <View ref={ref} className="flex-row flex-wrap items-center justify-between gap-x-4">
+    <View ref={ref} className="flex-row flex-wrap items-center justify-between gap-x-grid-2">
       <View className="min-w-name flex-1">
         {fault ? (
           <Text accessibilityRole="alert" className="font-language-bold text-body text-ink">
