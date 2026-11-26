@@ -1,6 +1,8 @@
 // THROWAWAY: the colours prototype (#51). See app/prototype/NOTES.md.
 import { Stack, useRouter } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import { cssInterop, vars } from 'nativewind';
 import { useState } from 'react';
 import {
@@ -184,14 +186,29 @@ const DAYS: Record<
   },
 };
 
-type Deletion = 'word' | 'bin' | 'bin-mid';
+type Deletion = 'word' | 'bin' | 'bin-mid' | 'swipe';
 
-/** Q9 (D21/D36): a row's *Delete* as the word, or a bin in ink, or a quieter bin in `ink-mid`. */
+/**
+ * Q9 (D21/D36): a row's *Delete* as the word, or a bin in ink, or a quieter bin in `ink-mid`; or the
+ * quiet bin and, beside it, a swipe to the left that shows *Delete* in red, as iOS's own lists.
+ */
 const DELETIONS: Chip<Deletion>[] = [
   { label: 'Delete', value: 'word' },
   { label: 'Bin', value: 'bin' },
   { label: 'Quiet bin', value: 'bin-mid' },
+  { label: 'Quiet bin and swipe', value: 'swipe' },
 ];
+
+/** What a swipe to the left shows. */
+const SwipedDelete = ({ name }: { name: string }) => (
+  <Pressable
+    accessibilityRole="button"
+    accessibilityLabel={`Delete ${name}`}
+    className="min-h-target min-w-target items-center justify-center bg-over px-5"
+  >
+    <Text className="font-language-bold text-body text-ground">Delete</Text>
+  </Pressable>
+);
 
 function Today({
   standing,
@@ -239,32 +256,42 @@ function Today({
           {`${entries.length} entries · ${total.toLocaleString('en')}${nbsp}kcal`}
         </Text>
       </View>
-      <View className={LIST}>
-        {entries.map((entry, index) => (
-          <View key={entry.name}>
-            {index > 0 ? <Hairline /> : null}
-            <View className="flex-row flex-wrap items-center justify-between gap-x-2">
-              <View className="min-w-name flex-1">
-                <Row {...entry} spoken={`${entry.name}, ${entry.figure}`} />
-              </View>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={`Delete ${entry.name}`}
-                className="min-h-target min-w-target items-center justify-center"
+      {/* NativeWind does not style the gesture root, so the card is a View around it. */}
+      <View className={`${LIST} overflow-hidden`}>
+        <GestureHandlerRootView>
+          {entries.map((entry, index) => (
+            <View key={entry.name}>
+              {index > 0 ? <Hairline /> : null}
+              <ReanimatedSwipeable
+                enabled={deletion === 'swipe'}
+                friction={2}
+                rightThreshold={40}
+                renderRightActions={() => <SwipedDelete name={entry.name} />}
               >
-                {deletion === 'word' ? (
-                  <Text className="font-language text-body text-ink">Delete</Text>
-                ) : (
-                  <SymbolView
-                    name={{ ios: 'trash', android: 'delete' }}
-                    size={22}
-                    tintColor={deletion === 'bin' ? palette.ink : palette['ink-mid']}
-                  />
-                )}
-              </Pressable>
+                <View className="flex-row flex-wrap items-center justify-between gap-x-2 bg-surface">
+                  <View className="min-w-name flex-1">
+                    <Row {...entry} spoken={`${entry.name}, ${entry.figure}`} />
+                  </View>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={`Delete ${entry.name}`}
+                    className="min-h-target min-w-target items-center justify-center"
+                  >
+                    {deletion === 'word' ? (
+                      <Text className="font-language text-body text-ink">Delete</Text>
+                    ) : (
+                      <SymbolView
+                        name={{ ios: 'trash', android: 'delete' }}
+                        size={22}
+                        tintColor={deletion === 'bin' ? palette.ink : palette['ink-mid']}
+                      />
+                    )}
+                  </Pressable>
+                </View>
+              </ReanimatedSwipeable>
             </View>
-          </View>
-        ))}
+          ))}
+        </GestureHandlerRootView>
       </View>
       <Text className="font-absence text-label text-ink-dim">fibre not stated</Text>
     </>
