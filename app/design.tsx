@@ -4,6 +4,7 @@ import { Appearance, Pressable, ScrollView, useColorScheme, View } from 'react-n
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle } from 'react-native-svg';
 
+import { Link } from '@/components/Link';
 import { Text } from '@/components/Text';
 
 /**
@@ -257,6 +258,14 @@ export default function Design() {
           Food has no colour. Colour is only where your day stands against its targets.
         </Text>
         <AppearanceSwitch />
+        {__DEV__ ? (
+          <Link
+            href="/prototype/colours"
+            className="font-language-bold text-body text-ink underline"
+          >
+            Colours prototype
+          </Link>
+        ) : null}
 
         <Section
           title="The day ring"

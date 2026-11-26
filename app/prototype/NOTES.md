@@ -1,0 +1,9 @@
+# PROTOTYPE — the colours (throwaway)
+
+**Question:** which palette Trim takes (#51): the grounds, the inks and the hue of `within`. Not in question: the thesis (colour only for where a day stands, kept by the user on 26 November 2026), so no hue reaches a button, a field, a fault or a macro; the amber and red of `slightly-over` and `over`; the layout, which is epic 1's as it stands.
+**Run:** design page › **Colours prototype**, or `macropilot://prototype/colours?variant=A` (`A` | `B` | `C` | `D`).
+**Variants:** **A — Trim now.** Warm grey grounds, teal `within`. **B — Pine, teal.** The user's palette of 26 November: its cool, pine-tinted neutrals, `ink-dim` darkened from `#8C9C95` to `#5F6E68` (light) and from `#64756E` to `#8D9E97` (dark) to pass 4.5:1, and a teal tuned to it. **C — Pine, emerald.** As B, with the palette's emerald as `within`. **D — Health grey.** iOS Health's cool grey grounds, black in dark, with Trim's teal.
+**The floating bar:** the variant; the screen (*Today* with a day on it, *Log* with a *Logged:* line, a *Form* with a field at fault); on Today, the day's standing (*Within*, *Slightly over*, *Over*), which turns the ring's arc, its figure and its words; the appearance, which switches the whole app's until it is next launched; a strip of the variant's ten tokens.
+**Settled while grilling:** the thesis and the two axes (`DESIGN.md`); one palette per appearance held to WCAG (ADR 0005); no hue for a failure; teal over green because green beside red is the pair most often confused (`DESIGN.md`), which C puts to the test. The candidate hex values sit in `prototype-palettes.ts` at the root, as `design-tokens.js` holds the real ones.
+**Verdict (<date>):**
+**Teardown:** `app/prototype/colours.tsx`, `prototype-palettes.ts`, this section, the link in `app/design.tsx` (and its `Link` import), then `exempt.sh off` when `app/prototype/` is empty.
