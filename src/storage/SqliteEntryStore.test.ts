@@ -37,7 +37,7 @@ describe('SqliteEntryStore', () => {
     const store = new SqliteEntryStore(db);
     const lunch = estimatedEntry({ label: ' pub LUNCH ', calories: 850.5 }, '2026-11-24');
     const oats = weighedEntry(food, 80, '2026-11-24');
-    const broth = estimatedEntry({ label: 'broth', calories: 0, protein: 0 }, '2026-11-24');
+    const broth = estimatedEntry({ label: 'broth', calories: 1, protein: 0 }, '2026-11-24');
     for (const entry of [lunch, oats, broth]) await store.add(entry);
 
     // When their day is listed

@@ -26,11 +26,19 @@ export function isEstimated(entry: { calories: number; label?: string }): entry 
 
 export const isLabel = (label: string) => label.trim() !== '';
 
+/** The fewest calories an estimate has, so that none is kept as nothing (the user's word, 26 November 2026). */
+export const LEAST_ESTIMATED_CALORIES = 1;
+
+export const isEstimatedCalories = (calories: number) =>
+  isAmount(calories) && calories >= LEAST_ESTIMATED_CALORIES;
+
 /** The label is kept as typed. */
 export function estimatedEntry(estimate: Omit<EstimatedEntry, 'day'>, day: string): EstimatedEntry {
   const { label, calories, protein } = estimate;
   if (!isLabel(label)) throw new Error('An estimate needs a label');
-  if (!isAmount(calories)) throw new Error('calories must be 0 or more');
+  if (!isEstimatedCalories(calories)) {
+    throw new Error(`calories must be ${LEAST_ESTIMATED_CALORIES} or more`);
+  }
   if (protein !== undefined && !isAmount(protein)) throw new Error('protein must be 0 or more');
   return { day, label, calories, protein };
 }

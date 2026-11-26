@@ -3,10 +3,11 @@ import { z } from 'zod';
 import { alcoholPer100g, isAbv, MAX_ABV } from '@/domain/abv';
 import { isFoodName, type NewFood } from '@/domain/food';
 
+import { grams } from './figures';
 import { optionalAmount } from './figureText';
 
 const macro = (name: string) =>
-  optionalAmount(name).pipe(z.number(`Enter ${name.toLowerCase()} per 100 g`));
+  optionalAmount(name).pipe(z.number(`Enter ${name.toLowerCase()} per ${grams(100)}`));
 
 /** A food as it is typed: grams per 100 g, with alcohol in percent by volume as a label gives it. */
 export const foodForm = z.object({

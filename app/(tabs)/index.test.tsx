@@ -78,7 +78,7 @@ describe('Today', () => {
     const entries = new InMemoryEntryStore([OATS]);
     await entries.add(weighedEntry(OATS, 80, '2026-11-24'));
     await entries.add(estimatedEntry({ label: 'pub LUNCH', calories: 850 }, '2026-11-24'));
-    await entries.add(estimatedEntry({ label: 'broth', calories: 0, protein: 0 }, '2026-11-24'));
+    await entries.add(estimatedEntry({ label: 'broth', calories: 1, protein: 0 }, '2026-11-24'));
 
     // When the user opens Today
     await openToday(entries);
@@ -89,10 +89,10 @@ describe('Today', () => {
     expect(
       screen.getByLabelText('Pub lunch, estimate, about 850 calories, protein not stated'),
     ).toBeOnTheScreen();
-    expect(screen.getByText('about 0 kcal')).toBeOnTheScreen();
+    expect(screen.getByText('about 1 kcal')).toBeOnTheScreen();
     expect(screen.getByText('Estimate, 0 g protein')).toBeOnTheScreen();
     expect(
-      screen.getByLabelText('Broth, estimate, about 0 calories, 0 grams of protein'),
+      screen.getByLabelText('Broth, estimate, about 1 calorie, 0 grams of protein'),
     ).toBeOnTheScreen();
     expect(screen.getByText('80 g, 10 g protein')).toBeOnTheScreen();
   });

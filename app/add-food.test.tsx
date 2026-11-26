@@ -67,11 +67,11 @@ describe('Add food', () => {
       // Then the field's label joins 100 and g, and so does that of Fibre
       expect(screen.getByLabelText('Fibre per 100 g, optional')).toHaveProp(
         'accessibilityLabel',
-        'Fibre per 100 g, optional',
+        'Fibre per 100\u00a0g, optional',
       );
       expect(await screen.findByLabelText(`${macro} per 100 g`)).toHaveProp(
         'accessibilityLabel',
-        `${macro} per 100 g`,
+        `${macro} per 100\u00a0g`,
       );
     },
   );

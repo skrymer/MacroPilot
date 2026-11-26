@@ -14,6 +14,7 @@ const noCoercedNumber = require('./eslint-rules/no-coerced-number');
 const noDarkVariant = require('./eslint-rules/no-dark-variant');
 const noDashPlaceholder = require('./eslint-rules/no-dash-placeholder');
 const tokensOnly = require('./eslint-rules/tokens-only');
+const firstFaultShown = require('./eslint-rules/first-fault-shown');
 
 /**
  * The domain core is framework-free, and this rule is what enforces it — see
@@ -127,6 +128,7 @@ const A11Y = {
 /** How a form may not be written (ADR 0009). */
 const formsPlugin = {
   rules: {
+    'first-fault-shown': firstFaultShown,
     'keyboard-avoided': keyboardAvoided,
     'no-coerced-number': noCoercedNumber,
     'no-watch': noWatch,
@@ -205,8 +207,24 @@ const NO_ALERT = {
   },
 };
 
+/**
+ * A no-break space keeps a figure with its unit, and typed as the character it looks like any space:
+ * a rewrite of the line lost one unseen. In strings, templates and JSX text too, so it is written
+ * `\u00a0`, where it can be seen.
+ */
+const VISIBLE_WHITESPACE = {
+  files: ['**/*.{js,cjs,mjs,jsx,ts,tsx}'],
+  rules: {
+    'no-irregular-whitespace': [
+      'error',
+      { skipStrings: false, skipTemplates: false, skipJSXText: false, skipRegExps: false },
+    ],
+  },
+};
+
 module.exports = defineConfig([
   expoConfig,
+  VISIBLE_WHITESPACE,
   FRAMEWORK_FREE_DOMAIN,
   GIVEN_WHEN_THEN,
   PERCEIVABLE_ONLY,

@@ -37,12 +37,12 @@ The figure in the centre is `ink` while the day is within its budget, `slightly-
 | --- | --- |
 | **Weighed** | Solid: B612 Bold, `ink` |
 | **Estimated** | Lighter: B612 Regular, `ink-mid`, and says *about* or *estimate* |
-| **Unknown** | Words, in italic `ink-dim`: *not stated*, *not logged*. Never a zero, never a dash |
+| **Unknown** | Words, in italic `ink-dim`: *not stated*, *not logged*. Never a zero, never a dash. Inside a row's detail, which is one run of text, the words are plain, as the rest of it: *Estimate, protein not stated* |
 | **Zero, and known** | A figure like any other |
 
 **A total takes the surest kind in it.** One weighed entry makes the day's calories solid; a day of estimates alone is set as one, and says *about*. A protein total that some entry does not state says *at least*, and one that no entry states is *not stated*. **An empty day is 0 kcal and 0 g**, which are known, with *Nothing logged yet* and a way to log.
 
-**Grams** have their thousands apart by a comma, `1,500 g`, and calories do not, `4410 kcal`, whatever the phone's language.
+**Grams** have their thousands apart by a comma, `1,500 g`, and calories do not, `4410 kcal`, but in the day's tally, `3 entries · 1,425 kcal`, as the reference app has it; whatever the phone's language.
 
 **An entry's row** has its calories at the right and its grams and protein under its name.
 
@@ -70,7 +70,7 @@ A target is at least 44pt on iOS and 48dp on Android, each platform's own floor,
 
 | When | What | Not |
 | --- | --- | --- |
-| A form (grams, an estimate, a food) | A full-height page with *Cancel* | A sheet |
+| A form (grams, an estimate, a food) | A full-height page with *Cancel*. Add food is presented as a full-height modal (the user's word, 26 November 2026, on #27) | A sheet |
 | Deleting | The system's own question, naming what goes, answered *Delete* or *Cancel*: an action sheet on iOS, a dialog on Android | A question drawn by us |
 | Leaving a full-height form with something typed | The same question, answered *Discard* or *Cancel*, on every way out. A form of up to three fields does not ask, and neither does a form left as it opened | A silent loss of six fields |
 | It worked, and the page shows it (a row goes, a row appears) | Nothing | A message repeating it |
