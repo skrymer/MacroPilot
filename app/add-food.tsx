@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import { useForm } from 'react-hook-form';
 import { View } from 'react-native';
 
+import { grams } from '@/components/figures';
 import { foodForm, foodOf } from '@/components/foodForm';
 import { formFault } from '@/components/formFault';
 import { FormField } from '@/components/FormField';
@@ -14,10 +15,10 @@ import { useFoodStore } from '@/storage/FoodStoreContext';
 
 const FIELDS = [
   ['name', 'Name'],
-  ['protein', 'Protein per 100\u00a0g'],
-  ['carbohydrate', 'Carbohydrate per 100\u00a0g'],
-  ['fat', 'Fat per 100\u00a0g'],
-  ['fibre', 'Fibre per 100\u00a0g, optional'],
+  ['protein', `Protein per ${grams(100)}`],
+  ['carbohydrate', `Carbohydrate per ${grams(100)}`],
+  ['fat', `Fat per ${grams(100)}`],
+  ['fibre', `Fibre per ${grams(100)}, optional`],
   ['abv', 'Alcohol % volume, optional'],
 ] as const;
 

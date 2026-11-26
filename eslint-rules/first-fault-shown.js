@@ -17,21 +17,23 @@ module.exports = {
   },
 
   create(context) {
-    const fields = [];
+    let first;
+    let several = false;
     const called = new Set();
+    // One written inside a `map` stands for as many as its list holds.
+    const isMapped = (node) =>
+      context.sourceCode
+        .getAncestors(node)
+        .some((up) => up.type === 'CallExpression' && up.callee.property?.name === 'map');
     return {
       'JSXOpeningElement[name.name="FormField"]': (node) => {
-        // One written inside a `map` stands for as many as its list holds.
-        const mapped = context.sourceCode
-          .getAncestors(node)
-          .some((up) => up.type === 'CallExpression' && up.callee.property?.name === 'map');
-        fields.push(node);
-        if (mapped) fields.push(node);
+        several ||= first !== undefined || isMapped(node);
+        first ??= node;
       },
-      'CallExpression[callee.type="Identifier"]': (node) => called.add(node.callee.name),
+      'CallExpression[callee.name=/^(useFirstFault|formFault)$/]': (node) =>
+        called.add(node.callee.name),
       'Program:exit': () => {
-        const shown = called.has('useFirstFault') && called.has('formFault');
-        if (fields.length > 1 && !shown) context.report({ node: fields[0], messageId: 'hidden' });
+        if (several && called.size < 2) context.report({ node: first, messageId: 'hidden' });
       },
     };
   },
