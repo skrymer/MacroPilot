@@ -276,17 +276,6 @@ const SwipedDelete = ({ name }: { name: string }) => (
 /** How many entries Today shows before the rest are asked for, as epic 1's. */
 const LAST = 3;
 
-type More = 'button' | 'row';
-
-/**
- * Q16, the rest of a long day: epic 1's outlined button under the card; or the card's own last row,
- * *Show all 5* with a chevron, as Health's *Show All Data*. The switch sits under the list here.
- */
-const MORES: Chip<More>[] = [
-  { label: 'Button under', value: 'button' },
-  { label: 'Row in the card', value: 'row' },
-];
-
 type Failure = 'none' | 'unreadable' | 'refused';
 type FailureLook = 'ink' | 'red';
 
@@ -420,7 +409,6 @@ function TodayList({
   palette: Palette;
 }) {
   const [all, setAll] = useState(false);
-  const [more, setMore] = useState<More>('row');
   const shown = all ? entries : entries.slice(-LAST);
   const label = all ? 'Show less' : `Show all ${entries.length}`;
   const hidden = entries.length > LAST;
@@ -479,7 +467,8 @@ function TodayList({
             </View>
           ))}
         </GestureHandlerRootView>
-        {hidden && more === 'row' ? (
+        {/* Decided 26 November 2026: the rest of a long day is asked for by the card's last row. */}
+        {hidden ? (
           <>
             <Hairline />
             <Pressable
@@ -500,14 +489,6 @@ function TodayList({
           </>
         ) : null}
       </View>
-      {hidden && more === 'button' ? (
-        <TrialButton
-          label={label}
-          onPress={() => setAll(!all)}
-          look={{ secondary: 'outlined', press: 'platform', palette }}
-        />
-      ) : null}
-      <Chips chips={MORES} chosen={more} onChoose={setMore} />
       <Text className="font-absence text-label text-ink-dim">fibre not stated</Text>
     </>
   );
