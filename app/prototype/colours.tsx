@@ -27,9 +27,9 @@ cssInterop(Circle, { className: { target: false, nativeStyleToProp: { stroke: tr
 
 const nbsp = String.fromCharCode(0xa0);
 
-type Chip<T extends string> = { label: string; value: T };
+export type Chip<T extends string> = { label: string; value: T };
 
-function Chips<T extends string>({
+export function Chips<T extends string>({
   chips,
   chosen,
   onChoose,
