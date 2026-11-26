@@ -1,5 +1,6 @@
 import { cssInterop } from 'nativewind';
 import type { ReactNode } from 'react';
+import { SymbolView, type AndroidSymbol, type SFSymbol } from 'expo-symbols';
 import { Appearance, Pressable, ScrollView, useColorScheme, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle } from 'react-native-svg';
@@ -29,8 +30,163 @@ const Section = ({ title, note, children }: Specimen) => (
 type Specimen = { title: string; note: string; children: ReactNode };
 
 const Card = ({ children }: { children: ReactNode }) => (
-  <View className="mb-3 rounded-2xl bg-surface p-4">{children}</View>
+  <View className="mb-3 rounded-card bg-surface p-4">{children}</View>
 );
+
+/** The no-break space between a figure and its unit (DESIGN.md, *Figures*). */
+const NBSP = String.fromCharCode(0xa0);
+
+type Palette = Record<string, string>;
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const TOKENS: { light: Palette; dark: Palette } = require('../design-tokens');
+
+/** A symbol takes its tint as a value: the token's, in the appearance in force. */
+const useTint = () => TOKENS[useColorScheme() === 'dark' ? 'dark' : 'light'];
+
+type Sign = { ios: SFSymbol; android: AndroidSymbol };
+
+const WARNING: Sign = { ios: 'exclamationmark.triangle.fill', android: 'warning' };
+const TICK: Sign = { ios: 'checkmark.circle.fill', android: 'check_circle' };
+
+/** What failed, where it failed: `fault`, with the warning sign, so the hue is never alone. */
+const Failure = ({ words }: { words: string }) => {
+  const tint = useTint();
+  return (
+    <View className="mb-3 flex-row items-center gap-2">
+      <SymbolView name={WARNING} size={18} tintColor={tint.fault} />
+      <Text className="flex-1 font-language-bold text-body text-fault">{words}</Text>
+    </View>
+  );
+};
+
+/** A form's field: its label, a fault's words above it, and its state at its end. */
+const Field = ({
+  label,
+  value,
+  state,
+  fault,
+}: {
+  label: string;
+  value: string;
+  state?: 'valid' | 'fault';
+  fault?: string;
+}) => {
+  const tint = useTint();
+  const outline =
+    state === 'fault'
+      ? 'border-2 border-fault bg-fault/10'
+      : state === 'valid'
+        ? 'border-2 border-valid bg-valid/10'
+        : 'border border-line bg-surface-lift';
+  return (
+    <View className="gap-1">
+      <Text className="font-language text-label text-ink-mid">{label}</Text>
+      {fault ? <Text className="font-language text-label text-fault">{fault}</Text> : null}
+      <View
+        className={`min-h-target flex-row items-center justify-between rounded-2xl px-3 ${outline}`}
+      >
+        <Text className="font-language text-body text-ink">{value}</Text>
+        {state ? (
+          <SymbolView
+            name={state === 'fault' ? WARNING : TICK}
+            size={20}
+            tintColor={state === 'fault' ? tint.fault : tint.valid}
+          />
+        ) : null}
+      </View>
+    </View>
+  );
+};
+
+/** A row of a list in its card, with its quiet bin at the end. */
+const ListRow = ({ name, detail, figure, estimated = false }: ListRowProps) => {
+  const tint = useTint();
+  return (
+    <View className="flex-row flex-wrap items-center justify-between gap-x-2">
+      <View className="min-w-name flex-1 flex-row flex-wrap items-center justify-between gap-x-4 py-3">
+        <View className="min-w-name flex-1">
+          <Text className="font-language text-body text-ink">{name}</Text>
+          <Text className="font-language text-label text-ink-mid">{detail}</Text>
+        </View>
+        <Text
+          className={`text-body ${estimated ? 'font-estimated text-ink-mid' : 'font-weighed text-ink'}`}
+        >
+          {figure}
+        </Text>
+      </View>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`Delete ${name}`}
+        className="min-h-target min-w-target items-center justify-center active:opacity-60"
+      >
+        <SymbolView
+          name={{ ios: 'trash', android: 'delete' }}
+          size={22}
+          tintColor={tint['ink-mid']}
+        />
+      </Pressable>
+    </View>
+  );
+};
+
+type ListRowProps = { name: string; detail: string; figure: string; estimated?: boolean };
+
+/** The rest of a long day, asked for by the card's own last row. */
+const ShowAll = () => {
+  const tint = useTint();
+  return (
+    <Pressable
+      accessibilityRole="button"
+      className="min-h-target min-w-target flex-row items-center justify-between py-3 active:opacity-60"
+    >
+      <Text className="font-language-bold text-body text-ink">Show all 5</Text>
+      <SymbolView
+        name={{ ios: 'chevron.down', android: 'expand_more' }}
+        size={18}
+        tintColor={tint['ink-mid']}
+      />
+    </Pressable>
+  );
+};
+
+/** A page with nothing else on it: a sign, a line, a detail and the way on. */
+const QuietEmpty = () => {
+  const tint = useTint();
+  return (
+    <View className="mb-3 items-center gap-grid-1 px-page py-grid-3">
+      <SymbolView
+        name={{ ios: 'fork.knife', android: 'restaurant' }}
+        size={32}
+        tintColor={tint['ink-mid']}
+      />
+      <Text className="text-center font-language-bold text-body text-ink">
+        Build your food catalog
+      </Text>
+      <Text className="text-center font-language text-label text-ink-mid">
+        Add the foods you eat regularly so logging takes a tap.
+      </Text>
+      <View className="mt-grid-1 self-stretch">
+        <Action label="Add your first food" />
+      </View>
+    </View>
+  );
+};
+
+/** What worked, on another page: a card with the tick that a valid field has. */
+const Logged = () => {
+  const tint = useTint();
+  return (
+    <View className="mb-3 flex-row items-center gap-3 rounded-card bg-surface p-4">
+      <SymbolView name={TICK} size={22} tintColor={tint.valid} />
+      <View className="flex-1">
+        <Text className="font-language-bold text-body text-ink">Logged: Rolled oats</Text>
+        <Text className="font-language text-label text-ink-mid">
+          {`80${NBSP}g, 294${NBSP}kcal, 10${NBSP}g protein`}
+        </Text>
+      </View>
+    </View>
+  );
+};
 
 type Arc = { radius: number; width: number; filled: number; stroke: string };
 
@@ -182,10 +338,12 @@ const Entry = ({ name, detail, first = false, children }: EntrySpecimen) => (
   </View>
 );
 
+/** Every button shows the platform's press: iOS dims it, Android ripples. */
 const Action = ({ label, solid = false }: { label: string; solid?: boolean }) => (
   <Pressable
     accessibilityRole="button"
-    className={`mb-3 min-h-target min-w-target items-center justify-center rounded-full px-5 ${
+    android_ripple={{ foreground: true }}
+    className={`mb-3 min-h-target min-w-target items-center justify-center overflow-hidden rounded-full px-5 ios:active:opacity-60 ${
       solid ? 'bg-ink' : 'border border-ink'
     }`}
   >
@@ -231,7 +389,7 @@ const AppearanceSwitch = () => {
 const TABS = ['Today', 'Log', 'Review', 'Foods', 'Profile'];
 
 const ASKING = [
-  ['Grams, an estimate, a food', 'A full-height page, with Cancel'],
+  ['Grams, an estimate, a food', 'iOS\u2019s page sheet, or a full page on Android, with an X'],
   ['Deleting, or discarding a food', 'The system\u2019s own question'],
   ['It worked, and the page shows it', 'Nothing is said'],
 ] as const;
@@ -292,7 +450,7 @@ export default function Design() {
           title="Figures"
           note="Weighed is solid. Estimated is lighter, and says so. An unknown is words. A known zero is a figure."
         >
-          <View className="mb-3 rounded-2xl bg-surface px-4 py-1">
+          <View className="mb-3 rounded-card bg-surface px-page py-1">
             <Entry first name="Chicken thigh, roasted" detail={'180\u00A0g, 46\u00A0g protein'}>
               <Text className="font-weighed text-body text-ink">{'376\u00A0kcal'}</Text>
             </Entry>
@@ -331,9 +489,79 @@ export default function Design() {
           </Card>
         </Section>
 
-        <Section title="Actions" note="Ink, never a hue: a button expresses no verdict.">
+        <Section
+          title="Actions"
+          note="Ink, never a hue: a button expresses no verdict. A secondary is outlined. A press dims on iOS and ripples on Android."
+        >
           <Action solid label={'Log 180\u00A0g'} />
           <Action label="Log an estimate instead" />
+        </Section>
+
+        <Section
+          title="A list"
+          note="Its rows in one card, a quiet bin at each and a swipe beside it. The tally's calories are a figure. The rest of a long day is the card's last row."
+        >
+          <View className="mb-1 flex-row flex-wrap items-baseline justify-between gap-x-4">
+            <Text accessibilityRole="header" className="font-language-bold text-body text-ink">
+              Today · Thu 26 Nov
+            </Text>
+            <Text className="font-language text-label text-ink-mid">
+              {'5 entries · '}
+              <Text className="font-weighed text-ink">{`2,610${NBSP}kcal`}</Text>
+            </Text>
+          </View>
+          <View className="mb-3 rounded-card bg-surface px-page">
+            <ListRow
+              name="Lunch at the canteen"
+              detail="Estimate, protein not stated"
+              figure={`about 650${NBSP}kcal`}
+              estimated
+            />
+            <View className="border-t border-line" />
+            <ListRow
+              name="Black coffee"
+              detail={`250${NBSP}g, 0${NBSP}g protein`}
+              figure={`0${NBSP}kcal`}
+            />
+            <View className="border-t border-line" />
+            <ShowAll />
+          </View>
+        </Section>
+
+        <Section
+          title="An empty list"
+          note="Under a summary, one line in the list's card with its way on. On a page with nothing else, the quiet empty state."
+        >
+          <View className="mb-3 min-h-target flex-row flex-wrap items-center justify-between gap-x-4 rounded-card bg-surface px-page py-2">
+            <Text className="font-language text-body text-ink-mid">
+              Log a weighed food, or an estimate.
+            </Text>
+            <Pressable
+              accessibilityRole="button"
+              className="min-h-target min-w-target items-center justify-center active:opacity-60"
+            >
+              <Text className="font-language-bold text-body text-ink">Log</Text>
+            </Pressable>
+          </View>
+          <QuietEmpty />
+        </Section>
+
+        <Section
+          title="A form"
+          note="Its fields in one card. A fault in red with a sign, its words above the field; a valid field in green with a tick, judged once it is left. The button at the foot."
+        >
+          <View className="mb-3 gap-grid-2 rounded-card bg-surface p-grid-2">
+            <Field label="Label" value="Lunch at the canteen" state="valid" />
+            <Field
+              label="Calories"
+              value="six hundred"
+              state="fault"
+              fault="Enter calories as a number"
+            />
+            <Field label="Protein (optional)" value="" />
+          </View>
+          <Failure words="Not saved. A field above needs changing." />
+          <Action solid label="Log estimated entry" />
         </Section>
 
         <Section
@@ -351,21 +579,18 @@ export default function Design() {
 
         <Section
           title="Asking and telling"
-          note="No toasts. What worked on another page is said here, and stays. A failure takes no hue."
+          note="No toasts. What worked on another page is said in a card with a tick, and stays. A failure is said in red with its sign, where it happened."
         >
+          <Logged />
           <Card>
-            <Text className="font-language-bold text-body text-ink">Logged: Rolled oats</Text>
-            <Text className="font-language text-label text-ink-mid">
-              {'80\u00A0g, 294\u00A0kcal, 10\u00A0g protein'}
-            </Text>
-          </Card>
-          <Card>
-            <Text className="mb-3 font-language-bold text-body text-ink">
-              Could not save entry. What you typed is still here.
-            </Text>
+            <Failure words="Could not save entry. What you typed is still here." />
             <Action solid label="Log entry" />
           </Card>
-          <View className="rounded-2xl bg-surface px-4 py-1">
+          <Card>
+            <Failure words={'Couldn\u2019t load today\u2019s summary'} />
+            <Action label="Retry" />
+          </Card>
+          <View className="rounded-card bg-surface px-page py-1">
             {ASKING.map(([when, what], index) => (
               <Entry key={when} first={index === 0} name={when} detail={what}>
                 {null}
@@ -385,9 +610,12 @@ export default function Design() {
           <Text className="font-language-bold text-eyebrow text-ink-dim">Eyebrow</Text>
         </Section>
 
-        <Section title="Grounds" note="Neutral, a little warm. Nothing here means anything.">
+        <Section
+          title="Grounds"
+          note="Neutral, with a cool pine tint. Nothing here means anything."
+        >
           {GROUNDS.map(([name, background]) => (
-            <View key={name} className={`mb-2 rounded-2xl border border-line p-4 ${background}`}>
+            <View key={name} className={`mb-2 rounded-card border border-line p-4 ${background}`}>
               <Text className="font-language text-label text-ink">{name}</Text>
             </View>
           ))}

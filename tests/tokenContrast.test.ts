@@ -37,6 +37,9 @@ const PAIRS: { text: string; on: string; size: 'body' | 'large' }[] = [
   { text: 'within', on: 'surface', size: 'body' },
   { text: 'slightly-over', on: 'surface', size: 'body' },
   { text: 'over', on: 'surface', size: 'body' },
+  // A fault is said on a card, and above a form's button on the ground.
+  { text: 'fault', on: 'surface', size: 'body' },
+  { text: 'fault', on: 'ground', size: 'body' },
 ];
 
 const FLOOR = { body: 4.5, large: 3 };

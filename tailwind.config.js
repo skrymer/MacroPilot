@@ -8,6 +8,12 @@ const channels = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)
 /** Each platform's own floor for a target: Apple's 44pt, Material's 48dp. */
 const target = platformSelect({ ios: '44px', android: '48px' });
 
+/** Each platform's body: Apple's default 17pt, Material's 16dp, each at 1.5 times for B612. */
+const body = [
+  platformSelect({ ios: '17px', android: '16px' }),
+  { lineHeight: platformSelect({ ios: '26px', android: '24px' }) },
+];
+
 const variables = (palette) =>
   Object.fromEntries(
     Object.entries(palette).map(([name, hex]) => [`--color-${name}`, channels(hex)]),
@@ -29,7 +35,7 @@ module.exports = {
       fontSize: {
         eyebrow: ['11px', { lineHeight: '17px' }],
         label: ['13px', { lineHeight: '20px' }],
-        body: ['16px', { lineHeight: '24px' }],
+        body,
         title: ['22px', { lineHeight: '36px' }],
         figure: ['44px', { lineHeight: '54px' }],
         'figure-lg': ['72px', { lineHeight: '88px' }],
@@ -48,7 +54,12 @@ module.exports = {
       // The touch target, in px on purpose. The numeric scale is rem-based and NativeWind's
       // native rem is 14, so `h-11` is 38.5pt on an iPhone. `a11y/touch-target` requires both
       // floors on every Pressable.
-      minHeight: { target },
+      // A two-line row: Material's list item is 72dp tall; iOS sizes a cell by what is in it.
+      minHeight: { target, 'two-line': platformSelect({ ios: '44px', android: '72px' }) },
+      // The page's margin and the 8 grid, in px for the same reason as the target: `px-4` is 14.
+      spacing: { page: '16px', 'grid-1': '8px', 'grid-2': '16px', 'grid-3': '24px' },
+      // A card's corner, in px so the rem cannot move it.
+      borderRadius: { card: '20px' },
       // `name` is the least a name keeps beside its figure: the longest word of one, at double. With
       // less, the figure drops below it. A basis does not do this: Yoga shrinks past it.
       minWidth: { target, name: '170px' },
