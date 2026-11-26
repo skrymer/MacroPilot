@@ -1,10 +1,12 @@
 // THROWAWAY: the colours prototype (#51). See app/prototype/NOTES.md.
-import { useLocalSearchParams } from 'expo-router';
+import { Stack, useLocalSearchParams } from 'expo-router';
+import { SymbolView } from 'expo-symbols';
 import { cssInterop, vars } from 'nativewind';
 import { useState, type ReactNode } from 'react';
 import {
   Appearance,
   KeyboardAvoidingView,
+  Platform,
   Pressable,
   ScrollView,
   useColorScheme,
@@ -23,6 +25,11 @@ import { Text } from '@/components/Text';
 import { CANDIDATES, variablesOf } from '../../prototype-palettes';
 
 cssInterop(Circle, { className: { target: false, nativeStyleToProp: { stroke: true } } });
+
+// A token reaches a symbol's tint through its class.
+const Icon = cssInterop(SymbolView, {
+  className: { target: 'style', nativeStyleToProp: { color: 'tintColor' } },
+});
 
 const nbsp = String.fromCharCode(0xa0);
 
@@ -184,17 +191,22 @@ const DAYS: Record<
   },
 };
 
-function Today({ standing }: { standing: Standing }) {
+function Today({ standing, system }: { standing: Standing; system: boolean }) {
   const day = DAYS[standing];
   const entries = day.dinner
     ? [...ENTRIES, { ...DINNER, figure: `about ${day.dinner}${nbsp}kcal` }]
     : ENTRIES;
   const total = 1320 + (day.dinner ?? 0);
   return (
-    <ScrollView contentContainerClassName="gap-3 px-4 pb-8">
-      <Text accessibilityRole="header" className="font-language-bold text-title text-ink">
-        Today
-      </Text>
+    <ScrollView
+      contentInsetAdjustmentBehavior="automatic"
+      contentContainerClassName="gap-3 px-4 pb-8"
+    >
+      {system ? null : (
+        <Text accessibilityRole="header" className="font-language-bold text-title text-ink">
+          Today
+        </Text>
+      )}
       <View className="rounded-2xl bg-surface p-4">
         <View
           accessible
@@ -250,12 +262,17 @@ const FOODS = [
   ['Skyr, plain', 11, 63],
 ] as const;
 
-function Log() {
+function Log({ system }: { system: boolean }) {
   return (
-    <ScrollView contentContainerClassName="gap-3 px-4 pb-8">
-      <Text accessibilityRole="header" className="font-language-bold text-title text-ink">
-        Log
-      </Text>
+    <ScrollView
+      contentInsetAdjustmentBehavior="automatic"
+      contentContainerClassName="gap-3 px-4 pb-8"
+    >
+      {system ? null : (
+        <Text accessibilityRole="header" className="font-language-bold text-title text-ink">
+          Log
+        </Text>
+      )}
       <View accessible className="rounded-2xl bg-surface p-4">
         <Text className="font-language-bold text-body text-ink">Logged: Rolled oats</Text>
         <Text className="font-language text-label text-ink-mid">
@@ -311,21 +328,44 @@ function Field({
   );
 }
 
-function Form() {
+/** The way out in the system's header: the word on iOS, Material's close X on Android. */
+function HeaderCancel() {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel="Cancel"
+      className="min-h-target min-w-target items-center justify-center"
+    >
+      {Platform.OS === 'ios' ? (
+        <Text className="font-language text-body text-ink">Cancel</Text>
+      ) : (
+        <Icon name={{ android: 'close' }} size={24} className="text-ink" />
+      )}
+    </Pressable>
+  );
+}
+
+function Form({ system }: { system: boolean }) {
   return (
     <KeyboardAvoidingView behavior="padding" className="flex-1">
-      <ScrollView keyboardShouldPersistTaps="handled" contentContainerClassName="gap-4 px-4 pb-4">
-        <View className="items-start">
-          <Pressable
-            accessibilityRole="button"
-            className="min-h-target min-w-target items-center justify-center self-start"
-          >
-            <Text className="font-language text-body text-ink">Cancel</Text>
-          </Pressable>
-          <Text accessibilityRole="header" className="font-language-bold text-title text-ink">
-            Log an estimate
-          </Text>
-        </View>
+      <ScrollView
+        contentInsetAdjustmentBehavior="automatic"
+        keyboardShouldPersistTaps="handled"
+        contentContainerClassName="gap-4 px-4 pb-4"
+      >
+        {system ? null : (
+          <View className="items-start">
+            <Pressable
+              accessibilityRole="button"
+              className="min-h-target min-w-target items-center justify-center self-start"
+            >
+              <Text className="font-language text-body text-ink">Cancel</Text>
+            </Pressable>
+            <Text accessibilityRole="header" className="font-language-bold text-title text-ink">
+              Log an estimate
+            </Text>
+          </View>
+        )}
         <Field label="Label" value="Lunch at the canteen" />
         <Field label="Calories" value="six hundred" fault="Enter calories as a number" />
         <Field label="Protein (optional)" placeholder="e.g. 30" />
@@ -342,44 +382,93 @@ function Form() {
 
 /* The page ---------------------------------------------------------------------------------- */
 
+type Title = 'ours' | 'system';
+
+const TITLES: Chip<Title>[] = [
+  { label: 'Our title', value: 'ours' },
+  { label: 'System title', value: 'system' },
+];
+
+const HEADINGS: Record<Screen, string> = { today: 'Today', log: 'Log', form: 'Log an estimate' };
+
 export default function ColoursPrototype() {
   const { variant } = useLocalSearchParams<{ variant?: string }>();
-  const [key, setKey] = useState(CANDIDATES.some((c) => c.key === variant) ? variant! : 'A');
+  const [key, setKey] = useState(CANDIDATES.some((c) => c.key === variant) ? variant! : 'C');
   const [screen, setScreen] = useState<Screen>('today');
   const [standing, setStanding] = useState<Standing>('within');
+  const [title, setTitle] = useState<Title>('ours');
+  const [barShown, setBarShown] = useState(true);
   const appearance = useColorScheme() === 'dark' ? 'dark' : 'light';
   const candidate = CANDIDATES.find((c) => c.key === key) ?? CANDIDATES[0]!;
+  const palette = candidate[appearance];
+  const system = title === 'system';
   const shown: Record<Screen, ReactNode> = {
-    today: <Today standing={standing} />,
-    log: <Log />,
-    form: <Form />,
+    today: <Today standing={standing} system={system} />,
+    log: <Log system={system} />,
+    form: <Form system={system} />,
   };
+  // The native header takes colours as values, not classes: the variant's own, at run time.
+  const face = { fontFamily: 'B612_700Bold', color: palette.ink };
   return (
-    <View style={vars(variablesOf(candidate[appearance]))} className="flex-1 bg-ground">
-      <SafeAreaView className="flex-1" edges={['top', 'bottom']}>
-        <View className="mx-2 mb-2 gap-1 rounded-2xl border border-line bg-surface p-2">
-          <Chips
-            chips={CANDIDATES.map((c) => ({ label: c.key, value: c.key }))}
-            chosen={key}
-            onChoose={setKey}
-          />
-          <Text className="font-language-bold text-label text-ink">{`${candidate.key}: ${candidate.name}`}</Text>
-          <Chips chips={SCREENS} chosen={screen} onChoose={setScreen} />
-          {screen === 'today' ? (
-            <Chips chips={STANDINGS} chosen={standing} onChoose={setStanding} />
-          ) : null}
-          <Chips
-            chips={APPEARANCES}
-            chosen={appearance}
-            onChoose={(value) => Appearance.setColorScheme(value)}
-          />
-          <View className="flex-row overflow-hidden rounded-full border border-line">
-            {SWATCHES.map((swatch) => (
-              <View key={swatch} className={`h-3 flex-1 ${swatch}`} />
-            ))}
+    <View style={vars(variablesOf(palette))} className="flex-1 bg-ground">
+      <Stack.Screen
+        options={{
+          headerShown: system,
+          title: HEADINGS[screen],
+          headerLargeTitle: screen !== 'form',
+          headerLargeTitleShadowVisible: false,
+          headerShadowVisible: false,
+          headerBackVisible: false,
+          headerStyle: { backgroundColor: palette.ground },
+          headerLargeStyle: { backgroundColor: palette.ground },
+          headerTitleStyle: face,
+          headerLargeTitleStyle: face,
+          headerTintColor: palette.ink,
+          headerLeft: screen === 'form' ? () => <HeaderCancel /> : () => null,
+        }}
+      />
+      <SafeAreaView className="flex-1" edges={system ? ['bottom'] : ['top', 'bottom']}>
+        <View className="flex-1">{shown[screen]}</View>
+        {barShown ? (
+          <View className="mx-2 mt-2 gap-1 rounded-2xl border border-line bg-surface p-2">
+            <View className="flex-row flex-wrap items-center justify-between gap-1">
+              <Chips
+                chips={CANDIDATES.map((c) => ({ label: c.key, value: c.key }))}
+                chosen={key}
+                onChoose={setKey}
+              />
+              <Chips
+                chips={[{ label: 'Hide', value: 'hide' }]}
+                chosen=""
+                onChoose={() => setBarShown(false)}
+              />
+            </View>
+            <Text className="font-language-bold text-label text-ink">{`${candidate.key}: ${candidate.name}`}</Text>
+            <Chips chips={TITLES} chosen={title} onChoose={setTitle} />
+            <Chips chips={SCREENS} chosen={screen} onChoose={setScreen} />
+            {screen === 'today' ? (
+              <Chips chips={STANDINGS} chosen={standing} onChoose={setStanding} />
+            ) : null}
+            <Chips
+              chips={APPEARANCES}
+              chosen={appearance}
+              onChoose={(value) => Appearance.setColorScheme(value)}
+            />
+            <View className="flex-row overflow-hidden rounded-full border border-line">
+              {SWATCHES.map((swatch) => (
+                <View key={swatch} className={`h-3 flex-1 ${swatch}`} />
+              ))}
+            </View>
           </View>
-        </View>
-        {shown[screen]}
+        ) : (
+          <View className="mx-2 mt-2 items-end">
+            <Chips
+              chips={[{ label: 'Show bar', value: 'show' }]}
+              chosen=""
+              onChoose={() => setBarShown(true)}
+            />
+          </View>
+        )}
       </SafeAreaView>
     </View>
   );
