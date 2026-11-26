@@ -16,7 +16,6 @@ import {
 } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 
-import { Button } from '@/components/Button';
 import { Hairline } from '@/components/Hairline';
 import { Input } from '@/components/Input';
 import { Row } from '@/components/Row';
@@ -300,18 +299,6 @@ const FOODS = [
 type Secondary = 'outlined' | 'tonal';
 type Press = 'none' | 'platform';
 
-/** Q11: a secondary button outlined in ink (now) or filled with `surface-lift`, as Material's tonal. */
-const SECONDARIES: Chip<Secondary>[] = [
-  { label: 'Outlined', value: 'outlined' },
-  { label: 'Tonal', value: 'tonal' },
-];
-
-/** Q11: what a press shows: nothing (now), or the platform's own: iOS dims, Android ripples. */
-const PRESSES: Chip<Press>[] = [
-  { label: 'No press', value: 'none' },
-  { label: 'Platform press', value: 'platform' },
-];
-
 type ButtonLook = { secondary: Secondary; press: Press; palette: Palette };
 
 function TrialButton({
@@ -516,7 +503,11 @@ export function Form({ faultStyle, palette }: { faultStyle: FaultStyle; palette:
         <Text className="font-language-bold text-body text-ink">
           Not saved. A field above needs changing.
         </Text>
-        <Button label="Log estimated entry" onPress={() => undefined} />
+        <TrialButton
+          label="Log estimated entry"
+          primary
+          look={{ secondary: 'outlined', press: 'platform', palette }}
+        />
       </View>
     </KeyboardAvoidingView>
   );
@@ -560,8 +551,9 @@ export default function ColoursPrototype() {
   const [barShown, setBarShown] = useState(true);
   // Decided 26 November 2026: the quiet bin, and a swipe to delete beside it.
   const deletion: Deletion = 'swipe';
-  const [secondary, setSecondary] = useState<Secondary>('outlined');
-  const [press, setPress] = useState<Press>('platform');
+  // Decided 26 November 2026: a secondary button outlined, and the platform's press on every button.
+  const secondary: Secondary = 'outlined';
+  const press: Press = 'platform';
   const appearance = useColorScheme() === 'dark' ? 'dark' : 'light';
   const palette = CHOSEN[appearance];
   const theme = vars(variablesOf(palette));
@@ -580,12 +572,6 @@ export default function ColoursPrototype() {
       </View>
       {screen === 'today' ? (
         <Chips chips={STANDINGS} chosen={standing} onChoose={setStanding} />
-      ) : null}
-      {screen === 'log' ? (
-        <>
-          <Chips chips={SECONDARIES} chosen={secondary} onChoose={setSecondary} />
-          <Chips chips={PRESSES} chosen={press} onChoose={setPress} />
-        </>
       ) : null}
       <Chips
         chips={APPEARANCES}
