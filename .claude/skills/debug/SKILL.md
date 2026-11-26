@@ -14,5 +14,5 @@ It stops this checkout's own stale Metro on port 8081 (or `METRO_PORT`), starts 
 Then the phone: same Wi-Fi, **force-quit and reopen the app**. The emulator: `drive-emulator`'s `emulator.sh`, which takes `METRO_PORT` too.
 
 - A fresh `Bundled` line after an edit is the only proof the device runs it.
-- A class new to the codebase needs `metro.sh <metro.log> --clear`. A start by hand inside another command dies with it, and what is driven after tests nothing.
+- A class new to the codebase needs `metro.sh <metro.log> --clear`. `metro.sh` stops this checkout's own Metro before it starts one, so a restart is always through it, never by hand. A start by hand inside another command dies with it, and what is driven after tests nothing.
 - There is no event log in the app yet. The first defect that needs a timeline earns one: a port for the development console, recorded in [`0001`](../../../docs/adr/0001-a-unit-owes-its-own-test-when-it-owns-something.md), and a reader script here.

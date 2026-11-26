@@ -10,9 +10,12 @@ import {
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
+import tailwind from '../../../../tailwind.config.js';
+
 const SIZES = path.join(__dirname, 'sizes.sh');
 const EMULATOR = path.join(__dirname, 'emulator.sh');
 const PIXELS = path.join(__dirname, 'pixels.mjs');
+const SPACING = path.join(__dirname, 'spacing.mjs');
 
 /** An Android SDK and a PATH of stand-ins, each logging how it was called and then running `body`. */
 const stage = (tools: Record<string, string>) => {
@@ -193,5 +196,125 @@ describe('pixels.mjs', () => {
     // Then it is refused, with the screen's size
     expect(status).toBe(1);
     expect(output).toContain('2x2');
+  });
+});
+
+describe('spacing.mjs', () => {
+  /**
+   * A screen at 320dpi, two pixels to the dp: a title 32px from the edge, a figure 32px below it and
+   * a unit 16px to its right, and a row 144px tall.
+   */
+  const NODES = [
+    { label: 'Today', rect: { x: 32, y: 100, width: 200, height: 60 } },
+    { label: '1,250 kcal today', rect: { x: 32, y: 192, width: 300, height: 80 } },
+    { label: 'kcal', rect: { x: 348, y: 192, width: 80, height: 80 } },
+    { label: 'Oats, 50 g', rect: { x: 0, y: 400, width: 1080, height: 144 } },
+    { label: 'Hidden', rect: { x: 0, y: 0, width: 0, height: 0 } },
+  ];
+
+  const device = (nodes: object[] = NODES) => ({
+    adb: '[ "$2" = wm ] && echo "Physical density: 320"; exit 0',
+    npx: `echo '${JSON.stringify({ data: { nodes } })}'; exit 0`,
+  });
+
+  it('passes each gap that is its token, and says which token', () => {
+    // Given a screen whose gaps are on the grid
+
+    // When a margin, a vertical gap and a horizontal gap are measured
+    const { status, output } = stage(device()).run(SPACING, [
+      '..Today=page',
+      'Today..*today=grid-2',
+      '1,250..kcal=grid-1',
+    ]);
+
+    // Then each passes, in dp against the dp its token requires
+    expect(status).toBe(0);
+    expect(output).toContain("PASS margin → 'Today': 16dp, required 16dp (page)");
+    expect(output).toContain("PASS vertical gap 'Today' → '*today': 16dp, required 16dp (grid-2)");
+    expect(output).toContain("PASS horizontal gap '1,250' → 'kcal': 8dp, required 8dp (grid-1)");
+  });
+
+  it('adds tokens joined by a plus', () => {
+    // Given a title 16dp from the screen's edge
+
+    // When the title is measured against the page's margin and a step of the grid
+    const { status, output } = stage(device()).run(SPACING, ['..Today=page+grid-1']);
+
+    // Then the required value is their sum
+    expect(status).toBe(1);
+    expect(output).toContain("FAULT margin → 'Today': 16dp, required 24dp (page+grid-1)");
+  });
+
+  it('prints a fault against the required value, and fails', () => {
+    // Given a title 16dp below the screen's edge
+
+    // When it is measured against the third step of the grid
+    const { status, output } = stage(device()).run(SPACING, ['..Today=grid-3']);
+
+    // Then the fault names what it is and what it must be
+    expect(status).toBe(1);
+    expect(output).toContain("FAULT margin → 'Today': 16dp, required 24dp (grid-3)");
+  });
+
+  it('holds a height to its token as a floor', () => {
+    // Given a row 72dp tall and a title 30dp tall
+
+    // When both are measured as two-line rows
+    const { status, output } = stage(device()).run(SPACING, ['Oats=two-line', 'Today=two-line']);
+
+    // Then the row passes and the title is a fault
+    expect(status).toBe(1);
+    expect(output).toContain("PASS height 'Oats': 72dp, required at least 72dp (two-line)");
+    expect(output).toContain("FAULT height 'Today': 30dp, required at least 72dp (two-line)");
+  });
+
+  it('refuses a token there is not, before touching the device', () => {
+    // Given a device
+
+    // When a gap is measured against an unknown token
+    const { status, output, calls } = stage(device()).run(SPACING, ['Today..kcal=grid-9']);
+
+    // Then it stops, naming it
+    expect(status).toBe(2);
+    expect(output).toContain('grid-9');
+    expect(calls).not.toContain('snapshot');
+  });
+
+  it('refuses an element not on the screen, rather than measure another', () => {
+    // Given a screen with a hidden element
+
+    // When the hidden one is measured
+    const { status, output } = stage(device()).run(SPACING, ['..Hidden=page']);
+
+    // Then nothing is measured, and it says what is missing
+    expect(status).toBe(2);
+    expect(output).toContain("no 'Hidden' on the screen");
+    expect(output).not.toContain('PASS');
+  });
+
+  it('measures nothing through the development build’s overlay', () => {
+    // Given the log box in front of the app
+    const nodes = [...NODES, { label: 'Minimize', rect: { x: 0, y: 0, width: 9, height: 9 } }];
+
+    // When a gap is measured
+    const { status, output } = stage(device(nodes)).run(SPACING, ['..Today=page']);
+
+    // Then it is refused
+    expect(status).toBe(1);
+    expect(output).toContain('overlay');
+    expect(output).not.toContain('dp');
+  });
+
+  it('reads the spacing tokens as tailwind.config.js has them', () => {
+    // Given the theme's spacing
+    const spacing = tailwind.theme?.extend?.spacing as Record<string, string>;
+
+    // When the script prints its table
+    const { output } = stage(device()).run(SPACING, ['--tokens']);
+
+    // Then every spacing token is in it at the same size
+    for (const [name, px] of Object.entries(spacing)) {
+      expect(output).toContain(`${name} ${parseInt(px)}dp`);
+    }
   });
 });

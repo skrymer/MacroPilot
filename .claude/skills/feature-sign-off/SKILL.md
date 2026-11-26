@@ -11,7 +11,7 @@ Run it from a working tree where the behaviour is done **and the suite is green*
 
 ## The five gates, in order
 
-Address what each surfaces *before* starting the next. When a gate is done, record it on the code as it stands: `node .claude/skills/break-it/scripts/charters.mjs gate <issue> <gate>` (`verify` with `--photos <dir>`, which refuses photographs older than the last edit). A later fix drops the stamps of the gates before it, and `charters.mjs gates <issue>` names each one to run again.
+Address what each surfaces *before* starting the next. When a gate is done, record it on the code as it stands, on what its run left: write the gate's report to a file (`<scratchpad>/gates/<gate>.md`: the findings and their triage, Stryker's verdicts, the ADR board), then `node .claude/skills/break-it/scripts/charters.mjs gate <issue> <gate> --evidence <file>` (`verify` may give `--photos <dir>` instead). Both are refused when older than the last edit, so a stamp is never re-applied by hand: a gate whose code changed runs again and writes a new report. A later fix drops the stamps of the gates before it, and `charters.mjs gates <issue>` names each one to run again.
 
 1. **`/simplify` — clean it up.** Apply reuse, simplification, efficiency and altitude cleanups to the changed code. It *edits* the tree, so run it before the bug hunt — the reviewer then reads the code you are actually shipping. Re-run the tests after.
 
@@ -19,7 +19,7 @@ Address what each surfaces *before* starting the next. When a gate is done, reco
 
    It runs here for two reasons: after gate 1, because `/simplify` edits the tree and mutating pre-simplify code wastes time on survivors that have moved; before gate 3, because this gate *writes tests* the reviewer should read.
 
-3. **`/code-review medium` — hunt correctness bugs.** Review the now-simplified diff. **Medium, not high**: at medium it focuses on correctness and drops the reuse and simplification angles gate 1 just applied. Triage every finding — fix the genuine ones, and for each you do not fix, say why. No unexplained findings. **One reproduced, by a test or on the device, is genuine**: keep its failing test or measurement, reproduce it once more, say who meets it, and leaving it is the user's call.
+3. **`/code-review medium` — hunt correctness bugs.** Review the now-simplified diff. **Medium, not high**: at medium it focuses on correctness and drops the reuse and simplification angles gate 1 just applied. Triage every finding — fix the genuine ones, and for each you do not fix, say why. No unexplained findings. **One reproduced, by a test or on the device, is genuine**: keep its failing test or measurement, reproduce it once more, say who meets it, and leaving it is the user's call. **A finding that asks for a test is checked against [`0001`](../../../docs/adr/0001-a-unit-owes-its-own-test-when-it-owns-something.md) before it is written**: a unit that owns nothing gets none, and the finding is answered with that reason.
 
 4. **`/check-adrs` — honour the recorded decisions.** Judge the final diff against `docs/adr/` and the language in `CONTEXT.md`. A FAIL is either a code fix or a same-PR doc fix — the user's call, surfaced rather than decided quietly.
 

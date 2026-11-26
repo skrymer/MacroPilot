@@ -6,9 +6,10 @@
 //   charters.mjs charter <issue> <charter>  registers "explore … with … to discover …", prints its key
 //   charters.mjs record <key> pass|fail|blocked [--snapshot <file>] [--screenshot <file>] --note <text>
 //   charters.mjs check <issue>              exits 1 on no charter, or on one with no result
-//   charters.mjs gate <issue> <gate> [--photos <dir>]
-//                                           records a sign-off gate as run on the code as it stands;
-//                                           verify's photographs must be newer than the last edit
+//   charters.mjs gate <issue> <gate> --evidence <report> | --photos <dir>
+//                                           records a sign-off gate as run on the code as it stands, on
+//                                           what its run left, newer than the last edit; verify's
+//                                           photographs serve
 //   charters.mjs gates <issue>              exits 1 unless every gate ran on the code as it stands
 import { execFileSync } from 'node:child_process';
 import {
@@ -189,8 +190,17 @@ function stalePhotos(dir) {
     .filter((name) => statSync(path.join(dir, name)).mtimeMs < edited);
 }
 
-function gate(issue, name, { photos }) {
+function gate(issue, name, { photos, evidence: report }) {
   if (!GATES.includes(name)) throw new Stop(`a gate is one of ${GATES.join(', ')}`);
+  if (!report && !(photos && name === 'verify')) {
+    throw new Stop(`${name} is recorded on what its run left: --evidence <report>`);
+  }
+  if (report) {
+    const [file] = evidence({ snapshot: report });
+    if (statSync(file).mtimeMs < lastEdit()) {
+      throw new Stop(`${file} is older than the last edit, so run ${name} again`);
+    }
+  }
   if (photos) {
     const stale = stalePhotos(photos);
     if (stale.length > 0) {
@@ -238,6 +248,7 @@ try {
       note: { type: 'string' },
       base: { type: 'string' },
       photos: { type: 'string' },
+      evidence: { type: 'string' },
     },
   });
   const [command, first, second] = positionals;
