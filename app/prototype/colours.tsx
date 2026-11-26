@@ -297,7 +297,58 @@ const FOODS = [
   ['Skyr, plain', 11, 63],
 ] as const;
 
-function Log() {
+type Secondary = 'outlined' | 'tonal';
+type Press = 'none' | 'platform';
+
+/** Q11: a secondary button outlined in ink (now) or filled with `surface-lift`, as Material's tonal. */
+const SECONDARIES: Chip<Secondary>[] = [
+  { label: 'Outlined', value: 'outlined' },
+  { label: 'Tonal', value: 'tonal' },
+];
+
+/** Q11: what a press shows: nothing (now), or the platform's own: iOS dims, Android ripples. */
+const PRESSES: Chip<Press>[] = [
+  { label: 'No press', value: 'none' },
+  { label: 'Platform press', value: 'platform' },
+];
+
+type ButtonLook = { secondary: Secondary; press: Press; palette: Palette };
+
+function TrialButton({
+  label,
+  primary = false,
+  look: { secondary, press, palette },
+}: {
+  label: string;
+  primary?: boolean;
+  look: ButtonLook;
+}) {
+  const ground = primary
+    ? 'bg-ink'
+    : secondary === 'tonal'
+      ? 'bg-surface-lift'
+      : 'border border-ink';
+  const dims = press === 'platform' && Platform.OS === 'ios' ? 'active:opacity-60' : '';
+  return (
+    <Pressable
+      accessibilityRole="button"
+      android_ripple={
+        press === 'platform'
+          ? { color: primary ? palette.ground : palette['ink-mid'], foreground: true }
+          : undefined
+      }
+      className={`min-h-target min-w-target items-center justify-center overflow-hidden rounded-full px-5 ${ground} ${dims}`}
+    >
+      <Text
+        className={`text-center font-language-bold text-body ${primary ? 'text-ground' : 'text-ink'}`}
+      >
+        {label}
+      </Text>
+    </Pressable>
+  );
+}
+
+function Log({ look }: { look: ButtonLook }) {
   return (
     <>
       <View accessible className="rounded-2xl bg-surface p-4">
@@ -306,7 +357,8 @@ function Log() {
           {`80${nbsp}g, 294${nbsp}kcal, 10${nbsp}g protein`}
         </Text>
       </View>
-      <Button label="Log an estimate instead" onPress={() => undefined} secondary />
+      <TrialButton label="Log an estimate instead" look={look} />
+      <TrialButton label="A primary button, to press" primary look={look} />
       <Text accessibilityRole="header" className="font-language-bold text-body text-ink">
         All foods
       </Text>
@@ -508,6 +560,8 @@ export default function ColoursPrototype() {
   const [barShown, setBarShown] = useState(true);
   // Decided 26 November 2026: the quiet bin, and a swipe to delete beside it.
   const deletion: Deletion = 'swipe';
+  const [secondary, setSecondary] = useState<Secondary>('outlined');
+  const [press, setPress] = useState<Press>('platform');
   const appearance = useColorScheme() === 'dark' ? 'dark' : 'light';
   const palette = CHOSEN[appearance];
   const theme = vars(variablesOf(palette));
@@ -526,6 +580,12 @@ export default function ColoursPrototype() {
       </View>
       {screen === 'today' ? (
         <Chips chips={STANDINGS} chosen={standing} onChoose={setStanding} />
+      ) : null}
+      {screen === 'log' ? (
+        <>
+          <Chips chips={SECONDARIES} chosen={secondary} onChoose={setSecondary} />
+          <Chips chips={PRESSES} chosen={press} onChoose={setPress} />
+        </>
       ) : null}
       <Chips
         chips={APPEARANCES}
@@ -571,7 +631,7 @@ export default function ColoursPrototype() {
         {screen === 'today' ? (
           <Today standing={standing} deletion={deletion} palette={palette} />
         ) : (
-          <Log />
+          <Log look={{ secondary, press, palette }} />
         )}
         {bar}
       </ScrollView>
