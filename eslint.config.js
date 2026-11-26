@@ -13,6 +13,7 @@ const keyboardAvoided = require('./eslint-rules/keyboard-avoided');
 const noCoercedNumber = require('./eslint-rules/no-coerced-number');
 const noDarkVariant = require('./eslint-rules/no-dark-variant');
 const noDashPlaceholder = require('./eslint-rules/no-dash-placeholder');
+const noBarePressable = require('./eslint-rules/no-bare-pressable');
 const tokensOnly = require('./eslint-rules/tokens-only');
 const firstFaultShown = require('./eslint-rules/first-fault-shown');
 
@@ -97,6 +98,7 @@ const designPlugin = {
     'tokens-only': tokensOnly,
     'no-dark-variant': noDarkVariant,
     'no-dash-placeholder': noDashPlaceholder,
+    'no-bare-pressable': noBarePressable,
   },
 };
 
@@ -139,6 +141,15 @@ const FORMS = {
   ...SOURCE,
   plugins: { forms: formsPlugin },
   rules: allErrors('forms', formsPlugin),
+};
+
+/**
+ * The components, where a `Pressable` carries the platform's press and the target for every screen;
+ * and the design page and the prototypes, whose controls are specimens of a component to be.
+ */
+const PRESSABLE_HOMES = {
+  files: ['src/components/**/*.tsx', 'app/design.tsx', 'app/prototype/**/*.tsx'],
+  rules: { 'design/no-bare-pressable': 'off' },
 };
 
 /** The components that wrap an uncapped text component, so they can cap it. */
@@ -230,6 +241,7 @@ module.exports = defineConfig([
   PERCEIVABLE_ONLY,
   DESIGN,
   A11Y,
+  PRESSABLE_HOMES,
   CAPPED_TEXT_HOMES,
   FORMS,
   INJECTED_CLOCK,

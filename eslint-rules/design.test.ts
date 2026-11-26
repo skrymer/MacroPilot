@@ -111,6 +111,53 @@ describe('design/no-dash-placeholder', () => {
   });
 });
 
+describe('design/no-bare-pressable', () => {
+  const PRESSABLE = `const c = <Pressable accessibilityRole="button" className="min-h-target min-w-target" />;`;
+
+  it.each([
+    ['a Pressable', PRESSABLE],
+    [
+      'an Animated.Pressable',
+      `const c = <Animated.Pressable accessibilityRole="button" hitSlop={12} />;`,
+    ],
+    ['a Touchable', `const c = <TouchableOpacity accessibilityRole="button" hitSlop={12} />;`],
+  ])('reports %s on a screen', (_, code) => {
+    // Given a screen that draws its own control
+    const source = code;
+
+    // When it is linted
+    const reported = lint(source, SCREEN);
+
+    // Then the bare-pressable rule reports it
+    expect(reported).toContain('design/no-bare-pressable');
+  });
+
+  it('accepts a Pressable in a component', () => {
+    // Given a component, where the press and the target are carried
+    const file = 'src/components/Button.tsx';
+
+    // When a Pressable there is linted
+    const reported = lint(PRESSABLE, file);
+
+    // Then the bare-pressable rule is silent
+    expect(reported).not.toContain('design/no-bare-pressable');
+  });
+
+  it.each([['app/design.tsx'], ['app/prototype/colours.tsx']])(
+    'accepts a Pressable in %s, which draws a control as a specimen',
+    (file) => {
+      // Given the design page or a prototype, whose controls are specimens of a component to be
+      const page = file;
+
+      // When a Pressable there is linted
+      const reported = lint(PRESSABLE, page);
+
+      // Then the bare-pressable rule is silent
+      expect(reported).not.toContain('design/no-bare-pressable');
+    },
+  );
+});
+
 describe('no-irregular-whitespace', () => {
   const NBSP = String.fromCharCode(0xa0);
 
