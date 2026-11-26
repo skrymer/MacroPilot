@@ -7,7 +7,7 @@ describe('estimatedEntry', () => {
   it('has the label, the calories and the protein it was given, not stated or stated', () => {
     // Given two estimates, one that states its protein
     const lunch = { label: 'pub LUNCH', calories: 850, protein: undefined };
-    const broth = { label: 'broth', calories: 0, protein: 0 };
+    const broth = { label: 'broth', calories: 1, protein: 0 };
 
     // When each is logged on a day
     const entries = [lunch, broth].map((estimate) => estimatedEntry(estimate, '2026-11-24'));
@@ -15,13 +15,14 @@ describe('estimatedEntry', () => {
     // Then each is as it was given, a zero still zero, with no food and no grams
     expect(entries).toStrictEqual([
       { day: '2026-11-24', label: 'pub LUNCH', calories: 850, protein: undefined },
-      { day: '2026-11-24', label: 'broth', calories: 0, protein: 0 },
+      { day: '2026-11-24', label: 'broth', calories: 1, protein: 0 },
     ]);
   });
 
   it.each([
     ['a blank label', { label: '' }, 'needs a label'],
     ['a label of spaces', { label: ' \t ' }, 'needs a label'],
+    ['calories under 1, which would read about 0 kcal', { calories: 0.999 }, 'calories must be 1 or more'],
     ['negative calories', { calories: -0.1 }, 'calories must be 0 or more'],
     ['calories that are not a number', { calories: Number.NaN }, 'calories must be 0 or more'],
     ['endless calories', { calories: Infinity }, 'calories must be 0 or more'],

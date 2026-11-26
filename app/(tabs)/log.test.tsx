@@ -110,15 +110,15 @@ describe('Log', () => {
   });
 
   it.each([
-    ['30', 'about 0 kcal, 30 g protein', 'about 0 calories, 30 grams of protein'],
-    ['0', 'about 0 kcal, 0 g protein', 'about 0 calories, 0 grams of protein'],
+    ['30', 'about 1 kcal, 30 g protein', 'about 1 calorie, 30 grams of protein'],
+    ['0', 'about 1 kcal, 0 g protein', 'about 1 calorie, 0 grams of protein'],
   ])('says the %s g of protein an estimate states', async (typed, shown, spoken) => {
-    // Given an estimate of no calories, with its protein
+    // Given an estimate of the fewest calories it can have, with its protein
     await openLog(await storesOf());
     const user = userEvent.setup();
     await user.press(await screen.findByRole('button', { name: 'Log an estimate instead' }));
     await user.type(await screen.findByLabelText('Label'), 'broth');
-    await user.type(screen.getByLabelText('Calories'), '0');
+    await user.type(screen.getByLabelText('Calories'), '1');
     await user.type(screen.getByLabelText('Protein (optional)'), typed);
 
     // When the user logs it

@@ -14,7 +14,7 @@ describe('estimateForm', () => {
   it.each([
     ['protein left blank', {}, { label: 'pub lunch', calories: 850, protein: undefined }],
     ['protein none', { protein: '0' }, { label: 'pub lunch', calories: 850, protein: 0 }],
-    ['nothing in it', { calories: '0' }, { label: 'pub lunch', calories: 0, protein: undefined }],
+    ['the fewest calories', { calories: '1' }, { label: 'pub lunch', calories: 1, protein: undefined }],
     ['a comma', { protein: '30,5' }, { label: 'pub lunch', calories: 850, protein: 30.5 }],
   ])('says an estimate with %s', (_, typed, estimate) => {
     // Given what was typed in the fields
@@ -45,6 +45,7 @@ describe('estimateForm', () => {
     [{ calories: '' }, { calories: 'Enter an estimated calorie figure' }],
     [{ calories: '-1' }, { calories: 'Calories can’t be negative' }],
     [{ calories: '1,500' }, { calories: 'Did you mean 1500 or 1.5?' }],
+    [{ calories: '0,9' }, { calories: 'Calories must be at least 1' }],
     [{ protein: '-0.1' }, { protein: 'Protein can’t be negative' }],
     [{ protein: 'x' }, { protein: 'Enter a number' }],
   ])('refuses %j', (typed, told) => {
