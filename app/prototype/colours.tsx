@@ -1,5 +1,5 @@
 // THROWAWAY: the colours prototype (#51). See app/prototype/NOTES.md.
-import { Stack } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
 import { cssInterop, vars } from 'nativewind';
 import { useState } from 'react';
@@ -12,7 +12,6 @@ import {
   useColorScheme,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Circle } from 'react-native-svg';
 
 import { Button } from '@/components/Button';
@@ -284,7 +283,7 @@ function Log() {
 
 type FaultStyle = 'words' | 'marked' | 'below' | 'colour' | 'colour-one';
 
-type Palette = (typeof CANDIDATES)[number]['light'];
+export type Palette = (typeof CANDIDATES)[number]['light'];
 
 /**
  * Q6: a field's fault as words alone, or with the field outlined in ink and a warning sign; or the
@@ -372,11 +371,12 @@ function Field({
 }
 
 /** The way out in the system's header: the word on iOS, Material's close X on Android. */
-function HeaderCancel({ ink }: { ink: string }) {
+export function HeaderCancel({ ink, onPress }: { ink: string; onPress: () => void }) {
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel="Cancel"
+      onPress={onPress}
       className="min-h-target min-w-target items-center justify-center"
     >
       {Platform.OS === 'ios' ? (
@@ -389,7 +389,7 @@ function HeaderCancel({ ink }: { ink: string }) {
   );
 }
 
-function Form({ faultStyle, palette }: { faultStyle: FaultStyle; palette: Palette }) {
+export function Form({ faultStyle, palette }: { faultStyle: FaultStyle; palette: Palette }) {
   const style = { faultStyle, palette };
   return (
     <KeyboardAvoidingView behavior="padding" className="flex-1">
@@ -427,25 +427,46 @@ function Form({ faultStyle, palette }: { faultStyle: FaultStyle; palette: Palett
 const LIST = 'rounded-2xl bg-surface px-4';
 
 /** Decided 26 November 2026: C, the pine neutrals with emerald as `within`. */
-const CHOSEN = CANDIDATES.find((c) => c.key === 'C')!;
+export const CHOSEN = CANDIDATES.find((c) => c.key === 'C')!;
 
-const HEADINGS: Record<Screen, string> = { today: 'Today', log: 'Log', form: 'Log an estimate' };
+/**
+ * Decided 26 November 2026: the system draws a page's title. iOS draws its own bar: clear over the
+ * large title, glass once the page scrolls under it, as Health's; a colour of ours would make it
+ * opaque. Android's bar takes the ground. The header takes colours as values, not classes.
+ */
+export const headerFor = (palette: Palette, title: string) => {
+  const face = { fontFamily: 'B612_700Bold', color: palette.ink };
+  return {
+    headerShown: true,
+    title,
+    headerShadowVisible: false,
+    headerBackVisible: false,
+    ...(Platform.OS === 'ios'
+      ? { headerTransparent: true }
+      : { headerStyle: { backgroundColor: palette.ground } }),
+    headerTitleStyle: face,
+    headerLargeTitleStyle: face,
+    headerTintColor: palette.ink,
+  };
+};
+
+const HEADINGS: Record<Exclude<Screen, 'form'>, string> = { today: 'Today', log: 'Log' };
 
 export default function ColoursPrototype() {
-  const [screen, setScreen] = useState<Screen>('today');
+  const router = useRouter();
+  const [screen, setScreen] = useState<Exclude<Screen, 'form'>>('today');
   const [standing, setStanding] = useState<Standing>('within');
   const [barShown, setBarShown] = useState(true);
-  // Decided 26 November 2026: red and green, the fault's words above its field, one card.
-  const faultStyle: FaultStyle = 'colour-one';
   const appearance = useColorScheme() === 'dark' ? 'dark' : 'light';
   const palette = CHOSEN[appearance];
-  // The native header takes colours as values, not classes: the variant's own, at run time.
-  const face = { fontFamily: 'B612_700Bold', color: palette.ink };
   const theme = vars(variablesOf(palette));
+  // Decided 26 November 2026: every form opens the platform's way, a page sheet on iOS.
+  const choose = (chosen: Screen) =>
+    chosen === 'form' ? router.navigate('/prototype/form') : setScreen(chosen);
   const bar = barShown ? (
     <View className="mx-2 mt-2 gap-1 rounded-2xl border border-line bg-surface p-2">
       <View className="flex-row flex-wrap items-center justify-between gap-1">
-        <Chips chips={SCREENS} chosen={screen} onChoose={setScreen} />
+        <Chips chips={SCREENS} chosen={screen} onChoose={choose} />
         <Chips
           chips={[{ label: 'Hide', value: 'hide' }]}
           chosen=""
@@ -478,36 +499,13 @@ export default function ColoursPrototype() {
   const header = (
     <Stack.Screen
       options={{
-        // Decided 26 November 2026: the system draws a page's title.
-        headerShown: true,
-        title: HEADINGS[screen],
-        headerLargeTitle: screen !== 'form',
+        ...headerFor(palette, HEADINGS[screen]),
+        headerLargeTitle: true,
         headerLargeTitleShadowVisible: false,
-        headerShadowVisible: false,
-        headerBackVisible: false,
-        // iOS draws its own bar: clear over the large title, glass once the page scrolls under it,
-        // as Health's. A colour of ours would make it opaque. Android's bar takes the ground.
-        ...(Platform.OS === 'ios'
-          ? { headerTransparent: true }
-          : { headerStyle: { backgroundColor: palette.ground } }),
-        headerTitleStyle: face,
-        headerLargeTitleStyle: face,
-        headerTintColor: palette.ink,
-        headerLeft: screen === 'form' ? () => <HeaderCancel ink={palette.ink} /> : () => null,
+        headerLeft: () => null,
       }}
     />
   );
-  if (screen === 'form') {
-    return (
-      <View style={theme} className="flex-1 bg-ground">
-        {header}
-        <SafeAreaView className="flex-1" edges={['bottom']}>
-          <Form faultStyle={faultStyle} palette={palette} />
-          {bar}
-        </SafeAreaView>
-      </View>
-    );
-  }
   // iOS ties its large title to the scroll view only when that is the screen's first view, so it is
   // the root here, the bar at the foot of what scrolls.
   return (
