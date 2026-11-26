@@ -10,6 +10,7 @@ import { LogBox, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { AskProvider } from '@/components/AskContext';
+import { useFormPresentation } from '@/components/FormHeader';
 import { LoggedProvider } from '@/components/LoggedContext';
 import { SystemAsk } from '@/components/SystemAsk';
 import { ClockProvider } from '@/lifecycle/ClockContext';
@@ -45,6 +46,7 @@ function BackToToday() {
 
 export default function RootLayout() {
   const [loaded, failed] = useFonts({ B612_400Regular, B612_400Regular_Italic, B612_700Bold });
+  const form = useFormPresentation();
   // Text measured in the system's face and then drawn in its own is clipped, and stays so. Faces that
   // fail to load leave the system's.
   if (!loaded && !failed) return null;
@@ -67,8 +69,11 @@ export default function RootLayout() {
                       !__DEV__ && route.name === 'design' ? <BackToToday /> : children
                     }
                   >
-                    {/* DESIGN.md: Add food is a full-height modal page (the user's word, 26 November 2026). */}
-                    <Stack.Screen name="add-food" options={{ presentation: 'fullScreenModal' }} />
+                    {/* DESIGN.md, Forms: every form is iOS's page sheet and Android's page rising over
+                        the last (the user's word, 26 November 2026). */}
+                    <Stack.Screen name="add-food" options={form} />
+                    <Stack.Screen name="log-food" options={form} />
+                    <Stack.Screen name="log-estimate" options={form} />
                   </Stack>
                 </View>
               </GestureHandlerRootView>

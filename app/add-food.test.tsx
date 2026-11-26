@@ -219,9 +219,12 @@ describe('Add food', () => {
     // When the user opens Add food
     await openApp('/add-food', foods);
 
-    // Then Cancel is met before the page's title
-    const met = await screen.findAllByText(/^(Cancel|Add food)$/);
-    expect(met.map((text) => text.children[0])).toEqual(['Cancel', 'Add food']);
+    // Then the X, heard as Cancel, is met before the page's title
+    const met = await screen.findAllByRole(/^(button|header)$/, { name: /^(Cancel|Add food)$/ });
+    expect(met).toEqual([
+      screen.getByRole('button', { name: 'Cancel' }),
+      screen.getByRole('header', { name: 'Add food' }),
+    ]);
   });
 
   it('goes back to Foods on Cancel, saving nothing', async () => {

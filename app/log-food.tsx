@@ -3,9 +3,9 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useForm } from 'react-hook-form';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { CancelButton } from '@/components/CancelButton';
 import { FoodsNotice } from '@/components/FoodsNotice';
 import { FormField } from '@/components/FormField';
+import { FormHeader } from '@/components/FormHeader';
 import { FormPage } from '@/components/FormPage';
 import { gramsForm } from '@/components/gramsForm';
 import { Text } from '@/components/Text';
@@ -57,8 +57,8 @@ export default function LogFood() {
   // A link can put another food on this page, and what was typed is not of it.
   if (food) return <GramsForm key={food.id} food={food} />;
   return (
-    <SafeAreaView className="flex-1 bg-ground px-page">
-      <CancelButton onPress={() => router.dismissTo('/log')} />
+    <SafeAreaView edges={['bottom', 'left', 'right']} className="flex-1 bg-ground px-page">
+      <FormHeader title="Log entry" onCancel={() => router.dismissTo('/log')} />
       {foods === 'unreadable' ? <FoodsNotice foods={foods} readAgain={readAgain} /> : null}
       {Array.isArray(foods) ? (
         <Text className="font-language text-body text-ink">This food is not in your foods</Text>

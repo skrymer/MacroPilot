@@ -3,12 +3,13 @@ import { KeyboardAvoidingView, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from './Button';
-import { CancelButton } from './CancelButton';
+import { FormHeader } from './FormHeader';
 import { Text } from './Text';
 
 /**
- * A form on a full-height page with *Cancel* (DESIGN.md, *Asking and telling*). Its fields are the
- * scroll view's own children, so a field's `onLayout` is measured from the top of what scrolls.
+ * A form, presented the platform's way under the system's header with its X (DESIGN.md, *Forms*). Its
+ * fields are the scroll view's own children, so a field's `onLayout` is measured from the top of what
+ * scrolls.
  */
 export function FormPage({
   title,
@@ -29,19 +30,15 @@ export function FormPage({
   children: ReactNode;
 }) {
   return (
-    <SafeAreaView className="flex-1 bg-ground">
+    // The header keeps the top inset.
+    <SafeAreaView edges={['bottom', 'left', 'right']} className="flex-1 bg-ground">
+      <FormHeader title={title} onCancel={onCancel} />
       <KeyboardAvoidingView behavior="padding" className="flex-1">
         <ScrollView
           ref={scroll}
           keyboardShouldPersistTaps="handled"
-          contentContainerClassName="gap-grid-2 px-page pb-grid-2"
+          contentContainerClassName="gap-grid-2 px-page py-grid-2"
         >
-          <View className="items-start">
-            <CancelButton onPress={onCancel} />
-            <Text accessibilityRole="header" className="font-language-bold text-title text-ink">
-              {title}
-            </Text>
-          </View>
           {children}
         </ScrollView>
         {/* Out of the scroll view, so that the keyboard never hides them. */}

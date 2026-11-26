@@ -1,0 +1,49 @@
+# Every form opens the platform's way, the same way: on Android a page rising over the last, under
+# the system's top app bar, its title beside Material's close X, heard as Cancel (DESIGN.md, *Forms*).
+# A form with something typed asks before it goes, by the X and by back. Jest cannot see how a page
+# is presented (ADR 0011).
+appId: com.skrymer.macropilot
+---
+- runFlow: steps/start.yaml
+
+# Add food, from Foods.
+- openLink: 'macropilot://foods'
+- tapOn: 'Add your first food'
+- assertVisible:
+    text: 'Add food'
+    rightOf: 'Cancel'
+- tapOn: 'Name'
+- inputText: 'Milk'
+- tapOn: 'Protein per.*'
+- inputText: '3'
+- tapOn: 'Carbohydrate per.*'
+- inputText: '5'
+- tapOn: 'Fat per.*'
+- inputText: '3'
+# With something typed, the X and back each ask, and Cancel keeps the form.
+- tapOn: 'Cancel'
+- assertVisible: 'Discard this food?'
+- tapOn: 'Cancel'
+- back
+- assertVisible: 'Discard this food?'
+- tapOn: 'Cancel'
+- tapOn: 'Save food'
+- extendedWaitUntil:
+    visible: 'Milk, .*'
+    timeout: 10000
+
+# The grams, from Log.
+- openLink: 'macropilot://log'
+- tapOn: 'Log Milk.*'
+- assertVisible:
+    text: 'Log Milk'
+    rightOf: 'Cancel'
+- tapOn: 'Cancel'
+
+# The estimate, from Log.
+- tapOn: 'Log an estimate instead'
+- assertVisible:
+    text: 'Log an estimate'
+    rightOf: 'Cancel'
+- tapOn: 'Cancel'
+- assertVisible: 'Log an estimate instead'
