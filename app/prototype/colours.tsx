@@ -282,12 +282,6 @@ const FAILURES: Chip<Failure>[] = [
   { label: 'Delete failed', value: 'refused' },
 ];
 
-/** Q14: a failure outside a field in bold ink, as epic 1's; or in a field fault's red, with its sign. */
-const FAILURE_LOOKS: Chip<FailureLook>[] = [
-  { label: 'Ink', value: 'ink' },
-  { label: 'Red', value: 'red' },
-];
-
 /** What went wrong, said where it happened, with the warning sign when it takes the red. */
 function FailureWords({
   words,
@@ -521,17 +515,53 @@ function TrialButton({
   );
 }
 
-function Log({ look }: { look: ButtonLook }) {
+type Told = 'card' | 'tick' | 'line';
+
+/**
+ * Q15, telling what worked on another page: epic 1's card; the card with a green tick, as a valid
+ * field has; or one quiet line with the tick, no card.
+ */
+const TOLDS: Chip<Told>[] = [
+  { label: 'Card', value: 'card' },
+  { label: 'Card and tick', value: 'tick' },
+  { label: 'Line and tick', value: 'line' },
+];
+
+function Logged({ told, palette }: { told: Told; palette: Palette }) {
+  const tick =
+    told === 'card' ? null : (
+      <SymbolView
+        name={{ ios: 'checkmark.circle.fill', android: 'check_circle' }}
+        size={told === 'line' ? 18 : 22}
+        tintColor={palette.within}
+      />
+    );
+  const figures = `80${nbsp}g, 294${nbsp}kcal, 10${nbsp}g protein`;
+  if (told === 'line') {
+    return (
+      <View accessible className="flex-row flex-wrap items-center gap-x-2">
+        {tick}
+        <Text className="font-language-bold text-label text-ink">Logged: Rolled oats</Text>
+        <Text className="font-language text-label text-ink-mid">{figures}</Text>
+      </View>
+    );
+  }
+  return (
+    <View accessible className="flex-row items-center gap-3 rounded-2xl bg-surface p-4">
+      {tick}
+      <View className="flex-1">
+        <Text className="font-language-bold text-body text-ink">Logged: Rolled oats</Text>
+        <Text className="font-language text-label text-ink-mid">{figures}</Text>
+      </View>
+    </View>
+  );
+}
+
+function Log({ look, told }: { look: ButtonLook; told: Told }) {
   return (
     <>
-      <View accessible className="rounded-2xl bg-surface p-4">
-        <Text className="font-language-bold text-body text-ink">Logged: Rolled oats</Text>
-        <Text className="font-language text-label text-ink-mid">
-          {`80${nbsp}g, 294${nbsp}kcal, 10${nbsp}g protein`}
-        </Text>
-      </View>
+      <Logged told={told} palette={look.palette} />
       <TrialButton label="Log an estimate instead" look={look} />
-      <TrialButton label="A primary button, to press" primary look={look} />
       <Text accessibilityRole="header" className="font-language-bold text-body text-ink">
         All foods
       </Text>
@@ -686,9 +716,11 @@ export function Form({ faultStyle, palette }: { faultStyle: FaultStyle; palette:
         </View>
       </ScrollView>
       <View className="gap-2 px-4 py-2">
-        <Text className="font-language-bold text-body text-ink">
-          Not saved. A field above needs changing.
-        </Text>
+        <FailureWords
+          words="Not saved. A field above needs changing."
+          look="red"
+          palette={palette}
+        />
         <TrialButton
           label="Log estimated entry"
           primary
@@ -740,7 +772,9 @@ export default function ColoursPrototype() {
   // Decided 26 November 2026: under a summary, an empty list is one line in its own card.
   const empty: Empty = 'in-list';
   const [failure, setFailure] = useState<Failure>('none');
-  const [failureLook, setFailureLook] = useState<FailureLook>('red');
+  // Decided 26 November 2026: a failure anywhere takes a field fault's red and its sign.
+  const failureLook: FailureLook = 'red';
+  const [told, setTold] = useState<Told>('tick');
   // Decided 26 November 2026: a secondary button outlined, and the platform's press on every button.
   const secondary: Secondary = 'outlined';
   const press: Press = 'platform';
@@ -764,11 +798,9 @@ export default function ColoursPrototype() {
         <>
           <Chips chips={STANDINGS} chosen={standing} onChoose={setStanding} />
           <Chips chips={FAILURES} chosen={failure} onChoose={setFailure} />
-          {failure === 'none' ? null : (
-            <Chips chips={FAILURE_LOOKS} chosen={failureLook} onChoose={setFailureLook} />
-          )}
         </>
       ) : null}
+      {screen === 'log' ? <Chips chips={TOLDS} chosen={told} onChoose={setTold} /> : null}
       <Chips
         chips={APPEARANCES}
         chosen={appearance}
@@ -820,7 +852,7 @@ export default function ColoursPrototype() {
             palette={palette}
           />
         ) : (
-          <Log look={{ secondary, press, palette }} />
+          <Log look={{ secondary, press, palette }} told={told} />
         )}
         {bar}
       </ScrollView>
