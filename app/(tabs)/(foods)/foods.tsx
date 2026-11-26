@@ -2,10 +2,11 @@ import { useRouter } from 'expo-router';
 import { FlatList, View } from 'react-native';
 
 import { Button } from '@/components/Button';
+import { CardSlice } from '@/components/CardSlice';
+import { Hairline } from '@/components/Hairline';
 import { DeletableRow } from '@/components/DeletableRow';
 import { FoodRow } from '@/components/FoodRow';
 import { FoodsNotice } from '@/components/FoodsNotice';
-import { Hairline } from '@/components/Hairline';
 import { useDelete } from '@/components/useDelete';
 import { useFailedInView } from '@/components/useFailedInView';
 import type { Food } from '@/domain/food';
@@ -41,15 +42,16 @@ export default function Foods() {
       contentInsetAdjustmentBehavior="automatic"
       data={listed}
       keyExtractor={({ id }) => String(id)}
-      renderItem={({ item }) => (
-        <DeletableRow
-          ref={item.id === deletion.fault?.id ? faultInView.row : undefined}
-          name={shownName(item.name)}
-          onDelete={() => void deletion.begin(item)}
-          fault={item.id === deletion.fault?.id ? deletion.fault.why : undefined}
-        >
-          <FoodRow food={item} />
-        </DeletableRow>
+      renderItem={({ item, index }) => (
+        <CardSlice first={index === 0} last={index === listed.length - 1}>
+          <DeletableRow
+            ref={item.id === deletion.fault?.id ? faultInView.row : undefined}
+            onDelete={() => void deletion.begin(item)}
+            fault={item.id === deletion.fault?.id ? deletion.fault.why : undefined}
+          >
+            <FoodRow food={item} onDelete={() => void deletion.begin(item)} />
+          </DeletableRow>
+        </CardSlice>
       )}
       contentContainerClassName="px-page py-grid-2"
       ItemSeparatorComponent={Hairline}

@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { ClockProvider } from '@/lifecycle/ClockContext';
 import { ScriptedClock } from '@/lifecycle/ScriptedClock';
@@ -40,7 +41,10 @@ export function TestProviders({
       <FoodStoreProvider store={foods ?? noFoods}>
         <EntryStoreProvider store={entries ?? noEntries}>
           <AskProvider ask={ask ?? unanswered}>
-            <LoggedProvider>{children}</LoggedProvider>
+            <LoggedProvider>
+              {/* The root's, as `app/_layout.tsx` gives it: a swipe is seen only under it. */}
+              <GestureHandlerRootView style={{ flex: 1 }}>{children}</GestureHandlerRootView>
+            </LoggedProvider>
           </AskProvider>
         </EntryStoreProvider>
       </FoodStoreProvider>

@@ -2,16 +2,18 @@ import { useNavigation, useRouter } from 'expo-router';
 import { useCallback, useEffect, useEffectEvent, useState } from 'react';
 import { FlatList, View } from 'react-native';
 
-import { Button } from '@/components/Button';
 import { dayWords } from '@/components/dayWords';
+import { CardSlice } from '@/components/CardSlice';
 import { DeletableRow } from '@/components/DeletableRow';
+import { EmptyLine } from '@/components/EmptyLine';
 import { entryFigures, entryWords, tallyWords, totalsWords } from '@/components/entryWords';
 import { FIGURE_SET } from '@/components/figureSet';
 import { Hairline } from '@/components/Hairline';
 import { useLogged } from '@/components/LoggedContext';
-import { Notice } from '@/components/Notice';
 import { Row } from '@/components/Row';
+import { ShowAll } from '@/components/ShowAll';
 import { Text } from '@/components/Text';
+import { Unreadable } from '@/components/Unreadable';
 import { useDelete } from '@/components/useDelete';
 import { useFailedInView } from '@/components/useFailedInView';
 import { totalsOf, type Totals as DayTotals } from '@/domain/dailyLog';
@@ -23,29 +25,33 @@ import { useReading } from '@/storage/useReading';
 
 const PROTEIN_SET = { ...FIGURE_SET, weighed: 'font-language text-ink-mid' };
 
-function Totals({ totals }: { totals: DayTotals }) {
+function Totals({ totals, count }: { totals: DayTotals; count: number }) {
   const { calories, caloriesKind, protein, proteinKind, spoken } = totalsWords(totals);
   return (
     <View
       accessible
-      accessibilityLabel={`${spoken} today`}
+      accessibilityLabel={`${spoken} today${count === 0 ? ', nothing logged yet' : ''}`}
       className="rounded-card bg-surface p-grid-2"
     >
       <Text className={`text-title ${FIGURE_SET[caloriesKind]}`}>{calories}</Text>
       <Text className={`text-label ${PROTEIN_SET[proteinKind]}`}>{protein}</Text>
+      {count === 0 ? (
+        <Text className="font-language text-label text-ink-mid">Nothing logged yet</Text>
+      ) : null}
     </View>
   );
 }
 
 function DayHeading({ day, count, totals }: { day: string; count: number; totals: DayTotals }) {
-  const { shown, spoken } = tallyWords(count, totals);
+  const { count: entries, calories, caloriesKind, spoken } = tallyWords(count, totals);
   return (
     <View className="flex-row flex-wrap items-baseline justify-between gap-x-grid-2 pt-grid-1">
       <Text accessibilityRole="header" className="font-language-bold text-body text-ink">
         {`Today · ${dayWords(day)}`}
       </Text>
       <Text accessibilityLabel={spoken} className="font-language text-label text-ink-mid">
-        {shown}
+        {`${entries} · `}
+        <Text className={FIGURE_SET[caloriesKind]}>{calories}</Text>
       </Text>
     </View>
   );
@@ -84,6 +90,7 @@ export default function Today() {
   const all = allOf === day;
   const setAll = (asked: boolean) => setAllOf(asked ? day : undefined);
   const shown = all ? listed : listed.slice(-LAST);
+  const asksForRest = listed.length > LAST;
   const faultInView = useFailedInView(shown, deletion.fault);
   return (
     <FlatList
@@ -92,37 +99,39 @@ export default function Today() {
       contentInsetAdjustmentBehavior="automatic"
       data={shown}
       ListFooterComponent={
-        listed.length > LAST ? (
-          <View className="pt-grid-2">
-            <Button
+        asksForRest ? (
+          <CardSlice first={false} last>
+            <Hairline />
+            <ShowAll
               label={all ? 'Show less' : `Show all ${listed.length}`}
+              opens={all ? 'up' : 'down'}
               onPress={() => setAll(!all)}
-              secondary
             />
-          </View>
+          </CardSlice>
         ) : undefined
       }
       keyExtractor={({ id }) => String(id)}
-      renderItem={({ item }) => {
+      renderItem={({ item, index }) => {
         const name = shownName(item.name);
         const words = entryWords(name, item);
         return (
-          <DeletableRow
-            ref={item.id === deletion.fault?.id ? faultInView.row : undefined}
-            name={words.spoken}
-            onDelete={() => void deletion.begin(item)}
-            fault={item.id === deletion.fault?.id ? deletion.fault.why : undefined}
-          >
-            <Row name={name} {...words} />
-          </DeletableRow>
+          <CardSlice first={index === 0} last={index === shown.length - 1 && !asksForRest}>
+            <DeletableRow
+              ref={item.id === deletion.fault?.id ? faultInView.row : undefined}
+              onDelete={() => void deletion.begin(item)}
+              fault={item.id === deletion.fault?.id ? deletion.fault.why : undefined}
+            >
+              <Row name={name} {...words} onDelete={() => void deletion.begin(item)} />
+            </DeletableRow>
+          </CardSlice>
         );
       }}
       contentContainerClassName="px-page py-grid-2"
       ItemSeparatorComponent={Hairline}
       ListEmptyComponent={
         Array.isArray(found) ? (
-          <Notice
-            title="Nothing logged yet"
+          <EmptyLine
+            words="Log a weighed food, or an estimate."
             action="Log"
             onAction={() => router.navigate('/log')}
           />
@@ -131,9 +140,9 @@ export default function Today() {
       ListHeaderComponent={
         <View className="gap-grid-2 pb-grid-1">
           {found === 'unreadable' ? (
-            <Notice title="Couldn’t load today’s summary" action="Retry" onAction={readAgain} />
+            <Unreadable words="Couldn’t load today’s summary" onRetry={readAgain} />
           ) : null}
-          {Array.isArray(found) ? <Totals totals={totals} /> : null}
+          {Array.isArray(found) ? <Totals totals={totals} count={listed.length} /> : null}
           {listed.length > 0 ? (
             <DayHeading day={day} count={listed.length} totals={totals} />
           ) : null}

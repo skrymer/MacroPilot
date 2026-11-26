@@ -1,4 +1,4 @@
-import { act, screen, userEvent } from '@testing-library/react-native';
+import { act, fireEvent, screen, userEvent, within } from '@testing-library/react-native';
 import { renderRouter } from 'expo-router/testing-library';
 import type { ReactNode } from 'react';
 
@@ -43,6 +43,14 @@ const openToday = (entries: InMemoryEntryStore, clock = atNoon(), ask?: Scripted
     },
   );
 
+/** Deletes an entry the way a screen reader does, in place of the swipe: the row's Delete action. */
+const deleteFrom = async (row: string | RegExp) => {
+  const found = await screen.findByLabelText(row);
+  await act(async () => {
+    fireEvent(found, 'accessibilityAction', { nativeEvent: { actionName: 'delete' } });
+  });
+};
+
 describe('Today', () => {
   it('says what the day adds up to, and what is in it', async () => {
     // Given three entries logged today, and one yesterday
@@ -56,11 +64,9 @@ describe('Today', () => {
     await openToday(entries);
 
     // Then the totals are today's sums, and each entry of today has its own figures, zeros too
-    expect(
-      await screen.findByLabelText('294 calories, 13 grams of protein today'),
-    ).toBeOnTheScreen();
-    expect(screen.getByText('294 kcal')).toBeOnTheScreen();
-    expect(screen.getByText('13 g protein')).toBeOnTheScreen();
+    const day = await screen.findByLabelText('294 calories, 13 grams of protein today');
+    expect(within(day).getByText('294 kcal')).toBeOnTheScreen();
+    expect(within(day).getByText('13 g protein')).toBeOnTheScreen();
     expect(
       screen.getByLabelText('Rolled oats, 80 grams, 235 calories, 10 grams of protein'),
     ).toBeOnTheScreen();
@@ -163,6 +169,22 @@ describe('Today', () => {
     expect(screen.getByText('at least 18 g protein')).toBeOnTheScreen();
   });
 
+  it('asks about an entry deleted from its row’s actions, as a screen reader does in place of a swipe', async () => {
+    // Given Today open on an entry
+    const entries = new InMemoryEntryStore([OATS]);
+    await entries.add(weighedEntry(OATS, 80, '2026-11-24'));
+    const ask = new ScriptedAsk();
+    await openToday(entries, atNoon(), ask);
+    const row = await screen.findByLabelText(/^Rolled oats, /);
+
+    // When a screen reader takes the row's Delete action (userEvent has none to take)
+    fireEvent(row, 'accessibilityAction', { nativeEvent: { actionName: 'delete' } });
+
+    // Then the system asks about that entry
+    expect(row).toHaveProp('accessibilityActions', [{ name: 'delete', label: 'Delete' }]);
+    expect(ask.question?.title).toBe('Delete this entry?');
+  });
+
   it('deletes the entry it asked about by its figures, and the totals follow', async () => {
     // Given Today open on two entries of one food, and the first asked to be deleted
     const entries = new InMemoryEntryStore([OATS]);
@@ -171,8 +193,7 @@ describe('Today', () => {
     }
     const ask = new ScriptedAsk();
     await openToday(entries, atNoon(), ask);
-    const name = 'Delete Rolled oats, 80 grams, 235 calories, 10 grams of protein';
-    await userEvent.press(await screen.findByRole('button', { name }));
+    await deleteFrom('Rolled oats, 80 grams, 235 calories, 10 grams of protein');
     const { title, message, loses } = ask.question ?? {};
     expect([title, loses]).toEqual(['Delete this entry?', 'Delete']);
     // A figure and its unit are joined by a no-break space.
@@ -197,7 +218,7 @@ describe('Today', () => {
     await entries.add(estimatedEntry({ label: 'pub lunch', calories: 850 }, '2026-11-24'));
     const ask = new ScriptedAsk();
     await openToday(entries, atNoon(), ask);
-    await userEvent.press(await screen.findByRole('button', { name: /^Delete Pub lunch/ }));
+    await deleteFrom(/^Pub lunch, /);
     expect(ask.question?.message?.replace(/\s/g, ' ')).toMatch(
       /^Pub lunch, about 850 kcal will be removed/,
     );
@@ -217,14 +238,13 @@ describe('Today', () => {
     entries.unwritable = true;
     const ask = new ScriptedAsk();
     await openToday(entries, atNoon(), ask);
-    const user = userEvent.setup();
-    await user.press(await screen.findByRole('button', { name: /^Delete Pub lunch/ }));
+    await deleteFrom(/^Pub lunch, /);
     await act(async () => ask.answer(true));
     expect(await screen.findByRole('alert')).toHaveTextContent('Could not delete entry');
     const met = await screen.findAllByText(/^(Could not delete entry|Pub lunch)$/);
     expect(met.map((text) => text.children[0])).toEqual(['Could not delete entry', 'Pub lunch']);
     entries.unwritable = false;
-    await user.press(screen.getByRole('button', { name: /^Delete Pub lunch/ }));
+    await deleteFrom(/^Pub lunch, /);
     expect(screen.queryByRole('alert')).not.toBeOnTheScreen();
 
     // When the user says to delete it again
@@ -324,8 +344,7 @@ describe('Today', () => {
     await entries.add(weighedEntry(COFFEE, 250, '2026-11-25'));
     const ask = new ScriptedAsk();
     await openToday(entries, clock, ask);
-    const name = 'Delete Rolled oats, 80 grams, 235 calories, 10 grams of protein';
-    await userEvent.press(await screen.findByRole('button', { name }));
+    await deleteFrom('Rolled oats, 80 grams, 235 calories, 10 grams of protein');
     await act(async () => clock.advance(60_000));
     expect(await screen.findByText('Coffee')).toBeOnTheScreen();
 
@@ -457,6 +476,31 @@ describe('Today', () => {
     expect(screen.queryByText('Couldn’t load today’s summary')).not.toBeOnTheScreen();
   });
 
+  it('gives an empty day’s list one line, with the way on and without saying again that it is empty', async () => {
+    // Given nothing logged today
+    const entries = new InMemoryEntryStore([OATS]);
+
+    // When the user opens Today
+    await openToday(entries);
+
+    // Then the list is one line, and the summary alone says nothing is logged
+    expect(await screen.findByText('Log a weighed food, or an estimate.')).toBeOnTheScreen();
+    expect(screen.getAllByText('Nothing logged yet')).toHaveLength(1);
+  });
+
+  it('tells a screen reader that nothing is logged, with the day’s zeros', async () => {
+    // Given nothing logged today
+    const entries = new InMemoryEntryStore([OATS]);
+
+    // When the user opens Today
+    await openToday(entries);
+
+    // Then the summary is heard as known zeros and an empty day
+    expect(
+      await screen.findByLabelText('0 calories, 0 grams of protein today, nothing logged yet'),
+    ).toBeOnTheScreen();
+  });
+
   it('goes to Log from an empty day', async () => {
     // Given Today open with nothing logged
     await openToday(new InMemoryEntryStore([OATS]));
@@ -467,6 +511,18 @@ describe('Today', () => {
 
     // Then Log is open
     expect(screen).toHavePathname('/log');
+  });
+
+  it('announces that it could not read the day', async () => {
+    // Given a day that cannot be read
+    const entries = new InMemoryEntryStore([OATS]);
+    entries.unreadable = true;
+
+    // When the user opens Today
+    await openToday(entries);
+
+    // Then a screen reader is told at once
+    expect(await screen.findByRole('alert')).toHaveTextContent('Couldn’t load today’s summary');
   });
 
   it('says it could not read the day, rather than that it is empty, and reads it when asked', async () => {

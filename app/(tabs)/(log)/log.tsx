@@ -1,14 +1,17 @@
 import { useNavigation, useRouter } from 'expo-router';
+import { SymbolView } from 'expo-symbols';
 import { useEffect, useRef, type ComponentRef } from 'react';
 import { AccessibilityInfo, FlatList, Platform, View } from 'react-native';
 
 import { Button } from '@/components/Button';
+import { CardSlice } from '@/components/CardSlice';
 import { entryFigures } from '@/components/entryWords';
 import { FoodRow } from '@/components/FoodRow';
 import { FoodsNotice } from '@/components/FoodsNotice';
 import { Hairline } from '@/components/Hairline';
 import { useLogged, type Logged } from '@/components/LoggedContext';
 import { Text } from '@/components/Text';
+import { useTint } from '@/components/useTint';
 import type { Food } from '@/domain/food';
 import { shownName } from '@/domain/shownName';
 import { useFoods } from '@/storage/useFoods';
@@ -17,6 +20,7 @@ function LoggedLine({ logged: { name, entry } }: { logged: Logged }) {
   const title = `Logged: ${shownName(name)}`;
   const words = entryFigures(entry);
   const spoken = `${title}, ${words.spoken}`;
+  const tint = useTint();
   // Android announces a live region as it changes, and iOS has none.
   useEffect(() => {
     if (Platform.OS === 'ios') AccessibilityInfo.announceForAccessibility(spoken);
@@ -26,10 +30,17 @@ function LoggedLine({ logged: { name, entry } }: { logged: Logged }) {
       accessible
       accessibilityLabel={spoken}
       accessibilityLiveRegion="polite"
-      className="rounded-card bg-surface p-grid-2"
+      className="flex-row items-center gap-grid-2 rounded-card bg-surface p-grid-2"
     >
-      <Text className="font-language-bold text-body text-ink">{title}</Text>
-      <Text className="font-language text-label text-ink-mid">{words.shown}</Text>
+      <SymbolView
+        name={{ ios: 'checkmark.circle.fill', android: 'check_circle' }}
+        size={22}
+        tintColor={tint.valid}
+      />
+      <View className="flex-1">
+        <Text className="font-language-bold text-body text-ink">{title}</Text>
+        <Text className="font-language text-label text-ink-mid">{words.shown}</Text>
+      </View>
     </View>
   );
 }
@@ -66,7 +77,11 @@ export default function Log() {
       contentInsetAdjustmentBehavior="automatic"
       data={listed}
       keyExtractor={({ id }) => String(id)}
-      renderItem={({ item }) => <FoodRow food={item} onLog={() => openForm(item.id)} />}
+      renderItem={({ item, index }) => (
+        <CardSlice first={index === 0} last={index === listed.length - 1}>
+          <FoodRow food={item} onLog={() => openForm(item.id)} />
+        </CardSlice>
+      )}
       contentContainerClassName="px-page py-grid-2"
       ItemSeparatorComponent={Hairline}
       ListEmptyComponent={

@@ -15,6 +15,7 @@ export function Row({
   spoken,
   estimated = false,
   onPress,
+  onDelete,
 }: {
   name: string;
   detail: string;
@@ -23,6 +24,8 @@ export function Row({
   /** Its figure is an estimate, and is set lighter (DESIGN.md, *Figures*). */
   estimated?: boolean;
   onPress?: () => void;
+  /** A screen reader's *Delete*, in place of the swipe it cannot make. */
+  onDelete?: () => void;
 }) {
   const ripple = useRipple('page');
   const said = (
@@ -42,7 +45,7 @@ export function Row({
       accessibilityLabel={spoken}
       onPress={onPress}
       android_ripple={ripple}
-      className="min-h-two-line min-w-target flex-row flex-wrap items-center justify-between gap-x-grid-2 py-3 ios:active:opacity-60"
+      className="min-h-two-line min-w-target flex-row flex-wrap items-center justify-between gap-x-grid-2 px-grid-2 py-3 ios:active:opacity-60"
     >
       {said}
     </Pressable>
@@ -50,7 +53,11 @@ export function Row({
     <View
       accessible
       accessibilityLabel={spoken}
-      className="min-h-two-line flex-row flex-wrap items-center justify-between gap-x-grid-2 py-3"
+      accessibilityActions={onDelete ? [{ name: 'delete', label: 'Delete' }] : undefined}
+      onAccessibilityAction={({ nativeEvent }) => {
+        if (nativeEvent.actionName === 'delete') onDelete?.();
+      }}
+      className="min-h-two-line flex-row flex-wrap items-center justify-between gap-x-grid-2 px-grid-2 py-3"
     >
       {said}
     </View>
