@@ -77,7 +77,7 @@ const Field = ({
       ? 'border-2 border-fault bg-fault/10'
       : state === 'valid'
         ? 'border-2 border-valid bg-valid/10'
-        : 'border border-line bg-surface-lift';
+        : 'border border-edge bg-surface-lift';
   return (
     <View className="gap-1">
       <Text className="font-language text-label text-ink-mid">{label}</Text>

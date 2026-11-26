@@ -1,18 +1,16 @@
 // THROWAWAY: a form as the platform presents one (#51). See app/prototype/NOTES.md.
 import { Stack, useRouter } from 'expo-router';
 import { vars } from 'nativewind';
-import { useState } from 'react';
 import { useColorScheme, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { variablesOf } from '../../prototype-palettes';
 
-import { CHOSEN, Chips, EDGE_CHIPS, Form, HeaderCancel, headerFor, type Edge } from './colours';
+import { CHOSEN, Form, HeaderCancel, headerFor } from './colours';
 
 export default function FormPrototype() {
   const router = useRouter();
   const palette = CHOSEN[useColorScheme() === 'dark' ? 'dark' : 'light'];
-  const [edge, setEdge] = useState<Edge>('soft');
   const leave = () => router.back();
   return (
     <View style={vars(variablesOf(palette))} className="flex-1 bg-ground">
@@ -35,11 +33,8 @@ export default function FormPrototype() {
         }}
       />
       <SafeAreaView className="flex-1" edges={['bottom']}>
-        <Form faultStyle="colour-one" palette={palette} edge={edge} />
-        {/* Q20: a field's edge at rest. */}
-        <View className="mx-2 mt-2 rounded-2xl border border-line bg-surface p-2">
-          <Chips chips={EDGE_CHIPS} chosen={edge} onChoose={setEdge} />
-        </View>
+        {/* Decided 26 November 2026: a field's edge at rest is 3:1, the `edge` token. */}
+        <Form faultStyle="colour-one" palette={palette} edge="soft" />
       </SafeAreaView>
     </View>
   );
