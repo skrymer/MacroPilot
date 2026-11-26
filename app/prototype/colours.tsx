@@ -276,6 +276,19 @@ const SwipedDelete = ({ name }: { name: string }) => (
 /** How many entries Today shows before the rest are asked for, as epic 1's. */
 const LAST = 3;
 
+type Heading = 'now' | 'figure' | 'large';
+
+/**
+ * Q17, a list's heading and the tally's weight: epic 1's (bold body heading, the tally in `ink-mid`);
+ * the same with the tally's calories set as a weighed figure; or Health's larger section heading,
+ * the tally under it. The switch sits under the list here.
+ */
+const HEADINGS_STYLES: Chip<Heading>[] = [
+  { label: 'As now', value: 'now' },
+  { label: 'Tally as a figure', value: 'figure' },
+  { label: 'Large heading', value: 'large' },
+];
+
 type Failure = 'none' | 'unreadable' | 'refused';
 type FailureLook = 'ink' | 'red';
 
@@ -409,19 +422,34 @@ function TodayList({
   palette: Palette;
 }) {
   const [all, setAll] = useState(false);
+  const [heading, setHeading] = useState<Heading>('figure');
   const shown = all ? entries : entries.slice(-LAST);
   const label = all ? 'Show less' : `Show all ${entries.length}`;
   const hidden = entries.length > LAST;
   return (
     <>
-      <View className="flex-row flex-wrap items-baseline justify-between gap-x-4 pt-3">
-        <Text accessibilityRole="header" className="font-language-bold text-body text-ink">
-          Today · Thu 26 Nov
-        </Text>
-        <Text className="font-language text-label text-ink-mid">
-          {`${entries.length} entries · ${total.toLocaleString('en')}${nbsp}kcal`}
-        </Text>
-      </View>
+      {heading === 'large' ? (
+        <View className="pt-3">
+          <Text accessibilityRole="header" className="font-language-bold text-title text-ink">
+            Thu 26 Nov
+          </Text>
+          <Text className="font-language text-label text-ink-mid">
+            {`${entries.length} entries · ${total.toLocaleString('en')}${nbsp}kcal`}
+          </Text>
+        </View>
+      ) : (
+        <View className="flex-row flex-wrap items-baseline justify-between gap-x-4 pt-3">
+          <Text accessibilityRole="header" className="font-language-bold text-body text-ink">
+            Today · Thu 26 Nov
+          </Text>
+          <Text className="font-language text-label text-ink-mid">
+            {`${entries.length} entries · `}
+            <Text className={heading === 'figure' ? 'font-weighed text-ink' : ''}>
+              {`${total.toLocaleString('en')}${nbsp}kcal`}
+            </Text>
+          </Text>
+        </View>
+      )}
       {/* NativeWind does not style the gesture root, so the card is a View around it. */}
       <View className={`${LIST} overflow-hidden`}>
         <GestureHandlerRootView>
@@ -489,6 +517,7 @@ function TodayList({
           </>
         ) : null}
       </View>
+      <Chips chips={HEADINGS_STYLES} chosen={heading} onChoose={setHeading} />
       <Text className="font-absence text-label text-ink-dim">fibre not stated</Text>
     </>
   );
