@@ -10,15 +10,16 @@ export default function TabsLayout() {
   useColorScheme();
   return (
     <NativeTabs>
-      <NativeTabs.Trigger name="index">
+      {/* Each tab is a stack of its own, so that it has the system's header. */}
+      <NativeTabs.Trigger name="(today)">
         <NativeTabs.Trigger.Label>Today</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf="house" md="home" />
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="log">
+      <NativeTabs.Trigger name="(log)">
         <NativeTabs.Trigger.Label>Log</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf="plus.circle" md="add_circle" />
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="foods">
+      <NativeTabs.Trigger name="(foods)">
         <NativeTabs.Trigger.Label>Foods</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf="fork.knife" md="restaurant" />
       </NativeTabs.Trigger>

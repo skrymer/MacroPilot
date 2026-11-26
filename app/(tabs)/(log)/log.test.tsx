@@ -8,13 +8,16 @@ import { ScriptedClock } from '@/lifecycle/ScriptedClock';
 import { InMemoryEntryStore } from '@/storage/InMemoryEntryStore';
 import { InMemoryFoodStore } from '@/storage/InMemoryFoodStore';
 
-import AddFood from '../add-food';
-import LogEstimate from '../log-estimate';
-import LogFood from '../log-food';
-import TabsLayout from './_layout';
-import Developer from './developer';
-import Foods from './foods';
-import Today from './index';
+import AddFood from '../../add-food';
+import LogEstimate from '../../log-estimate';
+import LogFood from '../../log-food';
+import FoodsStack from '../(foods)/_layout';
+import Foods from '../(foods)/foods';
+import TodayStack from '../(today)/_layout';
+import Today from '../(today)/index';
+import TabsLayout from '../_layout';
+import Developer from '../developer';
+import LogStack from './_layout';
 import Log from './log';
 
 const OATS = { name: 'rolled OATS', macros: { protein: 13, carbohydrate: 20, fat: 18 } };
@@ -43,9 +46,12 @@ const openLog = (
     {
       _layout: () => <Stack />,
       '(tabs)/_layout': TabsLayout,
-      '(tabs)/index': Today,
-      '(tabs)/log': Log,
-      '(tabs)/foods': Foods,
+      '(tabs)/(today)/_layout': TodayStack,
+      '(tabs)/(today)/index': Today,
+      '(tabs)/(log)/_layout': LogStack,
+      '(tabs)/(log)/log': Log,
+      '(tabs)/(foods)/_layout': FoodsStack,
+      '(tabs)/(foods)/foods': Foods,
       '(tabs)/developer': Developer,
       'log-food': LogFood,
       'log-estimate': LogEstimate,

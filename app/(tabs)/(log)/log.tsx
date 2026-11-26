@@ -1,7 +1,6 @@
 import { useNavigation, useRouter } from 'expo-router';
 import { useEffect, useRef, type ComponentRef } from 'react';
 import { AccessibilityInfo, FlatList, Platform, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/Button';
 import { entryFigures } from '@/components/entryWords';
@@ -41,13 +40,15 @@ export default function Log() {
   const { foods, readAgain } = useFoods();
   const listed = Array.isArray(foods) ? foods : [];
   const [logged, setLogged] = useLogged();
-  // Asked of the tabs rather than of focus: a food's form opens over Log, and Log is not left by it.
+  // Asked of the tabs, the parent of Log's own stack, rather than of focus: a food's form opens over
+  // Log, and Log is not left by it.
+  const tabs = navigation.getParent();
   useEffect(
     () =>
-      navigation.addListener('state', ({ data: { state } }) => {
-        if (state.routes[state.index]?.name !== 'log') setLogged(undefined);
+      tabs?.addListener('state', ({ data: { state } }) => {
+        if (state.routes[state.index]?.name !== '(log)') setLogged(undefined);
       }),
-    [navigation, setLogged],
+    [tabs, setLogged],
   );
   // The line is at the top of the page, which can be out of view of the food that was pressed.
   const list = useRef<ComponentRef<typeof FlatList<Food>>>(null);
@@ -59,38 +60,35 @@ export default function Log() {
     router.navigate({ pathname: '/log-food', params: { id } });
   };
   return (
-    <SafeAreaView className="flex-1 bg-ground" edges={['top']}>
-      <FlatList
-        ref={list}
-        data={listed}
-        keyExtractor={({ id }) => String(id)}
-        renderItem={({ item }) => <FoodRow food={item} onLog={() => openForm(item.id)} />}
-        contentContainerClassName="px-page pb-grid-2"
-        ItemSeparatorComponent={Hairline}
-        ListEmptyComponent={
-          <View className="pt-grid-2">
-            <FoodsNotice foods={foods} readAgain={readAgain} />
-          </View>
-        }
-        ListHeaderComponent={
-          <View className="gap-grid-2">
-            <Text accessibilityRole="header" className="font-language-bold text-title text-ink">
-              Log
+    <FlatList
+      ref={list}
+      // iOS's large title follows the scroll only with the insets its bars ask for.
+      contentInsetAdjustmentBehavior="automatic"
+      data={listed}
+      keyExtractor={({ id }) => String(id)}
+      renderItem={({ item }) => <FoodRow food={item} onLog={() => openForm(item.id)} />}
+      contentContainerClassName="px-page py-grid-2"
+      ItemSeparatorComponent={Hairline}
+      ListEmptyComponent={
+        <View className="pt-grid-2">
+          <FoodsNotice foods={foods} readAgain={readAgain} />
+        </View>
+      }
+      ListHeaderComponent={
+        <View className="gap-grid-2">
+          {logged ? <LoggedLine logged={logged} /> : null}
+          <Button
+            label="Log an estimate instead"
+            onPress={() => router.navigate('/log-estimate')}
+            secondary
+          />
+          {listed.length > 0 ? (
+            <Text accessibilityRole="header" className="font-language-bold text-body text-ink">
+              All foods
             </Text>
-            {logged ? <LoggedLine logged={logged} /> : null}
-            <Button
-              label="Log an estimate instead"
-              onPress={() => router.navigate('/log-estimate')}
-              secondary
-            />
-            {listed.length > 0 ? (
-              <Text accessibilityRole="header" className="font-language-bold text-body text-ink">
-                All foods
-              </Text>
-            ) : null}
-          </View>
-        }
-      />
-    </SafeAreaView>
+          ) : null}
+        </View>
+      }
+    />
   );
 }

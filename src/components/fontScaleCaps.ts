@@ -14,3 +14,17 @@ export const FONT_SCALE_CAPS: Record<string, 1 | 2> = {
   // Set beside a figure, so it is held with it.
   unit: 1,
 };
+
+/** `tailwind.config.js`'s sizes in px, for text the system draws and `Text` cannot cap. */
+const SIZES = { title: 22 } as const;
+
+/**
+ * A size scaled by the phone's text size and capped as `Text` caps it: for text the system draws
+ * from a size it is given, such as the header's title on Android, which does not scale it.
+ */
+export const scaledBy = (fontScale: number, size: keyof typeof SIZES) =>
+  SIZES[size] * Math.min(fontScale, FONT_SCALE_CAPS[size]!);
+
+/** A size of the system's own, such as iOS's 34pt large title, scaled as text that is not a figure. */
+export const systemScaledBy = (fontScale: number, pt: number) =>
+  pt * Math.min(fontScale, FONT_SCALE_CAPS.title!);

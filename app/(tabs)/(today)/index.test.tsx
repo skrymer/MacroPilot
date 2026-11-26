@@ -32,7 +32,7 @@ const withLunches = async (...labels: string[]) => {
 /** Opens the app on Today, over `entries`. */
 const openToday = (entries: InMemoryEntryStore, clock = atNoon(), ask?: ScriptedAsk) =>
   renderRouter(
-    { '(tabs)/index': Today, '(tabs)/log': () => null },
+    { '(tabs)/(today)/index': Today, '(tabs)/(log)/log': () => null },
     {
       initialUrl: '/',
       wrapper: ({ children }: { children: ReactNode }) => (

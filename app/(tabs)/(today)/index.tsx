@@ -1,7 +1,6 @@
 import { useNavigation, useRouter } from 'expo-router';
 import { useCallback, useEffect, useEffectEvent, useState } from 'react';
 import { FlatList, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/Button';
 import { dayWords } from '@/components/dayWords';
@@ -87,62 +86,59 @@ export default function Today() {
   const shown = all ? listed : listed.slice(-LAST);
   const faultInView = useFailedInView(shown, deletion.fault);
   return (
-    <SafeAreaView className="flex-1 bg-ground" edges={['top']}>
-      <FlatList
-        {...faultInView.list}
-        data={shown}
-        ListFooterComponent={
-          listed.length > LAST ? (
-            <View className="pt-grid-2">
-              <Button
-                label={all ? 'Show less' : `Show all ${listed.length}`}
-                onPress={() => setAll(!all)}
-                secondary
-              />
-            </View>
-          ) : undefined
-        }
-        keyExtractor={({ id }) => String(id)}
-        renderItem={({ item }) => {
-          const name = shownName(item.name);
-          const words = entryWords(name, item);
-          return (
-            <DeletableRow
-              ref={item.id === deletion.fault?.id ? faultInView.row : undefined}
-              name={words.spoken}
-              onDelete={() => void deletion.begin(item)}
-              fault={item.id === deletion.fault?.id ? deletion.fault.why : undefined}
-            >
-              <Row name={name} {...words} />
-            </DeletableRow>
-          );
-        }}
-        contentContainerClassName="px-page pb-grid-2"
-        ItemSeparatorComponent={Hairline}
-        ListEmptyComponent={
-          Array.isArray(found) ? (
-            <Notice
-              title="Nothing logged yet"
-              action="Log"
-              onAction={() => router.navigate('/log')}
+    <FlatList
+      {...faultInView.list}
+      // iOS's large title follows the scroll only with the insets its bars ask for.
+      contentInsetAdjustmentBehavior="automatic"
+      data={shown}
+      ListFooterComponent={
+        listed.length > LAST ? (
+          <View className="pt-grid-2">
+            <Button
+              label={all ? 'Show less' : `Show all ${listed.length}`}
+              onPress={() => setAll(!all)}
+              secondary
             />
-          ) : undefined
-        }
-        ListHeaderComponent={
-          <View className="gap-grid-2 pb-grid-1">
-            <Text accessibilityRole="header" className="font-language-bold text-title text-ink">
-              Today
-            </Text>
-            {found === 'unreadable' ? (
-              <Notice title="Couldn’t load today’s summary" action="Retry" onAction={readAgain} />
-            ) : null}
-            {Array.isArray(found) ? <Totals totals={totals} /> : null}
-            {listed.length > 0 ? (
-              <DayHeading day={day} count={listed.length} totals={totals} />
-            ) : null}
           </View>
-        }
-      />
-    </SafeAreaView>
+        ) : undefined
+      }
+      keyExtractor={({ id }) => String(id)}
+      renderItem={({ item }) => {
+        const name = shownName(item.name);
+        const words = entryWords(name, item);
+        return (
+          <DeletableRow
+            ref={item.id === deletion.fault?.id ? faultInView.row : undefined}
+            name={words.spoken}
+            onDelete={() => void deletion.begin(item)}
+            fault={item.id === deletion.fault?.id ? deletion.fault.why : undefined}
+          >
+            <Row name={name} {...words} />
+          </DeletableRow>
+        );
+      }}
+      contentContainerClassName="px-page py-grid-2"
+      ItemSeparatorComponent={Hairline}
+      ListEmptyComponent={
+        Array.isArray(found) ? (
+          <Notice
+            title="Nothing logged yet"
+            action="Log"
+            onAction={() => router.navigate('/log')}
+          />
+        ) : undefined
+      }
+      ListHeaderComponent={
+        <View className="gap-grid-2 pb-grid-1">
+          {found === 'unreadable' ? (
+            <Notice title="Couldn’t load today’s summary" action="Retry" onAction={readAgain} />
+          ) : null}
+          {Array.isArray(found) ? <Totals totals={totals} /> : null}
+          {listed.length > 0 ? (
+            <DayHeading day={day} count={listed.length} totals={totals} />
+          ) : null}
+        </View>
+      }
+    />
   );
 }

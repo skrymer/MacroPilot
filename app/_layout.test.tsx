@@ -2,11 +2,14 @@ import { act, screen, userEvent } from '@testing-library/react-native';
 import { router } from 'expo-router';
 import { renderRouter } from 'expo-router/testing-library';
 
+import FoodsStack from './(tabs)/(foods)/_layout';
+import Foods from './(tabs)/(foods)/foods';
+import LogStack from './(tabs)/(log)/_layout';
+import Log from './(tabs)/(log)/log';
+import TodayStack from './(tabs)/(today)/_layout';
+import Today from './(tabs)/(today)/index';
 import TabsLayout from './(tabs)/_layout';
 import Developer from './(tabs)/developer';
-import Foods from './(tabs)/foods';
-import Today from './(tabs)/index';
-import Log from './(tabs)/log';
 import RootLayout from './_layout';
 import AddFood from './add-food';
 import Design from './design';
@@ -45,9 +48,12 @@ const openAt = (initialUrl: string) =>
     {
       _layout: RootLayout,
       '(tabs)/_layout': TabsLayout,
-      '(tabs)/index': Today,
-      '(tabs)/log': Log,
-      '(tabs)/foods': Foods,
+      '(tabs)/(today)/_layout': TodayStack,
+      '(tabs)/(today)/index': Today,
+      '(tabs)/(log)/_layout': LogStack,
+      '(tabs)/(log)/log': Log,
+      '(tabs)/(foods)/_layout': FoodsStack,
+      '(tabs)/(foods)/foods': Foods,
       'log-food': LogFood,
       '(tabs)/developer': Developer,
       'add-food': AddFood,

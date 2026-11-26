@@ -3,8 +3,9 @@ import { renderRouter } from 'expo-router/testing-library';
 
 import { TestProviders } from '@/components/TestProviders';
 
+import TodayStack from './(today)/_layout';
+import Today from './(today)/index';
 import Developer from './developer';
-import Today from './index';
 
 /** React Native's development flag, which a test sets to stand for a release build. */
 const build = globalThis as unknown as { __DEV__: boolean };
@@ -30,7 +31,11 @@ describe('Developer', () => {
 
     // When the app opens on the Developer page, as a deep link would
     await renderRouter(
-      { '(tabs)/index': Today, '(tabs)/developer': Developer },
+      {
+        '(tabs)/(today)/_layout': TodayStack,
+        '(tabs)/(today)/index': Today,
+        '(tabs)/developer': Developer,
+      },
       { initialUrl: '/developer', wrapper: TestProviders },
     );
 

@@ -5,8 +5,8 @@ import { TestProviders } from '@/components/TestProviders';
 
 import TabsLayout from './_layout';
 import Developer from './developer';
-import Foods from './foods';
-import Today from './index';
+import Foods from './(foods)/foods';
+import Today from './(today)/index';
 
 describe('TabsLayout', () => {
   it('holds the Developer page as a tab of its own in a development build', async () => {
@@ -16,8 +16,8 @@ describe('TabsLayout', () => {
     await renderRouter(
       {
         '(tabs)/_layout': TabsLayout,
-        '(tabs)/index': Today,
-        '(tabs)/foods': Foods,
+        '(tabs)/(today)/index': Today,
+        '(tabs)/(foods)/foods': Foods,
         '(tabs)/developer': Developer,
       },
       { initialUrl: '/developer', wrapper: TestProviders },

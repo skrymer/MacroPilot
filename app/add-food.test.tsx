@@ -7,13 +7,13 @@ import { ScriptedAsk } from '@/components/ScriptedAsk';
 import { TestProviders } from '@/components/TestProviders';
 import { InMemoryFoodStore } from '@/storage/InMemoryFoodStore';
 
-import Foods from './(tabs)/foods';
+import Foods from './(tabs)/(foods)/foods';
 import AddFood from './add-food';
 
 /** Opens the app at `initialUrl`, over `foods`. */
 const openApp = (initialUrl: string, foods: InMemoryFoodStore, ask?: ScriptedAsk) =>
   renderRouter(
-    { _layout: () => <Stack />, '(tabs)/foods': Foods, 'add-food': AddFood },
+    { _layout: () => <Stack />, '(tabs)/(foods)/foods': Foods, 'add-food': AddFood },
     {
       initialUrl,
       wrapper: ({ children }: { children: ReactNode }) => (

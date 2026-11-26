@@ -9,7 +9,8 @@ import { weighedEntry } from '@/domain/entry';
 import { InMemoryEntryStore } from '@/storage/InMemoryEntryStore';
 import { InMemoryFoodStore } from '@/storage/InMemoryFoodStore';
 
-import TabsLayout from './_layout';
+import TabsLayout from '../_layout';
+import FoodsStack from './_layout';
 import Foods from './foods';
 
 /** Opens the app on Foods, over `foods`. */
@@ -17,9 +18,10 @@ const openFoods = (foods: InMemoryFoodStore, ask?: ScriptedAsk, entries?: InMemo
   renderRouter(
     {
       '(tabs)/_layout': TabsLayout,
-      '(tabs)/index': () => null,
-      '(tabs)/log': () => null,
-      '(tabs)/foods': Foods,
+      '(tabs)/(today)/index': () => null,
+      '(tabs)/(log)/log': () => null,
+      '(tabs)/(foods)/_layout': FoodsStack,
+      '(tabs)/(foods)/foods': Foods,
       '(tabs)/developer': () => null,
     },
     {
