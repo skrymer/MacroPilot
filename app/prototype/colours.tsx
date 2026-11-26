@@ -15,7 +15,6 @@ import {
 import Svg, { Circle } from 'react-native-svg';
 
 import { Button } from '@/components/Button';
-import { DeletableRow } from '@/components/DeletableRow';
 import { Hairline } from '@/components/Hairline';
 import { Input } from '@/components/Input';
 import { Row } from '@/components/Row';
@@ -185,7 +184,24 @@ const DAYS: Record<
   },
 };
 
-function Today({ standing }: { standing: Standing }) {
+type Deletion = 'word' | 'bin' | 'bin-mid';
+
+/** Q9 (D21/D36): a row's *Delete* as the word, or a bin in ink, or a quieter bin in `ink-mid`. */
+const DELETIONS: Chip<Deletion>[] = [
+  { label: 'Delete', value: 'word' },
+  { label: 'Bin', value: 'bin' },
+  { label: 'Quiet bin', value: 'bin-mid' },
+];
+
+function Today({
+  standing,
+  deletion,
+  palette,
+}: {
+  standing: Standing;
+  deletion: Deletion;
+  palette: Palette;
+}) {
   const day = DAYS[standing];
   const entries = day.dinner
     ? [...ENTRIES, { ...DINNER, figure: `about ${day.dinner}${nbsp}kcal` }]
@@ -227,9 +243,26 @@ function Today({ standing }: { standing: Standing }) {
         {entries.map((entry, index) => (
           <View key={entry.name}>
             {index > 0 ? <Hairline /> : null}
-            <DeletableRow name={entry.name} onDelete={() => undefined}>
-              <Row {...entry} spoken={`${entry.name}, ${entry.figure}`} />
-            </DeletableRow>
+            <View className="flex-row flex-wrap items-center justify-between gap-x-2">
+              <View className="min-w-name flex-1">
+                <Row {...entry} spoken={`${entry.name}, ${entry.figure}`} />
+              </View>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`Delete ${entry.name}`}
+                className="min-h-target min-w-target items-center justify-center"
+              >
+                {deletion === 'word' ? (
+                  <Text className="font-language text-body text-ink">Delete</Text>
+                ) : (
+                  <SymbolView
+                    name={{ ios: 'trash', android: 'delete' }}
+                    size={22}
+                    tintColor={deletion === 'bin' ? palette.ink : palette['ink-mid']}
+                  />
+                )}
+              </Pressable>
+            </View>
           </View>
         ))}
       </View>
@@ -457,6 +490,7 @@ export default function ColoursPrototype() {
   const [screen, setScreen] = useState<Exclude<Screen, 'form'>>('today');
   const [standing, setStanding] = useState<Standing>('within');
   const [barShown, setBarShown] = useState(true);
+  const [deletion, setDeletion] = useState<Deletion>('bin');
   const appearance = useColorScheme() === 'dark' ? 'dark' : 'light';
   const palette = CHOSEN[appearance];
   const theme = vars(variablesOf(palette));
@@ -474,7 +508,10 @@ export default function ColoursPrototype() {
         />
       </View>
       {screen === 'today' ? (
-        <Chips chips={STANDINGS} chosen={standing} onChoose={setStanding} />
+        <>
+          <Chips chips={STANDINGS} chosen={standing} onChoose={setStanding} />
+          <Chips chips={DELETIONS} chosen={deletion} onChoose={setDeletion} />
+        </>
       ) : null}
       <Chips
         chips={APPEARANCES}
@@ -517,7 +554,11 @@ export default function ColoursPrototype() {
         contentInsetAdjustmentBehavior="automatic"
         contentContainerClassName="gap-3 px-4 pb-8"
       >
-        {screen === 'today' ? <Today standing={standing} /> : <Log />}
+        {screen === 'today' ? (
+          <Today standing={standing} deletion={deletion} palette={palette} />
+        ) : (
+          <Log />
+        )}
         {bar}
       </ScrollView>
     </>
