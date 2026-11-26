@@ -23,7 +23,7 @@ ad wait text "Today" 30000
 - **`--metro-port` does not load this app**: it stops at the dev client's launcher. The link above does.
 - From a fresh install (`ad settings clear-app-state com.skrymer.macropilot`) the dev menu's introduction is in front: `press 'label="Continue"' --settle`, then `adb shell input keyevent BACK`.
 - A screen: `ad open macropilot://<route> --platform android`, with the bundle loaded. **A cold link** is force-stop, then the link, then a tap on the launcher's row for the server, which delivers it. Loading the bundle by its own link drops the waiting one, and then passes any check that expects Today. Run the control too: the same gesture on the development bundle has to show the page.
-- One agent drives one emulator. Finish with `ad close`, without `--shutdown`: `emulator.sh` booted it, not the session.
+- One agent drives one emulator. Finish with `ad close`, without `--shutdown`: `emulator.sh` booted it, not the session. **`ad close`, and so `sizes.sh`'s exit, leaves the app on the dev client's launcher**: load the bundle again by its link before driving.
 
 ## Drive it the tool's way
 
@@ -31,7 +31,7 @@ The rules are the `agent-device` skill's. They are here because the first tester
 
 - **Act with `--settle` and read the diff it prints.** `snapshot` again only when the diff lacks the next target.
 - **Wait for a thing, never `sleep`**: `wait text "…"`, `wait absent <selector>`.
-- **No pipes**: `| tail` and `| grep` drop the refs and the hints the next step needs. Chain sure steps with `&&`, or `ad batch`.
+- **No pipes**: `| tail` and `| grep` drop the refs and the hints the next step needs. Chain sure steps with `&&`, or `ad batch`. **A scripted walk joins with `&&`, never `;`**, so it stops at its first failed `wait` instead of timing out on every step after it.
 - **Raw `adb` only for a move in the table below**, or for a race the tool cannot produce, such as links 60 ms apart.
 
 ## Check
@@ -42,6 +42,7 @@ The rules are the `agent-device` skill's. They are here because the first tester
 - A tree that looks stale: one screenshot and one fresh snapshot, never a loop.
 - **Look at the pixels where they decide**: colour, appearance, clipping, size, a figure. `ad screenshot <file> --normalize-status-bar`, `--crop-on 'text="0 kcal"'` for one element. The tree has read "0 kcal" while the screen showed "0".
 - **A colour is measured with `.claude/skills/drive-emulator/scripts/pixels.mjs bar=60,2320 ground=540,1200`**, which refuses while a warning overlay is in front. The points are in pixels, on this AVD.
+- **A gap or a height is measured with `.claude/skills/drive-emulator/scripts/spacing.mjs ..Today=page 'Today..*today=grid-2' 'Oats=two-line'`**: each against its token, in dp, as `PASS` or `FAULT … required 16dp (page)`. `..B` is a margin from the left edge, `A..B` a gap, a bare `A` a height held as a floor; an element is the first label starting with the text (`*` for ending). It finds the outermost labelled element, so a card's label measures the card, not its contents. `--tokens` prints the table.
 - `ad audit` on a screen the change touched: targets under 48dp, controls with no name, covered controls. It reads what is in front, so clear a warning overlay first.
 - An `ERROR` in Metro's log since the last probe fails it. So does a red badge at the bottom left.
 - The round gear is the dev client's, not the app's.
