@@ -160,6 +160,20 @@ describe('.claude/settings.json', () => {
   });
 
   it.each(configuredCommands())(
+    'shows only its script and a refusal, so a refusal does not read as a missing hook: %s',
+    (command) => {
+      // Given a configured hook command
+
+      // When it is read, as Claude Code prints it over every refusal
+
+      // Then it is the script's path, its argument, and a refusal when it cannot run
+      expect(command).toMatch(
+        /^"\$\{CLAUDE_PROJECT_DIR\}\/\.claude\/hooks\/[a-z-]+\.sh"( pre| post)? \|\| exit 2$/,
+      );
+    },
+  );
+
+  it.each(configuredCommands())(
     'refuses, rather than letting the tool call through, when its script is gone: %s',
     (command) => {
       // Given the session's project directory gone, as when its worktree is removed mid-session
@@ -173,9 +187,11 @@ describe('.claude/settings.json', () => {
         encoding: 'utf8',
       });
 
-      // Then it refuses, saying the hook is missing
+      // Then it refuses, naming the script that is not there
       expect(status).toBe(2);
-      expect(stderr).toContain(`hook missing: ${projectDir}/.claude/hooks/`);
+      expect(stderr).toMatch(
+        new RegExp(`${projectDir}/\\.claude/hooks/[a-z-]+\\.sh: No such file or directory`),
+      );
     },
   );
 
@@ -310,6 +326,26 @@ describe('probity.sh', () => {
     const { status, stderr } = edit('second', 'src/b.ts');
 
     // Then it is refused without being judged, saying why
+    expect(status).toBe(2);
+    expect(stderr).not.toContain('probity ran');
+    expect(stderr).toContain('same message');
+  });
+
+  it('refuses unjudged an edit beside one probity refused the way it does: exit 0, a deny on stdout', () => {
+    // Given a message of two edits, the first refused as the real probity refuses, and passed on as such
+    const { root, edit } = message();
+    standIn(
+      root,
+      'probity',
+      'input="$(cat)"; echo "probity ran" >&2; case "$input" in *src/a.ts*) echo \'{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"no red"}}\' ;; esac; exit 0',
+    );
+    const first = edit('first', 'src/a.ts');
+    expect(first.stdout).toContain('"permissionDecision":"deny"');
+
+    // When the hook runs on the second
+    const { status, stderr } = edit('second', 'src/b.ts');
+
+    // Then it is refused without being judged
     expect(status).toBe(2);
     expect(stderr).not.toContain('probity ran');
     expect(stderr).toContain('same message');
