@@ -172,6 +172,23 @@ describe('Log', () => {
     expect(await stores.entries.listOn('2026-11-24')).toHaveLength(0);
   });
 
+  it('refuses an estimate of 0 calories beside its field, and logs nothing', async () => {
+    // Given an estimate of a label and 0 calories
+    const stores = await storesOf();
+    await openLog(stores);
+    const user = userEvent.setup();
+    await user.press(await screen.findByRole('button', { name: 'Log an estimate instead' }));
+    await user.type(await screen.findByLabelText('Label'), 'black coffee');
+    await user.type(screen.getByLabelText('Calories'), '0');
+
+    // When the user logs it
+    await user.press(screen.getByRole('button', { name: 'Log estimated entry' }));
+
+    // Then the field says what is wrong, and nothing is logged
+    expect(await screen.findByText('Calories must be at least 1')).toBeOnTheScreen();
+    expect(await stores.entries.listOn('2026-11-24')).toHaveLength(0);
+  });
+
   it('asks for the grams of the food pressed, with none stated yet', async () => {
     // Given Log open on two foods
     await openLog(await storesOf(OATS, COFFEE));

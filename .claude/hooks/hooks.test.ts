@@ -106,6 +106,36 @@ describe('lint-edited-file.sh', () => {
     expect(status).toBe(2);
     expect(stderr).toContain(`No ESLint in ${worktree}`);
   });
+
+  it('hands back an edit Prettier would format, checked and never rewritten', () => {
+    // Given a checkout whose ESLint passes and whose Prettier finds the file unformatted
+    const root = checkout([]);
+    standIn(root, 'eslint', 'exit 0');
+    standIn(root, 'prettier', 'echo "prettier ran with $*" >&2\nexit 1');
+
+    // When the hook runs on an edit there
+    const { status, stderr } = hook(LINT, path.join(root, 'src/a.ts'), root);
+
+    // Then it is handed back, Prettier having only checked it
+    expect(status).toBe(2);
+    expect(stderr).toContain('prettier ran with --check');
+    expect(readFileSync(path.join(root, 'src/a.ts'), 'utf8')).toBe(ORIGINAL);
+  });
+
+  it('checks the formatting of a document too, which ESLint does not lint', () => {
+    // Given an edited document in a checkout whose Prettier finds it unformatted
+    const root = checkout(['eslint']);
+    standIn(root, 'prettier', 'echo "prettier ran with $*" >&2\nexit 1');
+    writeFileSync(path.join(root, 'DESIGN.md'), '# Trim\n');
+
+    // When the hook runs on it
+    const { status, stderr } = hook(LINT, path.join(root, 'DESIGN.md'), root);
+
+    // Then Prettier checked it, and ESLint was not asked
+    expect(status).toBe(2);
+    expect(stderr).toContain('prettier ran with --check');
+    expect(stderr).not.toContain('eslint ran');
+  });
 });
 
 /** Every hook command `.claude/settings.json` configures, as Claude Code runs it. */

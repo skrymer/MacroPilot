@@ -25,4 +25,4 @@ The app is mostly forms: a food's macros, grams, a weight, a goal. Each field is
 ## Consequences
 
 - A new figure field uses the shared translation, or it has reopened the blank-or-zero question.
-- The two lint rules are written, test-first, with the first form.
+- The two lint rules are written, test-first, with the first form. A third, `forms/first-fault-shown`, came with the second form of several fields, which was built without bringing its first fault into view (26 November 2026).
