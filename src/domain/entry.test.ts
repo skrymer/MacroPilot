@@ -22,7 +22,7 @@ describe('estimatedEntry', () => {
   it.each([
     ['a blank label', { label: '' }, 'needs a label'],
     ['a label of spaces', { label: ' \t ' }, 'needs a label'],
-    ['calories under 1, which would read about 0 kcal', { calories: 0.999 }, 'calories must be 1 or more'],
+    ['calories under 1', { calories: 0.999 }, 'calories must be 1 or more'],
     ['negative calories', { calories: -0.1 }, 'calories must be 1 or more'],
     ['calories that are not a number', { calories: Number.NaN }, 'calories must be 1 or more'],
     ['endless calories', { calories: Infinity }, 'calories must be 1 or more'],

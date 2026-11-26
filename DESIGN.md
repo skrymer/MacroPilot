@@ -70,7 +70,7 @@ A target is at least 44pt on iOS and 48dp on Android, each platform's own floor,
 
 | When | What | Not |
 | --- | --- | --- |
-| A form (grams, an estimate, a food) | A full-height page with *Cancel* | A sheet |
+| A form (grams, an estimate, a food) | A full-height page with *Cancel*. Add food is presented as a full-height modal (the user's word, 26 November 2026, on #27) | A sheet |
 | Deleting | The system's own question, naming what goes, answered *Delete* or *Cancel*: an action sheet on iOS, a dialog on Android | A question drawn by us |
 | Leaving a full-height form with something typed | The same question, answered *Discard* or *Cancel*, on every way out. A form of up to three fields does not ask, and neither does a form left as it opened | A silent loss of six fields |
 | It worked, and the page shows it (a row goes, a row appears) | Nothing | A message repeating it |

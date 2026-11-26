@@ -213,7 +213,7 @@ const NO_ALERT = {
  * `\u00a0`, where it can be seen.
  */
 const VISIBLE_WHITESPACE = {
-  files: ['**/*.{js,mjs,ts,tsx}'],
+  files: ['**/*.{js,cjs,mjs,jsx,ts,tsx}'],
   rules: {
     'no-irregular-whitespace': [
       'error',

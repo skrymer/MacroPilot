@@ -26,7 +26,7 @@ export function isEstimated(entry: { calories: number; label?: string }): entry 
 
 export const isLabel = (label: string) => label.trim() !== '';
 
-/** The fewest calories an estimate has: one under it would read *about 0 kcal* (the user's word, 26 November 2026). */
+/** The fewest calories an estimate has, so that none is kept as nothing (the user's word, 26 November 2026). */
 export const LEAST_ESTIMATED_CALORIES = 1;
 
 export const isEstimatedCalories = (calories: number) =>
