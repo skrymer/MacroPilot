@@ -1,0 +1,66 @@
+# An entry is deleted from Today by a swipe to the left, which asks the system's question once the row
+# is open, and the day's totals follow (DESIGN.md, *Lists and rows*). Jest cannot make the swipe
+# (ADR 0011).
+appId: com.skrymer.macropilot
+---
+- runFlow: steps/start.yaml
+- openLink: 'macropilot://foods'
+- tapOn: 'Add your first food'
+- tapOn: 'Name'
+- inputText: 'Oats'
+- tapOn: 'Protein per.*'
+- inputText: '13'
+- tapOn: 'Carbohydrate per.*'
+- inputText: '56'
+- tapOn: 'Fat per.*'
+- inputText: '6'
+- tapOn: 'Save food'
+- extendedWaitUntil:
+    visible: 'Oats, .*'
+    timeout: 10000
+
+# Logged on Log, the entry is on Today.
+- openLink: 'macropilot://log'
+- tapOn: 'Log Oats, .*'
+- inputText: '100'
+- tapOn: 'Log entry'
+- extendedWaitUntil:
+    visible: 'Logged: Oats.*'
+    timeout: 10000
+# Its food, swiped and answered, is refused while the entry depends on it, and says so over its row.
+- openLink: 'macropilot://foods'
+- swipe:
+    from: 'Oats, .*'
+    direction: LEFT
+- assertVisible: 'Delete this food?'
+- tapOn: 'Delete'
+- extendedWaitUntil:
+    visible: 'Could not delete food. Oats has logged Entries.*'
+    timeout: 10000
+- assertVisible: 'Oats, .*'
+
+- openLink: 'macropilot://'
+- extendedWaitUntil:
+    visible: 'Oats, 100 grams, .*'
+    timeout: 10000
+- assertVisible: '1 entry.*'
+
+# Swiped open, the system asks; cancelled, the entry stays.
+- swipe:
+    from: 'Oats, 100 grams, .*'
+    direction: LEFT
+- assertVisible: 'Delete this entry?'
+- tapOn: 'Cancel'
+- assertVisible: 'Oats, 100 grams, .*'
+
+# Swiped open again and answered, it goes, and the day is an empty one.
+- swipe:
+    from: 'Oats, 100 grams, .*'
+    direction: LEFT
+- assertVisible: 'Delete this entry?'
+- tapOn: 'Delete'
+- extendedWaitUntil:
+    visible: 'Log a weighed food, or an estimate.'
+    timeout: 10000
+- assertVisible: 'Nothing logged yet'
+- assertNotVisible: 'Oats, 100 grams, .*'

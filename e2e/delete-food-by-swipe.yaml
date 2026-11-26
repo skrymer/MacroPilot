@@ -1,0 +1,39 @@
+# A food is deleted by a swipe to the left, which asks the system's question once the row is open
+# (DESIGN.md, *Lists and rows*). Jest cannot make the swipe (ADR 0011).
+appId: com.skrymer.macropilot
+---
+- runFlow: steps/start.yaml
+- openLink: 'macropilot://foods'
+- tapOn: 'Add your first food'
+- tapOn: 'Name'
+- inputText: 'Milk'
+- tapOn: 'Protein per.*'
+- inputText: '3'
+- tapOn: 'Carbohydrate per.*'
+- inputText: '5'
+- tapOn: 'Fat per.*'
+- inputText: '3'
+# No hideKeyboard: agent-device types with a headless keyboard, and hiding one not shown is a back,
+# which leaves the form.
+- tapOn: 'Save food'
+- extendedWaitUntil:
+    visible: 'Milk, .*'
+    timeout: 10000
+
+# Swiped open, the system asks; cancelled, the food stays.
+- swipe:
+    from: 'Milk, .*'
+    direction: LEFT
+- assertVisible: 'Delete this food?'
+- tapOn: 'Cancel'
+- assertVisible: 'Milk, .*'
+
+# Swiped open again and answered, the food goes.
+- swipe:
+    from: 'Milk, .*'
+    direction: LEFT
+- assertVisible: 'Delete this food?'
+- tapOn: 'Delete'
+- extendedWaitUntil:
+    visible: 'Build your food catalog'
+    timeout: 10000

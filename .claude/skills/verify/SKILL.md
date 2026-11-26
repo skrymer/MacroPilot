@@ -14,6 +14,16 @@ Runtime evidence that a change works. Tests already ran. Who verifies what is [`
 3. **Confirm the device fetched the bundle**: Metro's log shows a fresh `Android Bundled` line after the latest edit. Without it every probe tests old code.
 4. A schema change needs `clear-app-state`, or the old database stays.
 
+## Part 0: the flows
+
+Run the whole suite before anything else ([`0011`](../../../docs/adr/0011-happy-paths-and-what-jest-cannot-drive-are-maestro-flows.md)), unpiped, and save its report as evidence:
+
+```bash
+METRO_PORT=8082 npx agent-device test 'e2e/*.yaml' --maestro --platform android -e METRO_PORT=8082 --report-junit <scratchpad>/gates/flows.xml
+```
+
+**Every flow passes, or the verify is a FAIL**, whatever else passes. No `--retries`: a flake is a wait that should be on a thing, and is fixed. A flow that fails because its screen changed on purpose is changed in the same pull request, with the behaviour, and never loosened to pass (no `optional:`, no dropped assertion); deleting one is the user's. **A new happy path, or new behaviour Jest cannot drive (a gesture, what the system draws, how a page is presented, focus and the keyboard, where a page scrolls to, a cold start or a link), has its flow by now**: if it does not, that is a FAIL. A flow selects by accessibility label and starts from `e2e/steps/start.yaml`. Pixels are not a flow's: they are Part 1's.
+
 ## Part 1: the acceptance criteria
 
 List the issue's criteria. Give each evidence: the exact expectation checked on the screen, and the snapshot that shows it, saved to a file. Where the pixels decide (colour, appearance, clipping, size, a figure), a screenshot you have looked at ([`0004`](../../../docs/adr/0004-an-issue-is-verified-on-the-emulator-and-an-epic-on-the-iphone.md)). **A criterion with no evidence is a FAIL**, however much else passed. When one criterion names a path (the background, both directions, another tab), every criterion is driven on it. Until `charters.mjs check` passes, report criteria as measured and never the issue as fixed. For a screen the change touched, always:
