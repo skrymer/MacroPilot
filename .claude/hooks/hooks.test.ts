@@ -236,6 +236,74 @@ describe('probity.sh', () => {
     expect(stderr).toContain('probity: boom');
     expect(stderr).toContain('probity failed (exit 1)');
   });
+
+  /**
+   * A transcript whose one message made two edits, `first` and `second`, each line one content block as
+   * Claude Code writes it, and a checkout whose probity refuses `src/a.ts` alone.
+   */
+  const message = () => {
+    const root = checkout([]);
+    standIn(
+      root,
+      'probity',
+      'input="$(cat)"; echo "probity ran" >&2; case "$input" in *src/a.ts*) exit 2 ;; esac; exit 0',
+    );
+    const transcript = path.join(directory('transcript'), 'session.jsonl');
+    const block = (id: string) =>
+      JSON.stringify({
+        type: 'assistant',
+        message: { id: 'msg_1', content: [{ type: 'tool_use', id, name: 'Edit' }] },
+      });
+    writeFileSync(transcript, `${block('first')}\n${block('second')}\n`);
+    const edit = (id: string, file: string) =>
+      runHook(
+        PROBITY,
+        [],
+        JSON.stringify({
+          session_id: randomUUID(),
+          transcript_path: transcript,
+          tool_name: 'Edit',
+          tool_use_id: id,
+          tool_input: { file_path: path.join(root, file) },
+        }),
+        root,
+      );
+    return { root, transcript, edit };
+  };
+
+  it('refuses an edit sent in the same message as one it refused, unjudged', () => {
+    // Given a message of two edits, the first refused
+    const { edit } = message();
+    edit('first', 'src/a.ts');
+
+    // When the hook runs on the second
+    const { status, stderr } = edit('second', 'src/b.ts');
+
+    // Then it is refused without being judged, saying why
+    expect(status).toBe(2);
+    expect(stderr).not.toContain('probity ran');
+    expect(stderr).toContain('same message');
+  });
+
+  it('judges an edit of a later message as it would any other', () => {
+    // Given a refused edit, then a later message with an edit of its own
+    const { transcript, edit } = message();
+    edit('first', 'src/a.ts');
+    writeFileSync(
+      transcript,
+      `${readFileSync(transcript, 'utf8')}${JSON.stringify({
+        type: 'assistant',
+        message: { id: 'msg_2', content: [{ type: 'tool_use', id: 'third', name: 'Edit' }] },
+      })}\n`,
+    );
+
+    // When the hook runs on it
+    const { status, stderr } = edit('third', 'src/b.ts');
+
+    // Then probity judges it, and lets it through
+    expect(stderr).toContain('probity ran');
+    expect(status).toBe(0);
+  });
 });
 
 /** Runs git in `cwd`, committing as a throwaway identity. */
