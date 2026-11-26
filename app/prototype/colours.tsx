@@ -282,30 +282,74 @@ function Log() {
 
 /* A form ------------------------------------------------------------------------------------ */
 
-type FaultStyle = 'words' | 'marked' | 'below';
+type FaultStyle = 'words' | 'marked' | 'below' | 'colour';
 
 const FAULT_STYLES: Chip<FaultStyle>[] = [
   { label: 'Words above', value: 'words' },
   { label: 'Marked, above', value: 'marked' },
   { label: 'Marked, below', value: 'below' },
+  { label: 'Red and green', value: 'colour' },
 ];
 
-/** Q6: a field's fault as words alone, or with the field outlined in ink and a warning sign. */
+type Palette = (typeof CANDIDATES)[number]['light'];
+
+/**
+ * Q6: a field's fault as words alone, or with the field outlined in ink and a warning sign; or the
+ * user's mockup of 26 November, against the thesis: each field in a card, a valid one in `within`'s
+ * green with a tick, one at fault in `over`'s red with a warning and its words under it.
+ */
 function Field({
   label,
   value,
   fault,
+  valid = false,
   placeholder,
   faultStyle,
-  ink,
+  palette,
 }: {
   label: string;
   value?: string;
   fault?: string;
+  valid?: boolean;
   placeholder?: string;
   faultStyle: FaultStyle;
-  ink: string;
+  palette: Palette;
 }) {
+  if (faultStyle === 'colour') {
+    const sign = fault
+      ? { name: { ios: 'exclamationmark.triangle.fill', android: 'warning' }, tint: palette.over }
+      : valid
+        ? { name: { ios: 'checkmark.circle.fill', android: 'check_circle' }, tint: palette.within }
+        : undefined;
+    const outline = fault
+      ? 'border-2 border-over bg-over/10'
+      : valid
+        ? 'border-2 border-within bg-within/10'
+        : 'border border-line';
+    return (
+      <View className="gap-1 rounded-2xl bg-surface p-3">
+        <Text className="font-language text-label text-ink-mid">{label}</Text>
+        <View className="justify-center">
+          <Input
+            accessibilityLabel={label}
+            defaultValue={value}
+            placeholder={placeholder}
+            className={`pr-10 font-language text-body ${outline}`}
+          />
+          {sign ? (
+            <View className="absolute right-3">
+              <SymbolView
+                name={sign.name as { ios: 'checkmark.circle.fill'; android: 'check_circle' }}
+                size={20}
+                tintColor={sign.tint}
+              />
+            </View>
+          ) : null}
+        </View>
+        {fault ? <Text className="font-language text-label text-over">{fault}</Text> : null}
+      </View>
+    );
+  }
   const marked = fault && faultStyle !== 'words';
   const words = fault ? (
     <View className="flex-row items-center gap-1">
@@ -313,7 +357,7 @@ function Field({
         <SymbolView
           name={{ ios: 'exclamationmark.triangle.fill', android: 'warning' }}
           size={16}
-          tintColor={ink}
+          tintColor={palette.ink}
         />
       ) : null}
       <Text className="flex-1 font-language-bold text-label text-ink">{fault}</Text>
@@ -352,8 +396,8 @@ function HeaderCancel({ ink }: { ink: string }) {
   );
 }
 
-function Form({ faultStyle, ink }: { faultStyle: FaultStyle; ink: string }) {
-  const style = { faultStyle, ink };
+function Form({ faultStyle, palette }: { faultStyle: FaultStyle; palette: Palette }) {
+  const style = { faultStyle, palette };
   return (
     <KeyboardAvoidingView behavior="padding" className="flex-1">
       <ScrollView
@@ -361,7 +405,7 @@ function Form({ faultStyle, ink }: { faultStyle: FaultStyle; ink: string }) {
         keyboardShouldPersistTaps="handled"
         contentContainerClassName="gap-4 px-4 pb-4"
       >
-        <Field label="Label" value="Lunch at the canteen" {...style} />
+        <Field label="Label" value="Lunch at the canteen" valid {...style} />
         <Field label="Calories" value="six hundred" fault="Enter calories as a number" {...style} />
         <Field label="Protein (optional)" placeholder="e.g. 30" {...style} />
       </ScrollView>
@@ -458,7 +502,7 @@ export default function ColoursPrototype() {
       <View style={theme} className="flex-1 bg-ground">
         {header}
         <SafeAreaView className="flex-1" edges={['bottom']}>
-          <Form faultStyle={faultStyle} ink={palette.ink} />
+          <Form faultStyle={faultStyle} palette={palette} />
           {bar}
         </SafeAreaView>
       </View>
