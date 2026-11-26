@@ -296,7 +296,7 @@ type Palette = (typeof CANDIDATES)[number]['light'];
 /**
  * Q6: a field's fault as words alone, or with the field outlined in ink and a warning sign; or the
  * user's mockup of 26 November, against the thesis: each field in a card, a valid one in `within`'s
- * green with a tick, one at fault in `over`'s red with a warning and its words under it.
+ * green with a tick, one at fault in `over`'s red with a warning and its words above it.
  */
 function Field({
   label,
@@ -329,6 +329,7 @@ function Field({
     return (
       <View className="gap-1 rounded-2xl bg-surface p-3">
         <Text className="font-language text-label text-ink-mid">{label}</Text>
+        {fault ? <Text className="font-language text-label text-over">{fault}</Text> : null}
         <View className="justify-center">
           <Input
             accessibilityLabel={label}
@@ -346,7 +347,6 @@ function Field({
             </View>
           ) : null}
         </View>
-        {fault ? <Text className="font-language text-label text-over">{fault}</Text> : null}
       </View>
     );
   }
