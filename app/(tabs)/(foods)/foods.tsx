@@ -1,13 +1,11 @@
 import { useRouter } from 'expo-router';
 import { FlatList, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/Button';
 import { DeletableRow } from '@/components/DeletableRow';
 import { FoodRow } from '@/components/FoodRow';
 import { FoodsNotice } from '@/components/FoodsNotice';
 import { Hairline } from '@/components/Hairline';
-import { Text } from '@/components/Text';
 import { useDelete } from '@/components/useDelete';
 import { useFailedInView } from '@/components/useFailedInView';
 import type { Food } from '@/domain/food';
@@ -36,37 +34,34 @@ export default function Foods() {
   });
   const faultInView = useFailedInView(listed, deletion.fault);
   return (
-    <SafeAreaView className="flex-1 bg-ground" edges={['top']}>
-      {/* The page's first child and there from the start, or iOS finds no list to keep clear of its tab bar. */}
-      <FlatList
-        {...faultInView.list}
-        data={listed}
-        keyExtractor={({ id }) => String(id)}
-        renderItem={({ item }) => (
-          <DeletableRow
-            ref={item.id === deletion.fault?.id ? faultInView.row : undefined}
-            name={shownName(item.name)}
-            onDelete={() => void deletion.begin(item)}
-            fault={item.id === deletion.fault?.id ? deletion.fault.why : undefined}
-          >
-            <FoodRow food={item} />
-          </DeletableRow>
-        )}
-        contentContainerClassName="px-page pb-grid-2"
-        ItemSeparatorComponent={Hairline}
-        ListHeaderComponent={
-          <View className="min-h-target flex-row flex-wrap items-center justify-between gap-x-4">
-            <Text accessibilityRole="header" className="font-language-bold text-title text-ink">
-              Foods
-            </Text>
-            {listed.length > 0 ? (
-              // Not `push`, which opens a second form over the first when it is pressed twice.
-              <Button label="Add food" onPress={() => router.navigate('/add-food')} />
-            ) : null}
+    // The page's root and there from the start, or iOS finds no list to keep clear of its bars.
+    <FlatList
+      {...faultInView.list}
+      // iOS's large title follows the scroll only with the insets its bars ask for.
+      contentInsetAdjustmentBehavior="automatic"
+      data={listed}
+      keyExtractor={({ id }) => String(id)}
+      renderItem={({ item }) => (
+        <DeletableRow
+          ref={item.id === deletion.fault?.id ? faultInView.row : undefined}
+          name={shownName(item.name)}
+          onDelete={() => void deletion.begin(item)}
+          fault={item.id === deletion.fault?.id ? deletion.fault.why : undefined}
+        >
+          <FoodRow food={item} />
+        </DeletableRow>
+      )}
+      contentContainerClassName="px-page py-grid-2"
+      ItemSeparatorComponent={Hairline}
+      ListHeaderComponent={
+        listed.length > 0 ? (
+          <View className="pb-grid-2">
+            {/* Not `push`, which opens a second form over the first when it is pressed twice. */}
+            <Button label="Add food" onPress={() => router.navigate('/add-food')} />
           </View>
-        }
-        ListEmptyComponent={<FoodsNotice foods={foods} readAgain={readAgain} />}
-      />
-    </SafeAreaView>
+        ) : undefined
+      }
+      ListEmptyComponent={<FoodsNotice foods={foods} readAgain={readAgain} />}
+    />
   );
 }
