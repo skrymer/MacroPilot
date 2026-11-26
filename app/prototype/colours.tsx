@@ -4,7 +4,7 @@ import { SymbolView } from 'expo-symbols';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import { cssInterop, vars } from 'nativewind';
-import { useState } from 'react';
+import { createContext, useContext, useState } from 'react';
 import {
   Appearance,
   KeyboardAvoidingView,
@@ -223,10 +223,12 @@ function EmptyList({
   palette: Palette;
 }) {
   const look: ButtonLook = { secondary: 'outlined', press: 'platform', palette };
+  const corner = useCorner();
   if (empty === 'in-list') {
     // The summary above already says the day is empty, so the line gives only the way on.
     return (
       <View
+        style={corner}
         className={`${LIST} min-h-target flex-row flex-wrap items-center justify-between gap-x-4 py-2`}
       >
         <Text className="font-language text-body text-ink-mid">{detail}</Text>
@@ -252,7 +254,7 @@ function EmptyList({
     );
   }
   return (
-    <View className="gap-4 rounded-2xl bg-surface p-4">
+    <View style={corner} className="gap-4 rounded-2xl bg-surface p-4">
       <View>
         <Text className="font-language-bold text-body text-ink">{title}</Text>
         <Text className="font-language text-label text-ink-mid">{detail}</Text>
@@ -276,18 +278,22 @@ const SwipedDelete = ({ name }: { name: string }) => (
 /** How many entries Today shows before the rest are asked for, as epic 1's. */
 const LAST = 3;
 
-type Heading = 'now' | 'figure' | 'large';
+type Corner = '14' | '20' | '26';
 
 /**
- * Q17, a list's heading and the tally's weight: epic 1's (bold body heading, the tally in `ink-mid`);
- * the same with the tally's calories set as a weighed figure; or Health's larger section heading,
- * the tally under it. The switch sits under the list here.
+ * Q18, a card's corner: epic 1's `rounded-2xl` (14, NativeWind's rem being 14), 20, or Health's
+ * larger 26. Set on every card of Today and Log through the context, as a size in `style`.
  */
-const HEADINGS_STYLES: Chip<Heading>[] = [
-  { label: 'As now', value: 'now' },
-  { label: 'Tally as a figure', value: 'figure' },
-  { label: 'Large heading', value: 'large' },
+const CORNERS: Chip<Corner>[] = [
+  { label: '14', value: '14' },
+  { label: '20', value: '20' },
+  { label: '26 (Health)', value: '26' },
 ];
+
+const CornerContext = createContext(14);
+
+/** A card's corner, as the switch has it. */
+const useCorner = () => ({ borderRadius: useContext(CornerContext) });
 
 type Failure = 'none' | 'unreadable' | 'refused';
 type FailureLook = 'ink' | 'red';
@@ -346,9 +352,10 @@ function Today({
     ? [...ENTRIES, { ...DINNER, figure: `about ${day.dinner}${nbsp}kcal` }]
     : ENTRIES;
   const total = 1320 + (day.dinner ?? 0);
+  const corner = useCorner();
   if (failure === 'unreadable') {
     return (
-      <View className="gap-4 rounded-2xl bg-surface p-4">
+      <View style={corner} className="gap-4 rounded-2xl bg-surface p-4">
         <FailureWords words="Couldn’t load today’s summary" look={failureLook} palette={palette} />
         <TrialButton label="Retry" look={{ secondary: 'outlined', press: 'platform', palette }} />
       </View>
@@ -356,7 +363,7 @@ function Today({
   }
   return (
     <>
-      <View className="rounded-2xl bg-surface p-4">
+      <View style={corner} className="rounded-2xl bg-surface p-4">
         <View
           accessible
           accessibilityLabel={`${day.words}, ${day.centre} ${day.unit}`}
@@ -422,36 +429,24 @@ function TodayList({
   palette: Palette;
 }) {
   const [all, setAll] = useState(false);
-  const [heading, setHeading] = useState<Heading>('figure');
+  const corner = useCorner();
   const shown = all ? entries : entries.slice(-LAST);
   const label = all ? 'Show less' : `Show all ${entries.length}`;
   const hidden = entries.length > LAST;
   return (
     <>
-      {heading === 'large' ? (
-        <View className="pt-3">
-          <Text accessibilityRole="header" className="font-language-bold text-title text-ink">
-            Thu 26 Nov
-          </Text>
-          <Text className="font-language text-label text-ink-mid">
-            {`${entries.length} entries · ${total.toLocaleString('en')}${nbsp}kcal`}
-          </Text>
-        </View>
-      ) : (
-        <View className="flex-row flex-wrap items-baseline justify-between gap-x-4 pt-3">
-          <Text accessibilityRole="header" className="font-language-bold text-body text-ink">
-            Today · Thu 26 Nov
-          </Text>
-          <Text className="font-language text-label text-ink-mid">
-            {`${entries.length} entries · `}
-            <Text className={heading === 'figure' ? 'font-weighed text-ink' : ''}>
-              {`${total.toLocaleString('en')}${nbsp}kcal`}
-            </Text>
-          </Text>
-        </View>
-      )}
+      <View className="flex-row flex-wrap items-baseline justify-between gap-x-4 pt-3">
+        <Text accessibilityRole="header" className="font-language-bold text-body text-ink">
+          Today · Thu 26 Nov
+        </Text>
+        <Text className="font-language text-label text-ink-mid">
+          {`${entries.length} entries · `}
+          {/* Decided 26 November 2026: the tally's calories are a figure, by the surest kind in them. */}
+          <Text className="font-weighed text-ink">{`${total.toLocaleString('en')}${nbsp}kcal`}</Text>
+        </Text>
+      </View>
       {/* NativeWind does not style the gesture root, so the card is a View around it. */}
-      <View className={`${LIST} overflow-hidden`}>
+      <View style={corner} className={`${LIST} overflow-hidden`}>
         <GestureHandlerRootView>
           {shown.map((entry, index) => (
             <View key={entry.name}>
@@ -517,7 +512,6 @@ function TodayList({
           </>
         ) : null}
       </View>
-      <Chips chips={HEADINGS_STYLES} chosen={heading} onChoose={setHeading} />
       <Text className="font-absence text-label text-ink-dim">fibre not stated</Text>
     </>
   );
@@ -591,6 +585,7 @@ function Logged({ told, palette }: { told: Told; palette: Palette }) {
       />
     );
   const figures = `80${nbsp}g, 294${nbsp}kcal, 10${nbsp}g protein`;
+  const corner = useCorner();
   if (told === 'line') {
     return (
       <View accessible className="flex-row flex-wrap items-center gap-x-2">
@@ -601,7 +596,11 @@ function Logged({ told, palette }: { told: Told; palette: Palette }) {
     );
   }
   return (
-    <View accessible className="flex-row items-center gap-3 rounded-2xl bg-surface p-4">
+    <View
+      accessible
+      style={corner}
+      className="flex-row items-center gap-3 rounded-2xl bg-surface p-4"
+    >
       {tick}
       <View className="flex-1">
         <Text className="font-language-bold text-body text-ink">Logged: Rolled oats</Text>
@@ -619,7 +618,7 @@ function Log({ look, told }: { look: ButtonLook; told: Told }) {
       <Text accessibilityRole="header" className="font-language-bold text-body text-ink">
         All foods
       </Text>
-      <View className={LIST}>
+      <View style={useCorner()} className={LIST}>
         {FOODS.map(([name, protein, calories], index) => (
           <View key={name}>
             {index > 0 ? <Hairline /> : null}
@@ -821,6 +820,7 @@ export default function ColoursPrototype() {
   const [screen, setScreen] = useState<Exclude<Screen, 'form'>>('today');
   const [standing, setStanding] = useState<Standing>('within');
   const [barShown, setBarShown] = useState(true);
+  const [corner, setCorner] = useState<Corner>('20');
   // Decided 26 November 2026: the quiet bin, and a swipe to delete beside it.
   const deletion: Deletion = 'swipe';
   // Decided 26 November 2026: under a summary, an empty list is one line in its own card.
@@ -855,6 +855,7 @@ export default function ColoursPrototype() {
           <Chips chips={FAILURES} chosen={failure} onChoose={setFailure} />
         </>
       ) : null}
+      <Chips chips={CORNERS} chosen={corner} onChoose={setCorner} />
       <Chips
         chips={APPEARANCES}
         chosen={appearance}
@@ -888,7 +889,7 @@ export default function ColoursPrototype() {
   // iOS ties its large title to the scroll view only when that is the screen's first view, so it is
   // the root here, the bar at the foot of what scrolls.
   return (
-    <>
+    <CornerContext.Provider value={Number(corner)}>
       {header}
       <ScrollView
         style={theme}
@@ -910,6 +911,6 @@ export default function ColoursPrototype() {
         )}
         {bar}
       </ScrollView>
-    </>
+    </CornerContext.Provider>
   );
 }
