@@ -22,6 +22,9 @@
 13. **What worked on another page is told in a card with a green tick** (Q15): *Logged: Rolled oats* and its figures, the tick a valid field has, so green with a tick is *done* as red with a warning is *needs you*. Chosen over epic 1's card alone and a line with no card. It goes as `DESIGN.md` has it: when the next entry replaces it or Log is left, never on a timer.
 14. **The rest of a long day is asked for by the card's own last row** (Q16): *Show all 5* in bold ink with a chevron in `ink-mid`, after a hairline, turning to *Show less*, as Health's *Show All Data*. Chosen over epic 1's outlined button under the card: the row belongs to the list it opens, and the page keeps one full-width button.
 15. **The tally's calories are set as a figure** (Q17, left to #51 by #27): *4 entries · **1,320 kcal***, the calories by the surest kind in them, as `DESIGN.md` has a total, the heading as it is (bold body, *Today · Thu 26 Nov*). Chosen over the tally all in `ink-mid`, and Health's larger section heading, which would vie with the page's large title and the ring.
+16. **A card's corner is 20** (Q18), a px token as the margins are, so NativeWind's 14px rem cannot move it. Chosen over epic 1's 14 (`rounded-2xl`) and Health's 26, which pinches the ends of short rows. Inner fields and buttons keep their own shapes.
+
+Not #51's, recorded on epic 2 (#6, 26 November 2026): the day ring is Today's first element and stands in no card, and the goal ring is not on Today. The prototype's ring card does not bind it.
 
 **How the decisions are held, after the grilling** (the user, 26 November 2026: as easy as possible for a later session to follow). Cheapest to follow first:
 

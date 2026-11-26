@@ -280,16 +280,7 @@ const LAST = 3;
 
 type Corner = '14' | '20' | '26';
 
-/**
- * Q18, a card's corner: epic 1's `rounded-2xl` (14, NativeWind's rem being 14), 20, or Health's
- * larger 26. Set on every card of Today and Log through the context, as a size in `style`.
- */
-const CORNERS: Chip<Corner>[] = [
-  { label: '14', value: '14' },
-  { label: '20', value: '20' },
-  { label: '26 (Health)', value: '26' },
-];
-
+/** Q18: a card's corner, set on every card of Today and Log through the context, as a size. */
 const CornerContext = createContext(14);
 
 /** A card's corner, as the switch has it. */
@@ -820,7 +811,8 @@ export default function ColoursPrototype() {
   const [screen, setScreen] = useState<Exclude<Screen, 'form'>>('today');
   const [standing, setStanding] = useState<Standing>('within');
   const [barShown, setBarShown] = useState(true);
-  const [corner, setCorner] = useState<Corner>('20');
+  // Decided 26 November 2026: a card's corner is 20.
+  const corner: Corner = '20';
   // Decided 26 November 2026: the quiet bin, and a swipe to delete beside it.
   const deletion: Deletion = 'swipe';
   // Decided 26 November 2026: under a summary, an empty list is one line in its own card.
@@ -855,7 +847,6 @@ export default function ColoursPrototype() {
           <Chips chips={FAILURES} chosen={failure} onChoose={setFailure} />
         </>
       ) : null}
-      <Chips chips={CORNERS} chosen={corner} onChoose={setCorner} />
       <Chips
         chips={APPEARANCES}
         chosen={appearance}
