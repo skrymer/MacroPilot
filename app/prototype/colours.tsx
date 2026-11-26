@@ -186,7 +186,7 @@ const DAYS: Record<
   },
 };
 
-function Today({ standing, system }: { standing: Standing; system: boolean }) {
+function Today({ standing, system, list }: { standing: Standing; system: boolean; list: string }) {
   const day = DAYS[standing];
   const entries = day.dinner
     ? [...ENTRIES, { ...DINNER, figure: `about ${day.dinner}${nbsp}kcal` }]
@@ -229,7 +229,7 @@ function Today({ standing, system }: { standing: Standing; system: boolean }) {
           {`${entries.length} entries · ${total.toLocaleString('en')}${nbsp}kcal`}
         </Text>
       </View>
-      <View>
+      <View className={list}>
         {entries.map((entry, index) => (
           <View key={entry.name}>
             {index > 0 ? <Hairline /> : null}
@@ -254,7 +254,7 @@ const FOODS = [
   ['Skyr, plain', 11, 63],
 ] as const;
 
-function Log({ system }: { system: boolean }) {
+function Log({ system, list }: { system: boolean; list: string }) {
   return (
     <>
       {system ? null : (
@@ -272,7 +272,7 @@ function Log({ system }: { system: boolean }) {
       <Text accessibilityRole="header" className="font-language-bold text-body text-ink">
         All foods
       </Text>
-      <View>
+      <View className={list}>
         {FOODS.map(([name, protein, calories], index) => (
           <View key={name}>
             {index > 0 ? <Hairline /> : null}
@@ -374,6 +374,16 @@ function Form({ system }: { system: boolean }) {
 
 type Title = 'ours' | 'system';
 
+type Rows = 'plain' | 'grouped';
+
+const ROWS: Chip<Rows>[] = [
+  { label: 'Rows on the ground', value: 'plain' },
+  { label: 'Rows in a card', value: 'grouped' },
+];
+
+/** D39: epic 1's rows straight on the ground, or in one rounded card as Health's sections. */
+const LISTS: Record<Rows, string> = { plain: '', grouped: 'rounded-2xl bg-surface px-4' };
+
 const TITLES: Chip<Title>[] = [
   { label: 'Our title', value: 'ours' },
   { label: 'System title', value: 'system' },
@@ -386,15 +396,16 @@ export default function ColoursPrototype() {
   const [key, setKey] = useState(CANDIDATES.some((c) => c.key === variant) ? variant! : 'C');
   const [screen, setScreen] = useState<Screen>('today');
   const [standing, setStanding] = useState<Standing>('within');
-  const [title, setTitle] = useState<Title>('ours');
+  const [title, setTitle] = useState<Title>('system');
+  const [rows, setRows] = useState<Rows>('plain');
   const [barShown, setBarShown] = useState(true);
   const appearance = useColorScheme() === 'dark' ? 'dark' : 'light';
   const candidate = CANDIDATES.find((c) => c.key === key) ?? CANDIDATES[0]!;
   const palette = candidate[appearance];
   const system = title === 'system';
   const shown: Record<Screen, ReactNode> = {
-    today: <Today standing={standing} system={system} />,
-    log: <Log system={system} />,
+    today: <Today standing={standing} system={system} list={LISTS[rows]} />,
+    log: <Log system={system} list={LISTS[rows]} />,
     form: <Form system={system} />,
   };
   // The native header takes colours as values, not classes: the variant's own, at run time.
@@ -416,6 +427,7 @@ export default function ColoursPrototype() {
       </View>
       <Text className="font-language-bold text-label text-ink">{`${candidate.key}: ${candidate.name}`}</Text>
       <Chips chips={TITLES} chosen={title} onChoose={setTitle} />
+      {screen === 'form' ? null : <Chips chips={ROWS} chosen={rows} onChoose={setRows} />}
       <Chips chips={SCREENS} chosen={screen} onChoose={setScreen} />
       {screen === 'today' ? (
         <Chips chips={STANDINGS} chosen={standing} onChoose={setStanding} />
