@@ -76,4 +76,5 @@ Symptom first. Add each one that costs a failure; never copy in one that has not
 - **`Unable to resolve module console from @testing-library/react-native`** on export, while every test passes: a co-located test under `app/` reached the bundle. `metro.config.js` blocks them.
 - **Every weight of a font ships**: import Expo Google Fonts per face (`@expo-google-fonts/<family>/400Regular`).
 - **A new class does nothing on the phone**: restart Metro with `--clear`.
+- **A screen test times out, its page rendering thousands of times**: the page sets, through its own `<Stack.Screen options>`, an option that changes its layout (`headerShown`), so each layout sets it again. What is fixed for a route (presentation, the header shown, its styling) goes on the route in `app/_layout.tsx`; the page sets only its title and its own handlers (`FormHeader`). Count renders before reaching for a stable-callback workaround: a constant options object looped too.
 - **`npm ci` fails on EAS with a missing lockfile entry**: `eas.json` pins Node 24 through `base`; a new profile must extend it.
