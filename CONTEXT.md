@@ -41,7 +41,7 @@ _Avoid_: log (the verb is fine), record, meal
 An Entry of a Food and the grams of it eaten, its calories and protein computed from the Food.
 
 **Estimated Entry**:
-An Entry of something that could not be weighed: a label and calories, and protein where the user gave it. It has no Food and no grams.
+An Entry of something that could not be weighed: a label and calories, at least 1, and protein where the user gave it. It has no Food and no grams.
 _Avoid_: guess, quick add
 
 **Entry's name**:

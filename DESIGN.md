@@ -46,7 +46,7 @@ The figure in the centre is `ink` while the day is within its budget, `slightly-
 
 **An entry's row** has its calories at the right and its grams and protein under its name.
 
-**A figure and its unit are joined by a no-break space.** Android can break the line at an ordinary one and clip the second half: "0 kcal" was drawn as "0".
+**A figure and its unit are joined by a no-break space.** Android can break the line at an ordinary one and clip the second half: "0 kcal" was drawn as "0". In code it is written `\u00a0`, or comes from `figures.ts`, never typed as the character: one typed was lost unseen in a rewrite of its line, and `no-irregular-whitespace` refuses it.
 
 ## Type
 
@@ -82,6 +82,8 @@ A target is at least 44pt on iOS and 48dp on Android, each platform's own floor,
 **No toasts.** iOS has none, and a message on a timer is gone before someone slow to look has read it.
 
 **The keyboard never hides** the field being typed in or the button that commits it: a form that scrolls makes room for it, with its button and what it says above the button outside what scrolls.
+
+**A fault out of view is brought into it.** A form of more than one field scrolls to the first field at fault, and says above its button *Not saved. A field above needs changing.*, since on a phone the fault can be off the screen. `forms/first-fault-shown` refuses such a form without `useFirstFault` and `formFault`.
 
 **Focus:** a form of one field takes focus as it opens. A longer one does not, so the whole of it is seen first.
 
