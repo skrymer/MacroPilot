@@ -59,7 +59,10 @@ export default function RootLayout() {
                   screenLayout={({ route, children }) =>
                     !__DEV__ && route.name === 'design' ? <BackToToday /> : children
                   }
-                />
+                >
+                  {/* DESIGN.md: Add food is a full-height modal page (the user's word, 26 November 2026). */}
+                  <Stack.Screen name="add-food" options={{ presentation: 'fullScreenModal' }} />
+                </Stack>
               </View>
             </LoggedProvider>
           </AskProvider>

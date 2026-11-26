@@ -113,3 +113,38 @@ describe('forms/no-coerced-number', () => {
     expect(reported).not.toContain('forms/no-coerced-number');
   });
 });
+
+describe('forms/first-fault-shown', () => {
+  it('reports a form of several fields that neither brings its first fault into view nor says so', () => {
+    // Given a form of more than one field, which can put a fault out of view
+    const source = `const c = <><FormField name="label" /><FormField name="calories" /></>;`;
+
+    // When it is linted
+    const reported = lint(source, SCREEN);
+
+    // Then the rule reports it
+    expect(reported).toContain('forms/first-fault-shown');
+  });
+
+  it('accepts a form of several fields that does both', () => {
+    // Given a form that brings its first fault into view and says so by its button
+    const source = `const s = useFirstFault(['label']); const f = formFault(errors); const c = <><FormField name="label" /><FormField name="calories" /></>;`;
+
+    // When it is linted
+    const reported = lint(source, SCREEN);
+
+    // Then the rule is silent
+    expect(reported).not.toContain('forms/first-fault-shown');
+  });
+
+  it('reports fields mapped from a list, which are several though written once', () => {
+    // Given fields made from a list, as Add food makes its six
+    const source = `const c = F.map((n) => <FormField key={n} name={n} />);`;
+
+    // When it is linted
+    const reported = lint(source, SCREEN);
+
+    // Then the rule reports it
+    expect(reported).toContain('forms/first-fault-shown');
+  });
+});

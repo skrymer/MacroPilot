@@ -14,10 +14,10 @@ import { useFoodStore } from '@/storage/FoodStoreContext';
 
 const FIELDS = [
   ['name', 'Name'],
-  ['protein', 'Protein per 100 g'],
-  ['carbohydrate', 'Carbohydrate per 100 g'],
-  ['fat', 'Fat per 100 g'],
-  ['fibre', 'Fibre per 100 g, optional'],
+  ['protein', 'Protein per 100\u00a0g'],
+  ['carbohydrate', 'Carbohydrate per 100\u00a0g'],
+  ['fat', 'Fat per 100\u00a0g'],
+  ['fibre', 'Fibre per 100\u00a0g, optional'],
   ['abv', 'Alcohol % volume, optional'],
 ] as const;
 

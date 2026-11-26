@@ -39,9 +39,9 @@ describe('foodForm', () => {
     // Then each field is asked for by name, a blank figure never taken as 0
     expect(told).toEqual({
       name: 'Enter a name for this food',
-      protein: 'Enter protein per 100 g',
-      carbohydrate: 'Enter carbohydrate per 100 g',
-      fat: 'Enter fat per 100 g',
+      protein: 'Enter protein per 100\u00a0g',
+      carbohydrate: 'Enter carbohydrate per 100\u00a0g',
+      fat: 'Enter fat per 100\u00a0g',
     });
   });
 

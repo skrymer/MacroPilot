@@ -115,6 +115,8 @@ these hold. It then needs no failing test:
   - The session shows, before the write, the fault on the emulator, as a measurement in a command's
     output: whether the keyboard is shown, what has focus, or where an element stands. A measurement
     after agent-device has pressed or filled is of its headless keyboard and is not one.
+    How iOS presents a page, which the Android emulator cannot show, needs instead the user's word
+    for that page, quoted in the session with its date and where it is recorded.
   - It is the least that could repair that fault, and the tests of the file pass.
 
 Anything else in the same write is judged by the rules above.`;

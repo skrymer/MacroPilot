@@ -26,7 +26,7 @@ There is no server, and so no HTTP boundary to drive a feature through ([`0003`]
 
 - **The wall clock**, behind the `Clock` port, which also carries the phone's UTC offset. Which **day** a meal at 23:30 belongs to is a clock and time-zone judgement, so a test must be able to put the phone outside UTC. `Date.now()` is refused by lint.
 - **Persistent storage**: `expo-sqlite`, behind a port. A store that keeps tables takes a narrow `SqlDatabase`, backed in its own test by `better-sqlite3`.
-- **The system's own question** (an action sheet, a dialog), behind an `Ask` port that says what is asked and answers yes or no. The platform draws it and answers it outside React, so no screen test can press *Delete* or *Cancel* on it. Its adapter is driven on the emulator, and on the iPhone with the epic.
+- **The system's own question** (an action sheet, a dialog), behind an `Ask` port that says what is asked and answers yes or no. The platform draws it and answers it outside React, so no screen test can press *Delete* or *Cancel* on it. Its adapter, `SystemAsk`, is tested over React Native's `Alert`, `ActionSheetIOS` and `Platform.OS`, which stand for the platform there, so that iOS's half is not untested until the epic (the user's word, 26 November 2026, on #27); it is driven on the emulator too.
 
 Expected, and added here by the slice that first needs each: the nutrition providers over the network, the camera that reads a barcode, and local notifications.
 

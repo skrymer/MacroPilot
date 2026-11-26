@@ -37,12 +37,12 @@ The figure in the centre is `ink` while the day is within its budget, `slightly-
 | --- | --- |
 | **Weighed** | Solid: B612 Bold, `ink` |
 | **Estimated** | Lighter: B612 Regular, `ink-mid`, and says *about* or *estimate* |
-| **Unknown** | Words, in italic `ink-dim`: *not stated*, *not logged*. Never a zero, never a dash |
+| **Unknown** | Words, in italic `ink-dim`: *not stated*, *not logged*. Never a zero, never a dash. Inside a row's detail, which is one run of text, the words are plain, as the rest of it: *Estimate, protein not stated* |
 | **Zero, and known** | A figure like any other |
 
 **A total takes the surest kind in it.** One weighed entry makes the day's calories solid; a day of estimates alone is set as one, and says *about*. A protein total that some entry does not state says *at least*, and one that no entry states is *not stated*. **An empty day is 0 kcal and 0 g**, which are known, with *Nothing logged yet* and a way to log.
 
-**Grams** have their thousands apart by a comma, `1,500 g`, and calories do not, `4410 kcal`, whatever the phone's language.
+**Grams** have their thousands apart by a comma, `1,500 g`, and calories do not, `4410 kcal`, but in the day's tally, `3 entries · 1,425 kcal`, as the reference app has it; whatever the phone's language.
 
 **An entry's row** has its calories at the right and its grams and protein under its name.
 

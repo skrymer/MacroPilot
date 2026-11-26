@@ -332,7 +332,7 @@ describe('Log', () => {
     await user.press(screen.getByRole('button', { name: 'Log entry' }));
 
     // Then its grams are said with a comma, and its calories without
-    expect(await screen.findByText('1,500 g, 4410 kcal, 195 g protein')).toBeOnTheScreen();
+    expect(await screen.findByText('1,500\u00a0g, 4410\u00a0kcal, 195\u00a0g protein')).toBeOnTheScreen();
   });
 
   it('says a food to be weighed could not be read, and reads it when asked', async () => {

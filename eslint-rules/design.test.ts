@@ -110,3 +110,33 @@ describe('design/no-dash-placeholder', () => {
     expect(reported).not.toContain('design/no-dash-placeholder');
   });
 });
+
+describe('no-irregular-whitespace', () => {
+  const NBSP = String.fromCharCode(0xa0);
+
+  it.each([
+    ['a string', `const s = '80${NBSP}g';`],
+    ['a template', `const s = \`\${n}${NBSP}g\`;`],
+    ['JSX text', `const c = <Text>80${NBSP}g</Text>;`],
+  ])('reports a raw no-break space in %s, which a rewrite of the line can lose unseen', (_, code) => {
+    // Given a no-break space typed as the character itself
+    const source = code;
+
+    // When it is linted, in the app or in a test
+    const reported = [...lint(source, SCREEN), ...lint(source, 'app/day.test.tsx')];
+
+    // Then the rule reports it in both
+    expect(reported.filter((id) => id === 'no-irregular-whitespace')).toHaveLength(2);
+  });
+
+  it('accepts a no-break space written as its escape', () => {
+    // Given a no-break space written so that it can be seen
+    const source = "const s = '80\\u00a0g';";
+
+    // When it is linted
+    const reported = lint(source, SCREEN);
+
+    // Then nothing is reported
+    expect(reported).not.toContain('no-irregular-whitespace');
+  });
+});

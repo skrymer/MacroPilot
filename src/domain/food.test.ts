@@ -50,7 +50,7 @@ describe('newFood', () => {
   it.each([
     ['empty', ''],
     ['of spaces', '   '],
-    ['of other white space', '\t\n '],
+    ['of other white space', '\t\n\u00a0'],
   ])('refuses a name that is %s', (_, name) => {
     // Given macros a food could have, and a name that says nothing
     const macros = { protein: 10, carbohydrate: 20, fat: 5 };
