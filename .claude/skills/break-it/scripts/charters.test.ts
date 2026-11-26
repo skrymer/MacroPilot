@@ -325,11 +325,18 @@ describe('charters.mjs', () => {
 
 describe('charters.mjs gates', () => {
   const ALL = ['simplify', 'mutation-test', 'code-review', 'check-adrs', 'verify'];
-  /** A repo whose five gates were each recorded on the code as it stands. */
+  /** A repo whose five gates were each recorded on the code as it stands, on a report of each run. */
   const gated = () => {
     const made = repo();
-    for (const gate of ALL) run(made.root, 'gate', '8', gate);
+    for (const gate of ALL) run(made.root, 'gate', '8', gate, '--evidence', made.snapshot);
     return made;
+  };
+
+  /** Evidence written a minute before now, so an edit made now is newer than it. */
+  const aged = (file: string) => {
+    const old = new Date(Date.now() - 60_000);
+    utimesSync(file, old, old);
+    return file;
   };
 
   it('fails, naming each gate, when none was recorded', () => {
@@ -360,7 +367,14 @@ describe('charters.mjs gates', () => {
     // Given five gates recorded, then a fix made after them
     const { root } = gated();
     writeFileSync(path.join(root, 'a.ts'), 'export const a = 2;\n');
-    run(root, 'gate', '8', 'verify');
+    utimesSync(
+      path.join(root, 'a.ts'),
+      new Date(Date.now() - 60_000),
+      new Date(Date.now() - 60_000),
+    );
+    const report = path.join(mkdtempSync(path.join(tmpdir(), 'report-')), 'verify.txt');
+    writeFileSync(report, 'PASS');
+    run(root, 'gate', '8', 'verify', '--evidence', report);
 
     // When its gates are checked
     const { status, output } = run(root, 'gates', '8');
@@ -411,5 +425,44 @@ describe('charters.mjs gates', () => {
 
     // Then it is taken
     expect(status).toBe(0);
+  });
+
+  it('refuses a gate recorded with nothing its run left', () => {
+    // Given a repo
+    const { root } = repo();
+
+    // When code-review is recorded with no evidence
+    const { status, output } = run(root, 'gate', '8', 'code-review');
+
+    // Then it is refused, and nothing is recorded
+    expect(status).toBe(1);
+    expect(output).toContain('--evidence');
+    expect(run(root, 'gates', '8').output).toContain('code-review missing');
+  });
+
+  it('refuses a gate stamped again on a report older than the last edit', () => {
+    // Given simplify's report, then the code changed
+    const { root, snapshot } = repo();
+    aged(snapshot);
+    writeFileSync(path.join(root, 'a.ts'), 'export const a = 2;\n');
+
+    // When simplify is recorded on that report
+    const { status, output } = run(root, 'gate', '8', 'simplify', '--evidence', snapshot);
+
+    // Then it is refused, naming the report, so the gate runs again
+    expect(status).toBe(1);
+    expect(output).toContain('snapshot.txt');
+  });
+
+  it('refuses a gate on an empty report', () => {
+    // Given a report with nothing in it
+    const { root, empty } = repo();
+
+    // When check-adrs is recorded on it
+    const { status, output } = run(root, 'gate', '8', 'check-adrs', '--evidence', empty);
+
+    // Then it is refused
+    expect(status).toBe(1);
+    expect(output).toContain('empty');
   });
 });
