@@ -26,11 +26,6 @@ import { CANDIDATES, variablesOf } from '../../prototype-palettes';
 
 cssInterop(Circle, { className: { target: false, nativeStyleToProp: { stroke: true } } });
 
-// A token reaches a symbol's tint through its class.
-const Icon = cssInterop(SymbolView, {
-  className: { target: 'style', nativeStyleToProp: { color: 'tintColor' } },
-});
-
 const nbsp = String.fromCharCode(0xa0);
 
 type Chip<T extends string> = { label: string; value: T };
@@ -198,10 +193,7 @@ function Today({ standing, system }: { standing: Standing; system: boolean }) {
     : ENTRIES;
   const total = 1320 + (day.dinner ?? 0);
   return (
-    <ScrollView
-      contentInsetAdjustmentBehavior="automatic"
-      contentContainerClassName="gap-3 px-4 pb-8"
-    >
+    <>
       {system ? null : (
         <Text accessibilityRole="header" className="font-language-bold text-title text-ink">
           Today
@@ -248,7 +240,7 @@ function Today({ standing, system }: { standing: Standing; system: boolean }) {
         ))}
       </View>
       <Text className="font-absence text-label text-ink-dim">fibre not stated</Text>
-    </ScrollView>
+    </>
   );
 }
 
@@ -264,10 +256,7 @@ const FOODS = [
 
 function Log({ system }: { system: boolean }) {
   return (
-    <ScrollView
-      contentInsetAdjustmentBehavior="automatic"
-      contentContainerClassName="gap-3 px-4 pb-8"
-    >
+    <>
       {system ? null : (
         <Text accessibilityRole="header" className="font-language-bold text-title text-ink">
           Log
@@ -297,7 +286,7 @@ function Log({ system }: { system: boolean }) {
           </View>
         ))}
       </View>
-    </ScrollView>
+    </>
   );
 }
 
@@ -329,7 +318,7 @@ function Field({
 }
 
 /** The way out in the system's header: the word on iOS, Material's close X on Android. */
-function HeaderCancel() {
+function HeaderCancel({ ink }: { ink: string }) {
   return (
     <Pressable
       accessibilityRole="button"
@@ -339,7 +328,8 @@ function HeaderCancel() {
       {Platform.OS === 'ios' ? (
         <Text className="font-language text-body text-ink">Cancel</Text>
       ) : (
-        <Icon name={{ android: 'close' }} size={24} className="text-ink" />
+        // The header is drawn outside the page and its tokens: the variant's ink, as a value.
+        <SymbolView name={{ android: 'close' }} size={24} tintColor={ink} />
       )}
     </Pressable>
   );
@@ -409,69 +399,105 @@ export default function ColoursPrototype() {
   };
   // The native header takes colours as values, not classes: the variant's own, at run time.
   const face = { fontFamily: 'B612_700Bold', color: palette.ink };
-  return (
-    <View style={vars(variablesOf(palette))} className="flex-1 bg-ground">
-      <Stack.Screen
-        options={{
-          headerShown: system,
-          title: HEADINGS[screen],
-          headerLargeTitle: screen !== 'form',
-          headerLargeTitleShadowVisible: false,
-          headerShadowVisible: false,
-          headerBackVisible: false,
-          // iOS draws its own bar: clear over the large title, glass once the page scrolls under it,
-          // as Health's. A colour of ours would make it opaque. Android's bar takes the ground.
-          ...(Platform.OS === 'ios'
-            ? { headerTransparent: true }
-            : { headerStyle: { backgroundColor: palette.ground } }),
-          headerTitleStyle: face,
-          headerLargeTitleStyle: face,
-          headerTintColor: palette.ink,
-          headerLeft: screen === 'form' ? () => <HeaderCancel /> : () => null,
-        }}
+  const theme = vars(variablesOf(palette));
+  const bar = barShown ? (
+    <View className="mx-2 mt-2 gap-1 rounded-2xl border border-line bg-surface p-2">
+      <View className="flex-row flex-wrap items-center justify-between gap-1">
+        <Chips
+          chips={CANDIDATES.map((c) => ({ label: c.key, value: c.key }))}
+          chosen={key}
+          onChoose={setKey}
+        />
+        <Chips
+          chips={[{ label: 'Hide', value: 'hide' }]}
+          chosen=""
+          onChoose={() => setBarShown(false)}
+        />
+      </View>
+      <Text className="font-language-bold text-label text-ink">{`${candidate.key}: ${candidate.name}`}</Text>
+      <Chips chips={TITLES} chosen={title} onChoose={setTitle} />
+      <Chips chips={SCREENS} chosen={screen} onChoose={setScreen} />
+      {screen === 'today' ? (
+        <Chips chips={STANDINGS} chosen={standing} onChoose={setStanding} />
+      ) : null}
+      <Chips
+        chips={APPEARANCES}
+        chosen={appearance}
+        onChoose={(value) => Appearance.setColorScheme(value)}
       />
-      <SafeAreaView className="flex-1" edges={system ? ['bottom'] : ['top', 'bottom']}>
-        <View className="flex-1">{shown[screen]}</View>
-        {barShown ? (
-          <View className="mx-2 mt-2 gap-1 rounded-2xl border border-line bg-surface p-2">
-            <View className="flex-row flex-wrap items-center justify-between gap-1">
-              <Chips
-                chips={CANDIDATES.map((c) => ({ label: c.key, value: c.key }))}
-                chosen={key}
-                onChoose={setKey}
-              />
-              <Chips
-                chips={[{ label: 'Hide', value: 'hide' }]}
-                chosen=""
-                onChoose={() => setBarShown(false)}
-              />
-            </View>
-            <Text className="font-language-bold text-label text-ink">{`${candidate.key}: ${candidate.name}`}</Text>
-            <Chips chips={TITLES} chosen={title} onChoose={setTitle} />
-            <Chips chips={SCREENS} chosen={screen} onChoose={setScreen} />
-            {screen === 'today' ? (
-              <Chips chips={STANDINGS} chosen={standing} onChoose={setStanding} />
-            ) : null}
-            <Chips
-              chips={APPEARANCES}
-              chosen={appearance}
-              onChoose={(value) => Appearance.setColorScheme(value)}
-            />
-            <View className="flex-row overflow-hidden rounded-full border border-line">
-              {SWATCHES.map((swatch) => (
-                <View key={swatch} className={`h-3 flex-1 ${swatch}`} />
-              ))}
-            </View>
-          </View>
-        ) : (
-          <View className="mx-2 mt-2 items-end">
-            <Chips
-              chips={[{ label: 'Show bar', value: 'show' }]}
-              chosen=""
-              onChoose={() => setBarShown(true)}
-            />
-          </View>
-        )}
+      <View className="flex-row overflow-hidden rounded-full border border-line">
+        {SWATCHES.map((swatch) => (
+          <View key={swatch} className={`h-3 flex-1 ${swatch}`} />
+        ))}
+      </View>
+    </View>
+  ) : (
+    <View className="mx-2 mt-2 items-end">
+      <Chips
+        chips={[{ label: 'Show bar', value: 'show' }]}
+        chosen=""
+        onChoose={() => setBarShown(true)}
+      />
+    </View>
+  );
+  const header = (
+    <Stack.Screen
+      options={{
+        headerShown: system,
+        title: HEADINGS[screen],
+        headerLargeTitle: screen !== 'form',
+        headerLargeTitleShadowVisible: false,
+        headerShadowVisible: false,
+        headerBackVisible: false,
+        // iOS draws its own bar: clear over the large title, glass once the page scrolls under it,
+        // as Health's. A colour of ours would make it opaque. Android's bar takes the ground.
+        ...(Platform.OS === 'ios'
+          ? { headerTransparent: true }
+          : { headerStyle: { backgroundColor: palette.ground } }),
+        headerTitleStyle: face,
+        headerLargeTitleStyle: face,
+        headerTintColor: palette.ink,
+        headerLeft: screen === 'form' ? () => <HeaderCancel ink={palette.ink} /> : () => null,
+      }}
+    />
+  );
+  if (screen === 'form') {
+    return (
+      <View style={theme} className="flex-1 bg-ground">
+        {header}
+        <SafeAreaView className="flex-1" edges={system ? ['bottom'] : ['top', 'bottom']}>
+          {shown.form}
+          {bar}
+        </SafeAreaView>
+      </View>
+    );
+  }
+  if (system) {
+    // iOS ties its large title to the scroll view only when that is the screen's first view, so it
+    // is the root here, the bar at the foot of what scrolls.
+    return (
+      <>
+        {header}
+        <ScrollView
+          style={theme}
+          className="flex-1 bg-ground"
+          contentInsetAdjustmentBehavior="automatic"
+          contentContainerClassName="gap-3 px-4 pb-8"
+        >
+          {shown[screen]}
+          {bar}
+        </ScrollView>
+      </>
+    );
+  }
+  return (
+    <View style={theme} className="flex-1 bg-ground">
+      {header}
+      <SafeAreaView className="flex-1" edges={['top', 'bottom']}>
+        <ScrollView className="flex-1" contentContainerClassName="gap-3 px-4 pb-8">
+          {shown[screen]}
+        </ScrollView>
+        {bar}
       </SafeAreaView>
     </View>
   );
