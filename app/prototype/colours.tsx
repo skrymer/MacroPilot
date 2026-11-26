@@ -273,6 +273,20 @@ const SwipedDelete = ({ name }: { name: string }) => (
   </Pressable>
 );
 
+/** How many entries Today shows before the rest are asked for, as epic 1's. */
+const LAST = 3;
+
+type More = 'button' | 'row';
+
+/**
+ * Q16, the rest of a long day: epic 1's outlined button under the card; or the card's own last row,
+ * *Show all 5* with a chevron, as Health's *Show All Data*. The switch sits under the list here.
+ */
+const MORES: Chip<More>[] = [
+  { label: 'Button under', value: 'button' },
+  { label: 'Row in the card', value: 'row' },
+];
+
 type Failure = 'none' | 'unreadable' | 'refused';
 type FailureLook = 'ink' | 'red';
 
@@ -405,6 +419,11 @@ function TodayList({
   refused?: FailureLook;
   palette: Palette;
 }) {
+  const [all, setAll] = useState(false);
+  const [more, setMore] = useState<More>('row');
+  const shown = all ? entries : entries.slice(-LAST);
+  const label = all ? 'Show less' : `Show all ${entries.length}`;
+  const hidden = entries.length > LAST;
   return (
     <>
       <View className="flex-row flex-wrap items-baseline justify-between gap-x-4 pt-3">
@@ -418,7 +437,7 @@ function TodayList({
       {/* NativeWind does not style the gesture root, so the card is a View around it. */}
       <View className={`${LIST} overflow-hidden`}>
         <GestureHandlerRootView>
-          {entries.map((entry, index) => (
+          {shown.map((entry, index) => (
             <View key={entry.name}>
               {index > 0 ? <Hairline /> : null}
               {refused && index === 1 ? (
@@ -460,7 +479,35 @@ function TodayList({
             </View>
           ))}
         </GestureHandlerRootView>
+        {hidden && more === 'row' ? (
+          <>
+            <Hairline />
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => setAll(!all)}
+              className="min-h-target min-w-target flex-row items-center justify-between py-3 active:opacity-60"
+            >
+              <Text className="font-language-bold text-body text-ink">{label}</Text>
+              <SymbolView
+                name={{
+                  ios: all ? 'chevron.up' : 'chevron.down',
+                  android: all ? 'expand_less' : 'expand_more',
+                }}
+                size={18}
+                tintColor={palette['ink-mid']}
+              />
+            </Pressable>
+          </>
+        ) : null}
       </View>
+      {hidden && more === 'button' ? (
+        <TrialButton
+          label={label}
+          onPress={() => setAll(!all)}
+          look={{ secondary: 'outlined', press: 'platform', palette }}
+        />
+      ) : null}
+      <Chips chips={MORES} chosen={more} onChoose={setMore} />
       <Text className="font-absence text-label text-ink-dim">fibre not stated</Text>
     </>
   );
@@ -484,10 +531,12 @@ type ButtonLook = { secondary: Secondary; press: Press; palette: Palette };
 function TrialButton({
   label,
   primary = false,
+  onPress,
   look: { secondary, press, palette },
 }: {
   label: string;
   primary?: boolean;
+  onPress?: () => void;
   look: ButtonLook;
 }) {
   const ground = primary
@@ -499,6 +548,7 @@ function TrialButton({
   return (
     <Pressable
       accessibilityRole="button"
+      onPress={onPress}
       android_ripple={
         press === 'platform'
           ? { color: primary ? palette.ground : palette['ink-mid'], foreground: true }
