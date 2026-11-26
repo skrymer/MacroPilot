@@ -207,12 +207,6 @@ type Empty = 'card' | 'quiet' | 'in-list';
  * empty state, centred, with a sign and an outlined button, as Health's *No Data* and Material's empty
  * state; or one line in the list's own card, with its way on at the right.
  */
-export const EMPTIES: Chip<Empty>[] = [
-  { label: 'Card', value: 'card' },
-  { label: 'Quiet', value: 'quiet' },
-  { label: 'In the list', value: 'in-list' },
-];
-
 function EmptyList({
   empty,
   title,
@@ -230,11 +224,12 @@ function EmptyList({
 }) {
   const look: ButtonLook = { secondary: 'outlined', press: 'platform', palette };
   if (empty === 'in-list') {
+    // The summary above already says the day is empty, so the line gives only the way on.
     return (
       <View
         className={`${LIST} min-h-target flex-row flex-wrap items-center justify-between gap-x-4 py-2`}
       >
-        <Text className="font-language text-body text-ink-mid">{title}</Text>
+        <Text className="font-language text-body text-ink-mid">{detail}</Text>
         <Pressable
           accessibilityRole="button"
           className="min-h-target min-w-target items-center justify-center active:opacity-60"
@@ -278,15 +273,62 @@ const SwipedDelete = ({ name }: { name: string }) => (
   </Pressable>
 );
 
+type Failure = 'none' | 'unreadable' | 'refused';
+type FailureLook = 'ink' | 'red';
+
+const FAILURES: Chip<Failure>[] = [
+  { label: 'No failure', value: 'none' },
+  { label: 'Cannot read', value: 'unreadable' },
+  { label: 'Delete failed', value: 'refused' },
+];
+
+/** Q14: a failure outside a field in bold ink, as epic 1's; or in a field fault's red, with its sign. */
+const FAILURE_LOOKS: Chip<FailureLook>[] = [
+  { label: 'Ink', value: 'ink' },
+  { label: 'Red', value: 'red' },
+];
+
+/** What went wrong, said where it happened, with the warning sign when it takes the red. */
+function FailureWords({
+  words,
+  look,
+  palette,
+}: {
+  words: string;
+  look: FailureLook;
+  palette: Palette;
+}) {
+  return (
+    <View accessibilityRole="alert" className="flex-row items-center gap-2">
+      {look === 'red' ? (
+        <SymbolView
+          name={{ ios: 'exclamationmark.triangle.fill', android: 'warning' }}
+          size={18}
+          tintColor={palette.over}
+        />
+      ) : null}
+      <Text
+        className={`flex-1 font-language-bold text-body ${look === 'red' ? 'text-over' : 'text-ink'}`}
+      >
+        {words}
+      </Text>
+    </View>
+  );
+}
+
 function Today({
   standing,
   deletion,
   empty,
+  failure,
+  failureLook,
   palette,
 }: {
   standing: Standing;
   deletion: Deletion;
   empty: Empty;
+  failure: Failure;
+  failureLook: FailureLook;
   palette: Palette;
 }) {
   const day = DAYS[standing];
@@ -294,6 +336,14 @@ function Today({
     ? [...ENTRIES, { ...DINNER, figure: `about ${day.dinner}${nbsp}kcal` }]
     : ENTRIES;
   const total = 1320 + (day.dinner ?? 0);
+  if (failure === 'unreadable') {
+    return (
+      <View className="gap-4 rounded-2xl bg-surface p-4">
+        <FailureWords words="Couldn’t load today’s summary" look={failureLook} palette={palette} />
+        <TrialButton label="Retry" look={{ secondary: 'outlined', press: 'platform', palette }} />
+      </View>
+    );
+  }
   return (
     <>
       <View className="rounded-2xl bg-surface p-4">
@@ -335,7 +385,13 @@ function Today({
           palette={palette}
         />
       ) : (
-        <TodayList entries={entries} total={total} deletion={deletion} palette={palette} />
+        <TodayList
+          entries={entries}
+          total={total}
+          deletion={deletion}
+          refused={failure === 'refused' ? failureLook : undefined}
+          palette={palette}
+        />
       )}
     </>
   );
@@ -345,11 +401,14 @@ function TodayList({
   entries,
   total,
   deletion,
+  refused,
   palette,
 }: {
   entries: (typeof ENTRIES)[number][];
   total: number;
   deletion: Deletion;
+  /** The second row's delete failed, said over the row, in this look. */
+  refused?: FailureLook;
   palette: Palette;
 }) {
   return (
@@ -368,6 +427,15 @@ function TodayList({
           {entries.map((entry, index) => (
             <View key={entry.name}>
               {index > 0 ? <Hairline /> : null}
+              {refused && index === 1 ? (
+                <View className="pt-3">
+                  <FailureWords
+                    words="Could not delete entry. Try again."
+                    look={refused}
+                    palette={palette}
+                  />
+                </View>
+              ) : null}
               <ReanimatedSwipeable
                 enabled={deletion === 'swipe'}
                 friction={2}
@@ -669,7 +737,10 @@ export default function ColoursPrototype() {
   const [barShown, setBarShown] = useState(true);
   // Decided 26 November 2026: the quiet bin, and a swipe to delete beside it.
   const deletion: Deletion = 'swipe';
-  const [empty, setEmpty] = useState<Empty>('quiet');
+  // Decided 26 November 2026: under a summary, an empty list is one line in its own card.
+  const empty: Empty = 'in-list';
+  const [failure, setFailure] = useState<Failure>('none');
+  const [failureLook, setFailureLook] = useState<FailureLook>('red');
   // Decided 26 November 2026: a secondary button outlined, and the platform's press on every button.
   const secondary: Secondary = 'outlined';
   const press: Press = 'platform';
@@ -692,9 +763,10 @@ export default function ColoursPrototype() {
       {screen === 'today' ? (
         <>
           <Chips chips={STANDINGS} chosen={standing} onChoose={setStanding} />
-          {standing === 'empty' ? (
-            <Chips chips={EMPTIES} chosen={empty} onChoose={setEmpty} />
-          ) : null}
+          <Chips chips={FAILURES} chosen={failure} onChoose={setFailure} />
+          {failure === 'none' ? null : (
+            <Chips chips={FAILURE_LOOKS} chosen={failureLook} onChoose={setFailureLook} />
+          )}
         </>
       ) : null}
       <Chips
@@ -739,7 +811,14 @@ export default function ColoursPrototype() {
         contentContainerClassName="gap-3 px-4 pb-8"
       >
         {screen === 'today' ? (
-          <Today standing={standing} deletion={deletion} empty={empty} palette={palette} />
+          <Today
+            standing={standing}
+            deletion={deletion}
+            empty={empty}
+            failure={failure}
+            failureLook={failureLook}
+            palette={palette}
+          />
         ) : (
           <Log look={{ secondary, press, palette }} />
         )}
