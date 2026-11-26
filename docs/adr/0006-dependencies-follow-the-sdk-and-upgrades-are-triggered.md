@@ -15,7 +15,7 @@ A native package ahead of its SDK does not produce a version conflict. It produc
 
 **Packages that move together are grouped.** Tailwind bumped without NativeWind installs, typechecks and lints cleanly, then stops compiling class names. Renovate can express the group, which is why it was chosen over Dependabot.
 
-**Patch releases of Expo's own packages within the current SDK are the one thing Renovate opens unprompted**, as one grouped pull request, never automerged: `expo install --check` expects them the day they ship, and CI would otherwise go red on a branch nobody touched.
+**Releases of Expo's own packages within the current SDK are the one thing Renovate opens unprompted**, patches and point releases alike, as one grouped pull request, never automerged: `expo install --check` expects them the day they ship, and CI would otherwise go red on a branch nobody touched. A point release is a minor in semver, `expo` 58.0 to 58.1, and is still the same SDK: its major is the SDK. Only patches were proposed at first, and on 27 November 2026 SDK 58.1 turned every branch red with nothing proposed (#99). A new major is a new SDK, and stays a decision.
 
 ### The gate ladder
 

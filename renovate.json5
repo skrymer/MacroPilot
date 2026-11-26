@@ -45,20 +45,23 @@
       enabled: false,
     },
     {
-      // Expo's own packages move with the SDK, so nothing but a patch is ever
-      // proposed: a new SDK is a decision, argued in an ADR (0006).
+      // Expo's own packages move with the SDK, so nothing but a release within
+      // it is ever proposed: a new major is a new SDK, a decision argued in an
+      // ADR (0006).
       matchPackageNames: ['expo', 'expo-*', 'jest-expo', 'babel-preset-expo', 'eslint-config-expo'],
-      matchUpdateTypes: ['major', 'minor', 'pin', 'digest', 'pinDigest'],
+      matchUpdateTypes: ['major', 'pin', 'digest', 'pinDigest'],
       enabled: false,
     },
     {
-      // The exception: patch releases of the packages Expo itself publishes,
-      // within the SDK already in use. `npx expo install --check` starts
-      // expecting them the day they ship, so without this CI goes red on a
-      // branch nobody touched. One grouped PR, never automerged. The check
-      // reads the range in package.json, not the lockfile, so the range itself
-      // has to move.
-      groupName: 'expo sdk patches (within the current SDK — see 0006)',
+      // The exception: releases of the packages Expo itself publishes within
+      // the SDK already in use, patches and point releases alike. A point
+      // release is a semver minor (`expo` 58.0 to 58.1) and still the same SDK.
+      // `npx expo install --check` starts expecting them the day they ship, so
+      // without this CI goes red on a branch nobody touched, as it did with
+      // 58.1 when only patches were let through. One grouped PR, never
+      // automerged. The check reads the range in package.json, not the
+      // lockfile, so the range itself has to move.
+      groupName: 'expo sdk releases (within the current SDK — see 0006)',
       matchPackageNames: ['expo', 'expo-*', 'jest-expo', 'babel-preset-expo', 'eslint-config-expo'],
       rangeStrategy: 'bump',
     },
