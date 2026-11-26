@@ -282,13 +282,14 @@ function Log() {
 
 /* A form ------------------------------------------------------------------------------------ */
 
-type FaultStyle = 'words' | 'marked' | 'below' | 'colour';
+type FaultStyle = 'words' | 'marked' | 'below' | 'colour' | 'colour-one';
 
 const FAULT_STYLES: Chip<FaultStyle>[] = [
   { label: 'Words above', value: 'words' },
   { label: 'Marked, above', value: 'marked' },
   { label: 'Marked, below', value: 'below' },
   { label: 'Red and green', value: 'colour' },
+  { label: 'Red and green, one card', value: 'colour-one' },
 ];
 
 type Palette = (typeof CANDIDATES)[number]['light'];
@@ -315,7 +316,7 @@ function Field({
   faultStyle: FaultStyle;
   palette: Palette;
 }) {
-  if (faultStyle === 'colour') {
+  if (faultStyle === 'colour' || faultStyle === 'colour-one') {
     const sign = fault
       ? { name: { ios: 'exclamationmark.triangle.fill', android: 'warning' }, tint: palette.over }
       : valid
@@ -327,7 +328,7 @@ function Field({
         ? 'border-2 border-within bg-within/10'
         : 'border border-line';
     return (
-      <View className="gap-1 rounded-2xl bg-surface p-3">
+      <View className={faultStyle === 'colour' ? 'gap-1 rounded-2xl bg-surface p-3' : 'gap-1'}>
         <Text className="font-language text-label text-ink-mid">{label}</Text>
         {fault ? <Text className="font-language text-label text-over">{fault}</Text> : null}
         <View className="justify-center">
@@ -405,9 +406,18 @@ function Form({ faultStyle, palette }: { faultStyle: FaultStyle; palette: Palett
         keyboardShouldPersistTaps="handled"
         contentContainerClassName="gap-4 px-4 pb-4"
       >
-        <Field label="Label" value="Lunch at the canteen" valid {...style} />
-        <Field label="Calories" value="six hundred" fault="Enter calories as a number" {...style} />
-        <Field label="Protein (optional)" placeholder="e.g. 30" {...style} />
+        <View
+          className={faultStyle === 'colour-one' ? 'gap-4 rounded-2xl bg-surface p-3' : 'gap-4'}
+        >
+          <Field label="Label" value="Lunch at the canteen" valid {...style} />
+          <Field
+            label="Calories"
+            value="six hundred"
+            fault="Enter calories as a number"
+            {...style}
+          />
+          <Field label="Protein (optional)" placeholder="e.g. 30" {...style} />
+        </View>
       </ScrollView>
       <View className="gap-2 px-4 py-2">
         <Text className="font-language-bold text-body text-ink">
