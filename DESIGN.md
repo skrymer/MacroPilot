@@ -22,7 +22,7 @@ The reading condition: a kitchen, one hand, a few seconds, about ten times a day
 | **Standing: `within`, `slightly-over`, `over`** | The rings' arcs, a day's verdict, what is drawn against a target | A button, a link, a heading, a food, a macro |
 | **Outcome: `valid`, `fault`** | A field's state, a failure's words and sign, the tick of something done | A button, a heading, a food, a day |
 
-**Grounds** are neutral with a cool pine tint: `ground`, `surface` (a card), `surface-lift` (a thing on a card, such as a field), `line`. **Inks** are `ink`, `ink-mid`, and `ink-dim` for a stated absence. The tint is the palette's character: it was chosen over epic 1's warm greys, over a neutral grey after the iOS Health app, and over a teal tuned to the pine.
+**Grounds** are neutral with a cool pine tint: `ground`, `surface` (a card), `surface-lift` (a thing on a card, such as a field), `line` (a hairline between rows), and `edge`, a control's edge at rest, held 3:1 to the card and to the field so that an empty field is seen in bright light. `line` was refused for it at 1.24:1, and `ink-dim` itself (over 5:1) as too heavy on every field. **Inks** are `ink`, `ink-mid`, and `ink-dim` for a stated absence. The tint is the palette's character: it was chosen over epic 1's warm greys, over a neutral grey after the iOS Health app, and over a teal tuned to the pine.
 
 **The standing hues are a ladder**: `within` (emerald), `slightly-over` (amber), `over` (red). In dark the red is clearly darker than the other two, so *over* is seen without its hue. Emerald was chosen over teal though green beside red is the pair most often confused: red stays the darkest in dark, and **every verdict is also words**.
 
@@ -101,7 +101,7 @@ A target is at least 44pt on iOS and 48dp on Android, each platform's own floor,
 
 **A form's button stays at its foot**, full width, outside what scrolls, not in the header as iOS's *Add* and Material's *Save* are: within the thumb's reach, never under the keyboard, the form's fault just above it, and named for what it does (*Log estimated entry*), which a bar's single word cannot be.
 
-**A form's fields stand in one card.** Each has its label above it in `ink-mid`, and the field on `surface-lift`. **A field at fault** is outlined in `fault`, filled with a tint of it, and carries a warning sign at its end; its words are in `fault` **above the field**, under the label. **A valid field** is outlined in `valid` with a tint of it and a tick. Words above, though Material and iOS put them below: a form keeps the field at fault in view when it scrolls to it, and words under it can lie behind the keyboard.
+**A form's fields stand in one card.** Each has its label above it in `ink-mid`, and the field on `surface-lift` with an `edge` outline. **A field at fault** is outlined in `fault`, filled with a tint of it, and carries a warning sign at its end; its words are in `fault` **above the field**, under the label. **A valid field** is outlined in `valid` with a tint of it and a tick. Words above, though Material and iOS put them below: a form keeps the field at fault in view when it scrolls to it, and words under it can lie behind the keyboard.
 
 **A field is judged once it is left, then again as it is typed**, so a red one turns green the moment it is fixed: React Hook Form's `mode: 'onTouched'` ([`0009`](./docs/adr/0009-forms-are-react-hook-form-with-zod-and-the-domain-still-judges.md)). Its default, `onSubmit`, would show a tick only beside a red after a refused save. The button still judges the whole form.
 

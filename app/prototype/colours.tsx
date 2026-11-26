@@ -638,6 +638,25 @@ export type Palette = (typeof CANDIDATES)[number]['light'];
  * user's mockup of 26 November, against the thesis: each field in a card, a valid one in `within`'s
  * green with a tick, one at fault in `over`'s red with a warning and its words above it.
  */
+export type Edge = 'line' | 'soft' | 'strong';
+
+/**
+ * Q20, a field's edge at rest: the hairline `line` (1.24:1 on the card, short of the 3:1 a control's
+ * edge needs); `ink-dim` at 80% (3.5:1 in light, 4.2:1 in dark); or `ink-dim` itself (5.4:1, 5.8:1).
+ * Chosen, it becomes a token of its own.
+ */
+export const EDGES: Record<Edge, string> = {
+  line: 'border border-line',
+  soft: 'border border-ink-dim/80',
+  strong: 'border border-ink-dim',
+};
+
+export const EDGE_CHIPS: Chip<Edge>[] = [
+  { label: 'Hairline (now)', value: 'line' },
+  { label: '3:1 edge', value: 'soft' },
+  { label: 'Strong edge', value: 'strong' },
+];
+
 function Field({
   label,
   value,
@@ -646,6 +665,7 @@ function Field({
   placeholder,
   faultStyle,
   palette,
+  edge = 'line',
 }: {
   label: string;
   value?: string;
@@ -654,6 +674,7 @@ function Field({
   placeholder?: string;
   faultStyle: FaultStyle;
   palette: Palette;
+  edge?: Edge;
 }) {
   if (faultStyle === 'colour' || faultStyle === 'colour-one') {
     const sign = fault
@@ -665,7 +686,7 @@ function Field({
       ? 'border-2 border-over bg-over/10'
       : valid
         ? 'border-2 border-within bg-within/10'
-        : 'border border-line';
+        : EDGES[edge];
     return (
       <View className={faultStyle === 'colour' ? 'gap-1 rounded-2xl bg-surface p-3' : 'gap-1'}>
         <Text className="font-language text-label text-ink-mid">{label}</Text>
@@ -737,8 +758,16 @@ export function HeaderCancel({ ink, onPress }: { ink: string; onPress: () => voi
   );
 }
 
-export function Form({ faultStyle, palette }: { faultStyle: FaultStyle; palette: Palette }) {
-  const style = { faultStyle, palette };
+export function Form({
+  faultStyle,
+  palette,
+  edge,
+}: {
+  faultStyle: FaultStyle;
+  palette: Palette;
+  edge?: Edge;
+}) {
+  const style = { faultStyle, palette, edge };
   return (
     <KeyboardAvoidingView behavior="padding" className="flex-1">
       <ScrollView

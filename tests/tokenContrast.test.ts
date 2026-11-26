@@ -44,7 +44,13 @@ const PAIRS: { text: string; on: string; size: 'body' | 'large' }[] = [
   { text: 'ink-mid', on: 'surface-lift', size: 'body' },
   // A tick and a valid field's outline are not text: WCAG's 3:1 for a graphic, the `large` floor.
   { text: 'valid', on: 'surface', size: 'large' },
+  // A field's edge at rest, between the card and the field: a control's edge, 3:1 to both.
+  { text: 'edge', on: 'surface', size: 'large' },
+  { text: 'edge', on: 'surface-lift', size: 'large' },
 ];
+
+/** Tokens drawn only as a graphic (a tint, an outline), which no `text-` class names. */
+const GRAPHICS = ['valid', 'edge'];
 
 const FLOOR = { body: 4.5, large: 3 };
 
@@ -114,9 +120,9 @@ describe('token contrast', () => {
         .filter((token) => token in tokens.light),
     );
 
-    // Then each one has its contrast checked above (`valid` tints a symbol, and is no text class)
+    // Then each one has its contrast checked above
     expect([...used].sort()).toEqual(
-      [...new Set(PAIRS.map((p) => p.text))].filter((token) => token !== 'valid').sort(),
+      [...new Set(PAIRS.map((p) => p.text))].filter((token) => !GRAPHICS.includes(token)).sort(),
     );
   });
 });

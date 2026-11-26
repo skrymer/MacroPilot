@@ -33,7 +33,8 @@ export default function FormPrototype() {
         }}
       />
       <SafeAreaView className="flex-1" edges={['bottom']}>
-        <Form faultStyle="colour-one" palette={palette} />
+        {/* Decided 26 November 2026: a field's edge at rest is 3:1, the `edge` token. */}
+        <Form faultStyle="colour-one" palette={palette} edge="soft" />
       </SafeAreaView>
     </View>
   );
