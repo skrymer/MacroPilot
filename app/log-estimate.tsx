@@ -17,6 +17,7 @@ export default function LogEstimate() {
     setError,
     formState: { errors },
   } = useForm({
+    mode: 'onTouched',
     resolver: zodResolver(estimateForm),
     defaultValues: { label: '', calories: '', protein: '' },
   });

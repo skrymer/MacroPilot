@@ -148,3 +148,27 @@ describe('forms/first-fault-shown', () => {
     expect(reported).toContain('forms/first-fault-shown');
   });
 });
+
+describe('forms/on-touched', () => {
+  it('reports a form judged only when it is sent', () => {
+    // Given a form with React Hook Form's default mode, which shows a fault only after a refused save
+    const source = `const form = useForm({ resolver, defaultValues });`;
+
+    // When it is linted
+    const reported = lint(source, SCREEN);
+
+    // Then the rule reports it
+    expect(reported).toContain('forms/on-touched');
+  });
+
+  it('accepts a form judged once a field is left', () => {
+    // Given a form judged as each field is left, then as it is typed
+    const source = `const form = useForm({ mode: 'onTouched', resolver, defaultValues });`;
+
+    // When it is linted
+    const reported = lint(source, SCREEN);
+
+    // Then the rule is silent
+    expect(reported).not.toContain('forms/on-touched');
+  });
+});

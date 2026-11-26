@@ -178,6 +178,32 @@ describe('Log', () => {
     expect(await stores.entries.listOn('2026-11-24')).toHaveLength(0);
   });
 
+  it('says the grams are wrong as soon as the field is left, before they are logged', async () => {
+    // Given Log open on a food
+    await openLog(await storesOf(OATS));
+    const user = userEvent.setup();
+
+    // When its form is opened, 0 typed and the field left
+    await weigh(user, /^Log Rolled oats/, '0');
+
+    // Then the fault is said
+    expect(await screen.findByText('Grams must be greater than 0')).toBeOnTheScreen();
+  });
+
+  it('says an estimate’s field is wrong as soon as it is left, before it is logged', async () => {
+    // Given the estimate open
+    await openLog(await storesOf());
+    const user = userEvent.setup();
+    await user.press(await screen.findByRole('button', { name: 'Log an estimate instead' }));
+
+    // When 0 calories are typed and the field left
+    await user.type(await screen.findByLabelText('Calories'), '0');
+
+    // Then its fault is said, and of no field not yet reached
+    expect(await screen.findByText('Calories must be at least 1')).toBeOnTheScreen();
+    expect(screen.queryByText('Enter a label for this entry')).not.toBeOnTheScreen();
+  });
+
   it('refuses an estimate of 0 calories beside its field, and logs nothing', async () => {
     // Given an estimate of a label and 0 calories
     const stores = await storesOf();

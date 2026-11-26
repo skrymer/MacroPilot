@@ -31,6 +31,7 @@ export default function AddFood() {
     setError,
     formState: { errors, isDirty, isSubmitting },
   } = useForm({
+    mode: 'onTouched',
     resolver: zodResolver(foodForm),
     defaultValues: { name: '', protein: '', carbohydrate: '', fat: '', fibre: '', abv: '' },
   });

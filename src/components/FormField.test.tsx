@@ -9,6 +9,7 @@ import { Text } from './Text';
 /** A form of one field, which says what it was given when it is submitted. */
 function OneField({ onSubmit }: { onSubmit: (name: string) => void }) {
   const { control, handleSubmit } = useForm({
+    mode: 'onTouched',
     defaultValues: { name: '' },
     resolver: zodResolver(z.object({ name: z.string().min(1, 'Enter a name') })),
   });

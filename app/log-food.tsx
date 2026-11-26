@@ -22,6 +22,7 @@ function GramsForm({ food }: { food: Food }) {
     setError,
     formState: { errors },
   } = useForm({
+    mode: 'onTouched',
     resolver: zodResolver(gramsForm),
     defaultValues: { grams: '' },
   });
