@@ -188,17 +188,6 @@ const DAYS: Record<
 
 type Deletion = 'word' | 'bin' | 'bin-mid' | 'swipe';
 
-/**
- * Q9 (D21/D36): a row's *Delete* as the word, or a bin in ink, or a quieter bin in `ink-mid`; or the
- * quiet bin and, beside it, a swipe to the left that shows *Delete* in red, as iOS's own lists.
- */
-const DELETIONS: Chip<Deletion>[] = [
-  { label: 'Delete', value: 'word' },
-  { label: 'Bin', value: 'bin' },
-  { label: 'Quiet bin', value: 'bin-mid' },
-  { label: 'Quiet bin and swipe', value: 'swipe' },
-];
-
 /** What a swipe to the left shows. */
 const SwipedDelete = ({ name }: { name: string }) => (
   <Pressable
@@ -517,7 +506,8 @@ export default function ColoursPrototype() {
   const [screen, setScreen] = useState<Exclude<Screen, 'form'>>('today');
   const [standing, setStanding] = useState<Standing>('within');
   const [barShown, setBarShown] = useState(true);
-  const [deletion, setDeletion] = useState<Deletion>('bin');
+  // Decided 26 November 2026: the quiet bin, and a swipe to delete beside it.
+  const deletion: Deletion = 'swipe';
   const appearance = useColorScheme() === 'dark' ? 'dark' : 'light';
   const palette = CHOSEN[appearance];
   const theme = vars(variablesOf(palette));
@@ -535,10 +525,7 @@ export default function ColoursPrototype() {
         />
       </View>
       {screen === 'today' ? (
-        <>
-          <Chips chips={STANDINGS} chosen={standing} onChoose={setStanding} />
-          <Chips chips={DELETIONS} chosen={deletion} onChoose={setDeletion} />
-        </>
+        <Chips chips={STANDINGS} chosen={standing} onChoose={setStanding} />
       ) : null}
       <Chips
         chips={APPEARANCES}
