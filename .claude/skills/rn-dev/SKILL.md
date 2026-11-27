@@ -19,6 +19,31 @@ The playbook for any change under `src/` or `app/`. Read it first, build test-fi
 - **A form is React Hook Form with a Zod schema** that translates and never judges; blank is unstated, never `0`. No `z.coerce.number()`, no `watch()` ([`0009`](../../../docs/adr/0009-forms-are-react-hook-form-with-zod-and-the-domain-still-judges.md)).
 - **Domain terms are exact.** `CONTEXT.md` governs.
 
+## Transactions
+
+The stores share **one** expo-sqlite connection, and SQLite keeps one transaction per connection: any call made while one is open joins it, whoever made it. So a store write of more than one statement goes through the port's `withTransactionAsync`, never a hand-rolled `BEGIN`, and never expo's own `withTransactionAsync` (the same flaw: its docs say other async queries "will be included in the transaction") or `withExclusiveTransactionAsync` (a new connection a call: foreign keys off, competing writes fail with `database is locked`, and better-sqlite3 in memory cannot mirror it).
+
+`SerialDatabase` (`src/storage/SerialDatabase.ts`) is the one implementation, wrapped round the phone's connection in `app/_layout.tsx` and round better-sqlite3 by `BetterSqliteDatabase`, so Jest runs what the phone runs. It runs every call in turn; a transaction holds the turn from `BEGIN` to `COMMIT`, and a failed `ROLLBACK` is swallowed so the caller hears the task's fault (SQLite has already rolled back after a full disk or an I/O error).
+
+```ts
+async save(review: Review): Promise<void> {
+  const db = await withSchema(this.db); // before the transaction: a pragma inside one does nothing
+  await db.withTransactionAsync(async (tx) => {
+    await tx.runAsync('INSERT OR REPLACE INTO reviews (…) VALUES (?, ?, ?, ?, ?)', […]);
+    await tx.runAsync('DELETE FROM reviews WHERE day > ?', [review.day]);
+  });
+}
+```
+
+- **The task calls `tx`, never `this.db`**: a call on the database waits for the turn the task holds, and never comes.
+- **Nothing but statements in the task**: no network, no waiting on the user. Every other screen's read waits for it.
+- **Each transaction is tested** against better-sqlite3 (ADR 0008): every statement kept on success; none when a statement fails, made to fail with a trigger (`CREATE TRIGGER refuse BEFORE DELETE ON reviews BEGIN SELECT RAISE(ABORT, 'refused'); END;`), and the save rejects with that fault; and two calls that overlap both kept (`Promise.all`). `SerialDatabase.test.ts` holds the turn's own guarantees once: commit, rollback, the task's fault over the rollback's, a call made meanwhile kept out, and the next call after a failure.
+- **A test of a guarantee the code already keeps shows its red first**, against a copy with the guarantee taken out. Copy the source to the scratchpad, remove the one line (the `COMMIT`, the `.catch` on `ROLLBACK`, the turn), and run the test from there with the project's Babel config; the command's output naming the failing test is the red. Then the test goes into the repo.
+
+  ```bash
+  npx jest --rootDir "$scratch/run" --config '{"testEnvironment":"node","transform":{"^.+\\.tsx?$":["babel-jest",{"configFile":"'"$PWD"'/babel.config.js"}]},"moduleDirectories":["node_modules","'"$PWD"'/node_modules"]}'
+  ```
+
 ## Platform and design rules
 
 Every rule a screen is held to is in [`platform-conventions`](../platform-conventions/SKILL.md). A `design/*`, `a11y/*` or `forms/*` error is fixed in the code, never by weakening the rule.
