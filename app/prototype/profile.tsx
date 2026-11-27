@@ -2,7 +2,7 @@
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
 import { useState, type ReactNode } from 'react';
-import { ScrollView, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
 
 import { Button } from '@/components/Button';
 import { Failure } from '@/components/Failure';
@@ -11,7 +11,66 @@ import { FAULT_SIGN } from '@/components/signs';
 import { Text } from '@/components/Text';
 import { useTint } from '@/components/useTint';
 
-import { Bar, Chips, type Chip } from './today-targets';
+// The floating bar, copied from the retired today-targets prototype: both are throwaway.
+export type Chip<T extends string> = { label: string; value: T };
+
+/** The prototype's switches: a row of chips, the chosen one filled. */
+export function Chips<T extends string>({
+  chips,
+  chosen,
+  onChoose,
+}: {
+  chips: Chip<T>[];
+  chosen: T;
+  onChoose: (value: T) => void;
+}) {
+  return (
+    <View className="flex-row flex-wrap gap-1">
+      {chips.map(({ label, value }) => (
+        <Pressable
+          key={value}
+          accessibilityRole="button"
+          accessibilityState={{ selected: chosen === value }}
+          onPress={() => onChoose(value)}
+          className={`min-h-target min-w-target items-center justify-center rounded-full border border-ink px-3 ${
+            chosen === value ? 'bg-ink' : ''
+          }`}
+        >
+          <Text
+            className={`font-language-bold text-label ${chosen === value ? 'text-ground' : 'text-ink'}`}
+          >
+            {label}
+          </Text>
+        </Pressable>
+      ))}
+    </View>
+  );
+}
+
+/** The floating bar: what is being judged, and a way to hide it for a clean photo. */
+export function Bar({ children }: { children: ReactNode }) {
+  const [shown, setShown] = useState(true);
+  return shown ? (
+    <View className="gap-1 rounded-2xl border border-line bg-surface p-2">
+      {children}
+      <Chips
+        chips={[{ label: 'Hide bar', value: 'hide' }]}
+        chosen=""
+        onChoose={() => setShown(false)}
+      />
+    </View>
+  ) : (
+    <View className="items-end">
+      <Chips
+        chips={[{ label: 'Show bar', value: 'show' }]}
+        chosen=""
+        onChoose={() => setShown(true)}
+      />
+    </View>
+  );
+}
+
+// The ring, drawn as the design page's specimen draws it.
 
 const nbsp = String.fromCharCode(0xa0);
 

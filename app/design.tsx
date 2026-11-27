@@ -423,12 +423,6 @@ export default function Design() {
       {__DEV__ ? (
         <>
           <Link
-            href="/prototype/today-targets"
-            className="font-language-bold text-body text-ink underline"
-          >
-            Today targets prototype
-          </Link>
-          <Link
             href="/prototype/profile"
             className="font-language-bold text-body text-ink underline"
           >
