@@ -161,6 +161,24 @@ describe('emulator.sh', () => {
     expect(output).toContain('memory');
     expect(calls).not.toContain('emulator -avd');
   });
+
+  it('wakes the screen, since a flow cannot read one asleep', () => {
+    // Given an emulator running, with its screen put to sleep
+    const { run } = stage({
+      adb: [
+        '[ "$1" = devices ] && printf "List of devices attached\\nemulator-5554\\tdevice\\n"',
+        '[[ "$*" == *getprop* ]] && echo 1',
+        'exit 0',
+      ].join('\n'),
+    });
+
+    // When the emulator is asked for
+    const { calls } = run(EMULATOR, []);
+
+    // Then it is woken, and nothing locks it
+    expect(calls).toContain('adb -s emulator-5554 shell input keyevent KEYCODE_WAKEUP');
+    expect(calls).toContain('adb -s emulator-5554 shell wm dismiss-keyguard');
+  });
 });
 
 describe('pixels.mjs', () => {

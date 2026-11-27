@@ -19,9 +19,9 @@ Runtime evidence that a change works. Tests already ran. Who verifies what is [`
 Run the whole suite before anything else ([`0011`](../../../docs/adr/0011-happy-paths-and-what-jest-cannot-drive-are-maestro-flows.md)), unpiped, and save its report as evidence:
 
 ```bash
-# An emulator booted by hand has no reverse for Metro; emulator.sh sets it. Without it the start step
-# waits on the dev menu's Continue and fails, and Metro's log shows no bundle fetched.
-adb reverse tcp:8082 tcp:8082
+# emulator.sh wakes the screen and sets Metro's reverse. Asleep, the first flow fails at its link;
+# without the reverse, the start step waits on the dev menu's Continue and Metro fetches no bundle.
+METRO_PORT=8082 .claude/skills/drive-emulator/scripts/emulator.sh
 METRO_PORT=8082 npx agent-device test 'e2e/*.yaml' --maestro --platform android -e METRO_PORT=8082 --report-junit <scratchpad>/gates/flows.xml
 ```
 
