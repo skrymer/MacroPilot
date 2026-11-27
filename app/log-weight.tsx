@@ -1,5 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'expo-router';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -57,7 +58,8 @@ function WeightForm({ today, kg }: { today: string; kg?: number }) {
 
 export default function LogWeight() {
   const router = useRouter();
-  const today = useToday();
+  // The day the form was opened on: one left open past midnight is still that day's.
+  const [today] = useState(useToday());
   const { weighIns, readAgain } = useWeighIns();
   if (weighIns === 'unreadable') {
     return (

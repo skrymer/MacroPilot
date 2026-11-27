@@ -95,6 +95,29 @@ describe('Log weight', () => {
     expect(line).toBeTruthy();
   });
 
+  it('keeps the day it was opened on, when midnight passes with it open', async () => {
+    // Given a weigh-in on the 27th, opened from Edit at 23:59 and changed
+    const weighIns = new InMemoryWeighInStore();
+    await weighIns.save({ day: '2026-11-27', kg: 82.4 });
+    const clock = new ScriptedClock();
+    clock.advance(Date.UTC(2026, 10, 27, 23, 59));
+    await openApp('/', weighIns, clock);
+    const user = userEvent.setup();
+    await user.press(await screen.findByRole('button', { name: 'Edit today’s weight' }));
+    const field = await screen.findByLabelText('Weight (kg)');
+    await user.clear(field);
+    await user.type(field, '81.9');
+
+    // When midnight passes and the user saves it
+    await act(async () => clock.advance(2 * 60_000));
+    await user.press(screen.getByRole('button', { name: 'Save weight' }));
+
+    // Then it replaces the 27th's, and the 28th has none
+    await waitFor(async () =>
+      expect(await weighIns.list()).toEqual([{ day: '2026-11-27', kg: 81.9 }]),
+    );
+  });
+
   it('leaves by its X when the weigh-ins could not be read', async () => {
     // Given the form over Today, its weigh-ins unreadable
     const weighIns = new InMemoryWeighInStore();
