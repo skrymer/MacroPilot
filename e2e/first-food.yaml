@@ -1,0 +1,18 @@
+# A fresh install's Foods asks for the first food; added, it is listed with its figures per 100 g.
+# The happy path of building the catalog (ADR 0011).
+appId: com.skrymer.macropilot
+---
+- runFlow: steps/start.yaml
+- openLink: 'macropilot://foods'
+- assertVisible: 'Build your food catalog'
+- runFlow:
+    file: steps/add-food.yaml
+    env:
+      NAME: Oats
+      PROTEIN: '13'
+      CARBOHYDRATE: '56'
+      FAT: '6'
+# 13 g protein, 56 g carbohydrate and 6 g fat are 330 kcal.
+- assertVisible: 'Oats, 330 calories, 13 grams of protein per 100 grams'
+- assertNotVisible: 'Build your food catalog'
+- assertVisible: 'Add food'

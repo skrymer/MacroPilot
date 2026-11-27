@@ -3,22 +3,13 @@
 appId: com.skrymer.macropilot
 ---
 - runFlow: steps/start.yaml
-- openLink: 'macropilot://foods'
-- tapOn: 'Add your first food'
-- tapOn: 'Name'
-- inputText: 'Milk'
-- tapOn: 'Protein per.*'
-- inputText: '3'
-- tapOn: 'Carbohydrate per.*'
-- inputText: '5'
-- tapOn: 'Fat per.*'
-- inputText: '3'
-# No hideKeyboard: agent-device types with a headless keyboard, and hiding one not shown is a back,
-# which leaves the form.
-- tapOn: 'Save food'
-- extendedWaitUntil:
-    visible: 'Milk, .*'
-    timeout: 10000
+- runFlow:
+    file: steps/add-food.yaml
+    env:
+      NAME: Milk
+      PROTEIN: '3'
+      CARBOHYDRATE: '5'
+      FAT: '3'
 
 # Swiped open, the system asks; cancelled, the food stays.
 - swipe:

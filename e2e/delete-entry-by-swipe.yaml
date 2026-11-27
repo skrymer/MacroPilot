@@ -4,20 +4,13 @@
 appId: com.skrymer.macropilot
 ---
 - runFlow: steps/start.yaml
-- openLink: 'macropilot://foods'
-- tapOn: 'Add your first food'
-- tapOn: 'Name'
-- inputText: 'Oats'
-- tapOn: 'Protein per.*'
-- inputText: '13'
-- tapOn: 'Carbohydrate per.*'
-- inputText: '56'
-- tapOn: 'Fat per.*'
-- inputText: '6'
-- tapOn: 'Save food'
-- extendedWaitUntil:
-    visible: 'Oats, .*'
-    timeout: 10000
+- runFlow:
+    file: steps/add-food.yaml
+    env:
+      NAME: Oats
+      PROTEIN: '13'
+      CARBOHYDRATE: '56'
+      FAT: '6'
 
 # Logged on Log, the entry is on Today.
 - openLink: 'macropilot://log'

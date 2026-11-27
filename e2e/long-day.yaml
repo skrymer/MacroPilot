@@ -1,0 +1,51 @@
+# A day of more than three entries shows its last three and asks for the rest: Show all 4 opens it
+# whole, and Show less goes back to the last three. The happy path of a long day (ADR 0011).
+appId: com.skrymer.macropilot
+---
+- runFlow: steps/start.yaml
+- openLink: 'macropilot://log'
+- runFlow:
+    file: steps/log-estimate.yaml
+    env:
+      LABEL: First
+      CALORIES: '100'
+- runFlow:
+    file: steps/log-estimate.yaml
+    env:
+      LABEL: Second
+      CALORIES: '100'
+- runFlow:
+    file: steps/log-estimate.yaml
+    env:
+      LABEL: Third
+      CALORIES: '100'
+- runFlow:
+    file: steps/log-estimate.yaml
+    env:
+      LABEL: Fourth
+      CALORIES: '100'
+
+# Today shows the last three, and asks for the rest.
+- openLink: 'macropilot://'
+- extendedWaitUntil:
+    visible: 'Show all 4'
+    timeout: 10000
+- assertVisible: 'Second, .*'
+- assertVisible: 'Third, .*'
+- assertVisible: 'Fourth, .*'
+- assertNotVisible: 'First, .*'
+
+# Asked for, all four are there.
+- tapOn: 'Show all 4'
+- extendedWaitUntil:
+    visible: 'First, .*'
+    timeout: 10000
+- assertVisible: 'Fourth, .*'
+
+# Asked for less, the last three again.
+- tapOn: 'Show less'
+- extendedWaitUntil:
+    visible: 'Show all 4'
+    timeout: 10000
+- assertNotVisible: 'First, .*'
+- assertVisible: 'Fourth, .*'

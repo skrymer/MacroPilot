@@ -1,0 +1,16 @@
+# An estimate logged from Log, by its label and calories, and waited for in Log's line.
+appId: com.skrymer.macropilot
+---
+# A selector is a regular expression, so the label is waited for with its own characters escaped.
+- evalScript: ${output.logged = LABEL.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}
+- tapOn: 'Log an estimate instead'
+# The label field is found by its placeholder: agent-device names an empty field by its hint before
+# its label, and the caption above it, hidden from a screen reader, is not the field (ADR 0011; #125).
+- tapOn: 'e.g. Lunch at restaurant'
+- inputText: '${LABEL}'
+- tapOn: 'Calories'
+- inputText: '${CALORIES}'
+- tapOn: 'Log estimated entry'
+- extendedWaitUntil:
+    visible: 'Logged: ${output.logged}, .*'
+    timeout: 10000

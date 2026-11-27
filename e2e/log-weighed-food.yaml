@@ -1,0 +1,40 @@
+# A food is logged by its weight: the form's X leaves without logging, and the grams, logged, are said
+# on Log and are the entry and the day's totals on Today. The happy path of logging (ADR 0011).
+appId: com.skrymer.macropilot
+---
+- runFlow: steps/start.yaml
+- runFlow:
+    file: steps/add-food.yaml
+    env:
+      NAME: Oats
+      PROTEIN: '13'
+      CARBOHYDRATE: '56'
+      FAT: '6'
+
+# Opened and closed by its X, the form logs nothing.
+- openLink: 'macropilot://log'
+- tapOn: 'Log Oats, .*'
+- assertVisible: 'Weight \(g\)'
+- tapOn: 'Cancel'
+- extendedWaitUntil:
+    visible: 'Log an estimate instead'
+    timeout: 10000
+- assertNotVisible: 'Logged: .*'
+
+# Logged, 200 g of a food of 330 kcal and 13 g protein per 100 g is said on Log. The day's one entry,
+# on Today, is also what says the X logged nothing.
+- tapOn: 'Log Oats, .*'
+- inputText: '200'
+- tapOn: 'Log entry'
+- extendedWaitUntil:
+    visible: 'Logged: Oats, 200 grams, 660 calories, 26 grams of protein'
+    timeout: 10000
+
+# Today has the entry, and the day adds up to it.
+- openLink: 'macropilot://'
+- extendedWaitUntil:
+    visible: 'Oats, 200 grams, 660 calories, 26 grams of protein'
+    timeout: 10000
+- assertVisible: '660 calories, 26 grams of protein today'
+# agent-device reads the tally by what it shows, not by the label TalkBack speaks (ADR 0011).
+- assertVisible: '1 entry · 660.kcal'

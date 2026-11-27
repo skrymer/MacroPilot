@@ -1,0 +1,19 @@
+# What cannot be weighed is logged as an estimate, a label and its calories, and Today says it is
+# *about* them, its protein not stated. The happy path of an estimate (ADR 0011).
+appId: com.skrymer.macropilot
+---
+- runFlow: steps/start.yaml
+- openLink: 'macropilot://log'
+- runFlow:
+    file: steps/log-estimate.yaml
+    env:
+      LABEL: Pub lunch
+      CALORIES: '850'
+- assertVisible: 'Logged: Pub lunch, about 850 calories'
+
+- openLink: 'macropilot://'
+- extendedWaitUntil:
+    visible: 'Pub lunch, estimate, about 850 calories, protein not stated'
+    timeout: 10000
+- assertVisible: 'about 850 kcal'
+- assertVisible: 'About 850 calories, protein not stated today'
