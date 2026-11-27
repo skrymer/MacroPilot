@@ -1,4 +1,4 @@
-import type { ComponentRef, ReactNode, Ref } from 'react';
+import { useRef, useState, type ComponentRef, type ReactNode, type Ref } from 'react';
 import { KeyboardAvoidingView, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -29,11 +29,21 @@ export function FormPage({
   scroll?: Ref<ComponentRef<typeof ScrollView>>;
   children: ReactNode;
 }) {
+  // Where the page starts in the window, below Android's bar or in iOS's sheet. The keyboard is
+  // measured in the window and the page from its parent, so without it the button stays under the
+  // keyboard by the distance between them.
+  const page = useRef<ComponentRef<typeof View>>(null);
+  const [top, setTop] = useState(0);
   return (
     // The header keeps the top inset.
-    <SafeAreaView edges={['bottom', 'left', 'right']} className="flex-1 bg-ground">
+    <SafeAreaView
+      ref={page}
+      onLayout={() => page.current?.measureInWindow((_x, y) => setTop(y))}
+      edges={['bottom', 'left', 'right']}
+      className="flex-1 bg-ground"
+    >
       <FormHeader title={title} onCancel={onCancel} />
-      <KeyboardAvoidingView behavior="padding" className="flex-1">
+      <KeyboardAvoidingView behavior="padding" keyboardVerticalOffset={top} className="flex-1">
         <ScrollView
           ref={scroll}
           // iOS's bar is glass over the sheet: what scrolls starts under it unless inset for it, which
