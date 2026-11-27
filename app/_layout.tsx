@@ -12,6 +12,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AskProvider } from '@/components/AskContext';
 import { useFormPresentation } from '@/components/FormHeader';
 import { LoggedProvider } from '@/components/LoggedContext';
+import { usePagePresentation } from '@/components/PageStack';
 import { SystemAsk } from '@/components/SystemAsk';
 import { ClockProvider } from '@/lifecycle/ClockContext';
 import { SystemClock } from '@/lifecycle/SystemClock';
@@ -53,6 +54,7 @@ function BackToToday() {
 export default function RootLayout() {
   const [loaded, failed] = useFonts({ B612_400Regular, B612_400Regular_Italic, B612_700Bold });
   const form = useFormPresentation();
+  const page = usePagePresentation();
   // Text measured in the system's face and then drawn in its own is clipped, and stays so. Faces that
   // fail to load leave the system's.
   if (!loaded && !failed) return null;
@@ -80,6 +82,9 @@ export default function RootLayout() {
                     <Stack.Screen name="add-food" options={form} />
                     <Stack.Screen name="log-food" options={form} />
                     <Stack.Screen name="log-estimate" options={form} />
+                    {/* DESIGN.md, Pages: the design page stands under the system's header, as a tab's
+                        page does. */}
+                    <Stack.Screen name="design" options={{ ...page, title: 'Trim' }} />
                   </Stack>
                 </View>
               </GestureHandlerRootView>
