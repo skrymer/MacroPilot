@@ -23,3 +23,13 @@ This is [`0001`](./0001-a-unit-owes-its-own-test-when-it-owns-something.md)'s st
 - The engine is not the phone's. A query reaching for a recent SQLite feature is checked against the version expo-sqlite bundles.
 - The adapter's test owns the round trip: an unknown stays unknown, and a zero stays zero.
 - The interface grows only when an adapter calls a method it lacks.
+
+## Amended: transactions, and a connection whose calls run in turn
+
+*28 November 2026, on #129, when the review store first wrote two statements as one.*
+
+The port is no longer exactly a subset of expo-sqlite. It is two interfaces: **`SqlStatements`**, the three calls expo-sqlite's `SQLiteDatabase` answers as it stands (`execAsync`, `runAsync`, `getAllAsync`), and **`SqlDatabase`**, which adds `withTransactionAsync(task: (tx) => Promise<void>)`. The stores take `SqlDatabase`. `SerialDatabase` makes one from any `SqlStatements`: `app/_layout.tsx` wraps the phone's connection in it, and `BetterSqliteDatabase` is it wrapped round better-sqlite3, so the adapters' tests run the same queue and transactions the phone does.
+
+**Why our own transaction, not expo-sqlite's.** The stores share one connection, and SQLite holds one transaction per connection: a call made while one is open joins it, whoever made it. expo-sqlite's `withTransactionAsync` is `BEGIN`, the task and `COMMIT` on that connection, and its documentation says other async queries "will be included in the transaction": a screen's write landing between the two statements is rolled back with them, and two saves that overlap fail with *cannot start a transaction within a transaction* (both reproduced against better-sqlite3 before this change). Its `withExclusiveTransactionAsync` opens a new connection for each call instead: foreign keys are off on it, competing writes fail with *database is locked* rather than wait, and better-sqlite3 on `:memory:` cannot open a second connection to mirror it. `SerialDatabase` runs every call on the one connection in turn; a transaction holds the turn from `BEGIN` to `COMMIT`, and a `ROLLBACK` that fails because SQLite has already rolled back is swallowed, so the caller hears the task's fault.
+
+**Consequences.** A task calls the `tx` it is given, never the database, which would wait for the turn the task holds. Nothing slow goes in a task: every screen's reads wait for it. Each transaction is tested for commit, rollback when either statement fails, and overlapping calls (rn-dev, *Transactions*); `SerialDatabase.test.ts` holds the queue's own guarantees.

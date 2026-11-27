@@ -92,7 +92,7 @@ _Avoid_: protein target, protein goal
 How far past its **Calorie Budget** a day may go and be only *slightly over*: 10%.
 
 **Day's verdict**:
-Where a day stands against its targets, in words: *Over budget* past the **Tolerance**, *Slightly over* past the budget, otherwise *On target* once **Known protein** reaches the **Protein Floor** and *In progress* until then. Protein that is *at least* enough is enough; protein **Not stated** is not yet. A day has no verdict before **Setup**.
+Where a day stands against its targets, in words: *Over budget* past the **Tolerance**, *Slightly over* past the budget, otherwise *On target* once **Known protein** reaches the **Protein Floor** and *In progress* until then. Protein that is *at least* enough is enough; protein **Not stated** is not yet. A day with nothing logged reads *Nothing logged yet* in the verdict's place, rather than *In progress*. A day has no verdict before **Setup**.
 
 **Formula seed**:
 How the first **Weekly Review** sets maintenance before there is a history to learn from: the basal rate from the **Profile** and the **Trend Weight**, times a fixed 1.4.
