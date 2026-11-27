@@ -2,10 +2,10 @@ import { SymbolView } from 'expo-symbols';
 import { Controller, type Control, type FieldValues, type Path } from 'react-hook-form';
 import { View, type KeyboardTypeOptions } from 'react-native';
 
+import { FieldFrame } from './FieldFrame';
 import { fieldLook } from './fieldLook';
 import { Input } from './Input';
 import { FAULT_SIGN, VALID_SIGN } from './signs';
-import { Text } from './Text';
 import { useTint } from './useTint';
 
 type FormFieldProps<Typed extends FieldValues, Said> = {
@@ -50,17 +50,7 @@ export function FormField<Typed extends FieldValues, Said>({
         const look = fieldLook(fieldState);
         const { field: drawn, sign } = LOOKS[look];
         return (
-          <View className="gap-1">
-            <Text
-              accessibilityElementsHidden
-              importantForAccessibility="no-hide-descendants"
-              className="font-language text-label text-ink-mid"
-            >
-              {label}
-            </Text>
-            {error ? (
-              <Text className="font-language-bold text-label text-fault">{error.message}</Text>
-            ) : null}
+          <FieldFrame label={label} fault={error?.message}>
             <View className="justify-center">
               <Input
                 {...field}
@@ -83,7 +73,7 @@ export function FormField<Typed extends FieldValues, Said>({
                 </View>
               ) : null}
             </View>
-          </View>
+          </FieldFrame>
         );
       }}
     />

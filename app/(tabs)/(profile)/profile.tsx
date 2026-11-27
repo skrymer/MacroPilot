@@ -2,23 +2,15 @@ import { useRouter } from 'expo-router';
 import { ScrollView, View } from 'react-native';
 
 import { Button } from '@/components/Button';
-import { cm } from '@/components/figures';
+import { dateWords } from '@/components/DateField';
+import { cm, spokenCm } from '@/components/figures';
+import { Hairline } from '@/components/Hairline';
 import { Notice } from '@/components/Notice';
+import { SEXES, TRACKING, wordsOf } from '@/components/profileWords';
 import { Text } from '@/components/Text';
 import { Unreadable } from '@/components/Unreadable';
 import type { Profile as Details } from '@/domain/profile';
 import { useProfile } from '@/storage/useProfile';
-
-const SEX = { male: 'Male', female: 'Female' } as const;
-
-/** A birth date as `14 March 1984`, read as the day it names wherever the phone is. */
-const dateWords = (date: string) =>
-  new Date(`${date}T00:00:00Z`).toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-    timeZone: 'UTC',
-  });
 
 /** A label and what it holds, read out as one row of a card. */
 function Detail({ label, value, spoken }: { label: string; value: string; spoken?: string }) {
@@ -26,7 +18,7 @@ function Detail({ label, value, spoken }: { label: string; value: string; spoken
     <View
       accessible
       accessibilityLabel={`${label}, ${spoken ?? value}`}
-      className="min-h-target flex-row flex-wrap items-center justify-between gap-x-grid-2 py-grid-1"
+      className="min-h-target flex-row flex-wrap items-center justify-between gap-x-grid-2 px-grid-2 py-grid-1"
     >
       <Text className="font-language text-body text-ink">{label}</Text>
       <Text className="font-language text-body text-ink-mid">{value}</Text>
@@ -41,21 +33,14 @@ function Saved({ details }: { details: Details }) {
       <Text accessibilityRole="header" className="font-language-bold text-body text-ink">
         Your details
       </Text>
-      <View className="rounded-card bg-surface px-grid-2">
-        <Detail label="Sex" value={SEX[details.sex]} />
-        <View className="border-t border-line" />
+      <View className="overflow-hidden rounded-card bg-surface">
+        <Detail label="Sex" value={wordsOf(SEXES, details.sex)} />
+        <Hairline />
         <Detail label="Birth date" value={dateWords(details.born)} />
-        <View className="border-t border-line" />
-        <Detail
-          label="Height"
-          value={cm(details.heightCm)}
-          spoken={`${details.heightCm} centimetres`}
-        />
-        <View className="border-t border-line" />
-        <Detail
-          label="Calorie tracking"
-          value={details.countsCalories ? 'Calories and weight' : 'Weight only'}
-        />
+        <Hairline />
+        <Detail label="Height" value={cm(details.heightCm)} spoken={spokenCm(details.heightCm)} />
+        <Hairline />
+        <Detail label="Calorie tracking" value={wordsOf(TRACKING, details.countsCalories)} />
       </View>
       <Button label="Change details" onPress={() => router.navigate('/details')} secondary />
     </>

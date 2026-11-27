@@ -8,29 +8,17 @@ import { detailsForm } from '@/components/detailsForm';
 import { formFault } from '@/components/formFault';
 import { FormField } from '@/components/FormField';
 import { FormPage } from '@/components/FormPage';
+import { SEXES, TRACKING } from '@/components/profileWords';
 import { Segments } from '@/components/Segments';
 import { useDiscard } from '@/components/useDiscard';
 import { useSave } from '@/components/useSave';
+import { yearsBefore } from '@/domain/day';
 import { newProfile, type Profile } from '@/domain/profile';
 import { useToday } from '@/lifecycle/useToday';
 import { useProfileStore } from '@/storage/ProfileStoreContext';
 import { useProfile } from '@/storage/useProfile';
 
-const SEXES = [
-  { label: 'Male', value: 'male' },
-  { label: 'Female', value: 'female' },
-] as const;
-
-/** Two named answers rather than a switch: off is a way of using the app, not a setting turned down. */
-const TRACKING = [
-  { label: 'Calories and weight', value: true },
-  { label: 'Weight only', value: false },
-] as const;
-
 type Typed = z.input<ReturnType<typeof detailsForm>>;
-
-/** Where the picker stands before a birth date is chosen: thirty years before today. */
-const startsOn = (today: string) => `${Number(today.slice(0, 4)) - 30}${today.slice(4)}`;
 
 /** The form, given the details saved before, to be changed, or none. */
 function DetailsForm({ saved }: { saved?: Profile }) {
@@ -91,7 +79,8 @@ function DetailsForm({ saved }: { saved?: Profile }) {
             label="Birth date"
             value={field.value}
             onChange={field.onChange}
-            starts={startsOn(today)}
+            // Where the picker stands before a birth date is chosen.
+            starts={yearsBefore(today, 30)}
             fault={fieldState.error?.message}
           />
         )}

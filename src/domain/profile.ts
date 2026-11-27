@@ -1,3 +1,5 @@
+import { yearsBefore } from './day';
+
 /** Who the targets are worked out for. */
 export type Profile = {
   sex: 'male' | 'female';
@@ -25,8 +27,7 @@ const MAX_AGE_YEARS = 120;
 
 /** Before `today` and at most 120 years before it, both dates as `2026-11-24`. */
 export function isBirthDate(born: string, today: string): boolean {
-  const earliest = `${Number(today.slice(0, 4)) - MAX_AGE_YEARS}${today.slice(4)}`;
-  return born < today && born >= earliest;
+  return born < today && born >= yearsBefore(today, MAX_AGE_YEARS);
 }
 
 /** Whole years from `born` to `on`, both dates as `2026-11-24`. */

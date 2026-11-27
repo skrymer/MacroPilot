@@ -23,3 +23,6 @@ const spoken = (figure: number, unit: string) =>
 export const spokenKcal = (calories: number) => spoken(calories, 'calorie');
 
 export const spokenGrams = (weight: number) => spoken(weight, 'gram');
+
+/** A height as it was given, unrounded, as `cm` shows it. */
+export const spokenCm = (height: number) => `${height} centimetres`;

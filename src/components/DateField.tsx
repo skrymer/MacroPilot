@@ -1,7 +1,8 @@
 import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { useState } from 'react';
-import { Platform, Pressable, View } from 'react-native';
+import { Platform, Pressable } from 'react-native';
 
+import { FieldFrame } from './FieldFrame';
 import { Text } from './Text';
 import { useRipple } from './useRipple';
 
@@ -15,9 +16,15 @@ const asDay = (date: Date) =>
     .map((part, i) => String(part).padStart(i === 0 ? 4 : 2, '0'))
     .join('-');
 
-/** As `14 March 1984`. */
-const dateWords = (date: string) =>
-  asDate(date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+/** One for every date: a formatter is slow to make. */
+const DATE_WORDS = new Intl.DateTimeFormat('en-GB', {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+});
+
+/** A date as `2026-11-24` in words, `24 November 2026`. */
+export const dateWords = (date: string) => DATE_WORDS.format(asDate(date));
 
 /**
  * A date chosen with the system's own picker, from a field that says it or that none is chosen yet:
@@ -58,15 +65,7 @@ export function DateField({
     setOpen(!open);
   };
   return (
-    <View className="gap-1">
-      <Text
-        accessibilityElementsHidden
-        importantForAccessibility="no-hide-descendants"
-        className="font-language text-label text-ink-mid"
-      >
-        {label}
-      </Text>
-      {fault ? <Text className="font-language-bold text-label text-fault">{fault}</Text> : null}
+    <FieldFrame label={label} fault={fault}>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={`${label}, ${shown ?? 'not chosen'}`}
@@ -92,6 +91,6 @@ export function DateField({
           }}
         />
       ) : null}
-    </View>
+    </FieldFrame>
   );
 }

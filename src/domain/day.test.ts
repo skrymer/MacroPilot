@@ -1,4 +1,16 @@
-import { dayOf } from './day';
+import { dayOf, yearsBefore } from './day';
+
+describe('yearsBefore', () => {
+  it('takes a leap day back to the last of February in a year that has none', () => {
+    // Given 29 February 2028
+
+    // When thirty years before it is asked
+    const day = yearsBefore('2028-02-29', 30);
+
+    // Then it is 28 February 1998, a day that exists
+    expect(day).toBe('1998-02-28');
+  });
+});
 
 describe('dayOf', () => {
   it.each([
