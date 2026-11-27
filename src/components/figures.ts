@@ -9,6 +9,12 @@ export const grams = (weight: number) => `${THOUSANDS.format(Math.round(weight))
 /** A height in cm, as it was given. */
 export const cm = (height: number) => `${height}${String.fromCharCode(0xa0)}cm`;
 
+/** A weight to a tenth of a kilo, as a scale shows it: `82.0 kg`. */
+export const kg = (weight: number) => `${weight.toFixed(1)}${String.fromCharCode(0xa0)}kg`;
+
+/** The same, as a screen reader says it. */
+export const spokenKg = (weight: number) => `${weight.toFixed(1)} kilograms`;
+
 /** A day's calories in its tally, the one place they have their thousands apart. */
 export const talliedKcal = (calories: number) =>
   `${THOUSANDS.format(Math.round(calories))}\u00a0kcal`;

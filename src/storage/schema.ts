@@ -44,6 +44,10 @@ const SCHEMA = `
     height_cm REAL NOT NULL,
     counts_calories INTEGER NOT NULL CHECK (counts_calories IN (0, 1))
   );
+  CREATE TABLE IF NOT EXISTS weigh_ins (
+    day TEXT PRIMARY KEY,
+    kg REAL NOT NULL
+  );
 `;
 
 /** Made on every call rather than once, so a call after one that failed can succeed. */

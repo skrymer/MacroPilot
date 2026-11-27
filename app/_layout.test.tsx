@@ -20,6 +20,7 @@ import AddFood from './add-food';
 import Design from './design';
 import Details from './details';
 import LogFood from './log-food';
+import LogWeight from './log-weight';
 
 // NativeWind compiles the stylesheet in Metro; Jest has no CSS loader, and the classes reach the
 // rendered elements as `className` without it.
@@ -45,6 +46,9 @@ jest.mock('@/storage/SqliteEntryStore', () => ({
 jest.mock('@/storage/SqliteFoodStore', () => ({
   SqliteFoodStore: jest.requireActual('@/storage/InMemoryFoodStore').InMemoryFoodStore,
 }));
+jest.mock('@/storage/SqliteWeighInStore', () => ({
+  SqliteWeighInStore: jest.requireActual('@/storage/InMemoryWeighInStore').InMemoryWeighInStore,
+}));
 jest.mock('@/storage/SqliteProfileStore', () => ({
   SqliteProfileStore: jest.requireActual('@/storage/InMemoryProfileStore').InMemoryProfileStore,
 }));
@@ -66,6 +70,7 @@ const openAt = (initialUrl: string) =>
       '(tabs)/(profile)/_layout': ProfileStack,
       '(tabs)/(profile)/profile': Profile,
       details: Details,
+      'log-weight': LogWeight,
       'log-food': LogFood,
       '(tabs)/developer': Developer,
       'add-food': AddFood,
@@ -138,6 +143,22 @@ describe('RootLayout', () => {
 
     // Then Profile shows them
     expect(await screen.findByLabelText('Sex, Male')).toBeOnTheScreen();
+  });
+
+  it('keeps a weight logged on the weight form where Today reads it', async () => {
+    // Given Today's way in to the weight form, over the store the root layout makes
+    await openAt('/');
+    const user = userEvent.setup();
+    // The setup line offers it too where an earlier test left a profile: the layout's stores outlive one.
+    const [logWeight] = await screen.findAllByRole('button', { name: 'Log weight' });
+    await user.press(logWeight as NonNullable<typeof logWeight>);
+    await user.type(await screen.findByLabelText('Weight (kg)'), '82');
+
+    // When it is saved
+    await user.press(screen.getByRole('button', { name: 'Save weight' }));
+
+    // Then Today shows it
+    expect(await screen.findByLabelText('Weight today, 82.0 kilograms')).toBeOnTheScreen();
   });
 
   it('keeps an entry logged on Log where Today reads it', async () => {

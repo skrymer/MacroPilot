@@ -16,14 +16,7 @@ import { Bar, Chips, type Chip } from './today-targets';
 const nbsp = String.fromCharCode(0xa0);
 
 type Variant = 'A' | 'B';
-type State =
-  | 'beforeSetup'
-  | 'noGoal'
-  | 'goalSet'
-  | 'goalForm'
-  | 'goalRefused'
-  | 'weightForm'
-  | 'weightRefused';
+type State = 'beforeSetup' | 'noGoal' | 'goalSet' | 'goalForm' | 'goalRefused';
 
 const VARIANTS: Chip<Variant>[] = [
   { label: 'A goal form inline', value: 'A' },
@@ -36,15 +29,11 @@ const STATES: Chip<State>[] = [
   { label: 'Goal set', value: 'goalSet' },
   { label: 'Goal form', value: 'goalForm' },
   { label: 'Goal refused', value: 'goalRefused' },
-  { label: 'Weight form', value: 'weightForm' },
-  { label: 'Weight refused', value: 'weightRefused' },
 ];
 
 const TITLES: Partial<Record<State, string>> = {
   goalForm: 'Set goal',
   goalRefused: 'Set goal',
-  weightForm: 'Log weight',
-  weightRefused: 'Log weight',
 };
 
 const Heading = ({ children }: { children: string }) => (
@@ -188,18 +177,6 @@ function Body({ state, variant }: { state: State; variant: Variant }) {
           fault={state === 'goalRefused' ? 'Not saved. A field above needs changing.' : undefined}
         >
           <GoalFields refused={state === 'goalRefused'} />
-        </Form>
-      );
-    case 'weightForm':
-    case 'weightRefused':
-      return (
-        <Form action="Save weight">
-          <Field
-            label="Weight (kg)"
-            value={state === 'weightRefused' ? '820' : undefined}
-            fault={state === 'weightRefused' ? 'Enter a weight from 20 to 400 kg' : undefined}
-            autoFocus
-          />
         </Form>
       );
     default:

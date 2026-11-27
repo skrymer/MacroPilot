@@ -8,7 +8,9 @@ import { FoodStoreProvider } from '@/storage/FoodStoreContext';
 import { InMemoryEntryStore } from '@/storage/InMemoryEntryStore';
 import { InMemoryFoodStore } from '@/storage/InMemoryFoodStore';
 import { InMemoryProfileStore } from '@/storage/InMemoryProfileStore';
+import { InMemoryWeighInStore } from '@/storage/InMemoryWeighInStore';
 import { ProfileStoreProvider } from '@/storage/ProfileStoreContext';
+import { WeighInStoreProvider } from '@/storage/WeighInStoreContext';
 
 import { AskProvider } from './AskContext';
 import { LoggedProvider } from './LoggedContext';
@@ -24,6 +26,7 @@ export function TestProviders({
   foods,
   entries,
   profile,
+  weighIns,
   ask,
   children,
 }: {
@@ -31,6 +34,7 @@ export function TestProviders({
   foods?: InMemoryFoodStore;
   entries?: InMemoryEntryStore;
   profile?: InMemoryProfileStore;
+  weighIns?: InMemoryWeighInStore;
   ask?: ScriptedAsk;
   children: ReactNode;
 }) {
@@ -38,6 +42,7 @@ export function TestProviders({
   const [noFoods] = useState(() => new InMemoryFoodStore());
   const [noEntries] = useState(() => new InMemoryEntryStore());
   const [noProfile] = useState(() => new InMemoryProfileStore());
+  const [noWeighIns] = useState(() => new InMemoryWeighInStore());
   const [unanswered] = useState(() => new ScriptedAsk());
   // The phone's two stores are tables of one database.
   useEffect(() => (foods ?? noFoods).loggedIn(entries ?? noEntries));
@@ -46,12 +51,14 @@ export function TestProviders({
       <FoodStoreProvider store={foods ?? noFoods}>
         <EntryStoreProvider store={entries ?? noEntries}>
           <ProfileStoreProvider store={profile ?? noProfile}>
-            <AskProvider ask={ask ?? unanswered}>
-              <LoggedProvider>
-                {/* The root's, as `app/_layout.tsx` gives it: a swipe is seen only under it. */}
-                <GestureHandlerRootView style={{ flex: 1 }}>{children}</GestureHandlerRootView>
-              </LoggedProvider>
-            </AskProvider>
+            <WeighInStoreProvider store={weighIns ?? noWeighIns}>
+              <AskProvider ask={ask ?? unanswered}>
+                <LoggedProvider>
+                  {/* The root's, as `app/_layout.tsx` gives it: a swipe is seen only under it. */}
+                  <GestureHandlerRootView style={{ flex: 1 }}>{children}</GestureHandlerRootView>
+                </LoggedProvider>
+              </AskProvider>
+            </WeighInStoreProvider>
           </ProfileStoreProvider>
         </EntryStoreProvider>
       </FoodStoreProvider>

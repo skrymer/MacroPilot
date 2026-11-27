@@ -1,5 +1,5 @@
 import { useNavigation, useRouter } from 'expo-router';
-import { useCallback, useEffect, useEffectEvent, useState } from 'react';
+import { useCallback, useEffect, useEffectEvent, useState, type ReactNode } from 'react';
 import { FlatList, View } from 'react-native';
 
 import { dayWords } from '@/components/dayWords';
@@ -7,37 +7,116 @@ import { CardSlice } from '@/components/CardSlice';
 import { DeletableRow } from '@/components/DeletableRow';
 import { EmptyLine } from '@/components/EmptyLine';
 import { entryFigures, entryWords, tallyWords, totalsWords } from '@/components/entryWords';
+import { kg, spokenKg } from '@/components/figures';
 import { FIGURE_SET } from '@/components/figureSet';
 import { Hairline } from '@/components/Hairline';
 import { useLogged } from '@/components/LoggedContext';
 import { Row } from '@/components/Row';
 import { ShowAll } from '@/components/ShowAll';
 import { Text } from '@/components/Text';
+import { TextAction } from '@/components/TextAction';
 import { Unreadable } from '@/components/Unreadable';
 import { useDelete } from '@/components/useDelete';
 import { useFailedInView } from '@/components/useFailedInView';
 import { totalsOf, type Totals as DayTotals } from '@/domain/dailyLog';
+import { missingForSetup } from '@/domain/setup';
 import { shownName } from '@/domain/shownName';
+import { weighInOn, type WeighIn } from '@/domain/weighIn';
 import { useToday } from '@/lifecycle/useToday';
 import type { LoggedEntry } from '@/storage/EntryStore';
 import { useEntryStore } from '@/storage/EntryStoreContext';
 import { useReading } from '@/storage/useReading';
+import { useProfile } from '@/storage/useProfile';
+import { useWeighIns } from '@/storage/useWeighIns';
 
 const PROTEIN_SET = { ...FIGURE_SET, weighed: 'font-language text-ink-mid' };
 
-function Totals({ totals, count }: { totals: DayTotals; count: number }) {
+function Totals({
+  totals,
+  count,
+  children,
+}: {
+  totals: DayTotals;
+  count: number;
+  /** The card's last row. */
+  children: ReactNode;
+}) {
   const { calories, caloriesKind, protein, proteinKind, spoken } = totalsWords(totals);
   return (
-    <View
-      accessible
-      accessibilityLabel={`${spoken} today${count === 0 ? ', nothing logged yet' : ''}`}
-      className="rounded-card bg-surface p-grid-2"
-    >
-      <Text className={`text-title ${FIGURE_SET[caloriesKind]}`}>{calories}</Text>
-      <Text className={`text-label ${PROTEIN_SET[proteinKind]}`}>{protein}</Text>
-      {count === 0 ? (
-        <Text className="font-language text-label text-ink-mid">Nothing logged yet</Text>
-      ) : null}
+    <View className="rounded-card bg-surface p-grid-2">
+      <View
+        accessible
+        accessibilityLabel={`${spoken} today${count === 0 ? ', nothing logged yet' : ''}`}
+      >
+        <Text className={`text-title ${FIGURE_SET[caloriesKind]}`}>{calories}</Text>
+        <Text className={`text-label ${PROTEIN_SET[proteinKind]}`}>{protein}</Text>
+        {count === 0 ? (
+          <Text className="font-language text-label text-ink-mid">Nothing logged yet</Text>
+        ) : null}
+      </View>
+      <View className="mt-grid-2">{children}</View>
+    </View>
+  );
+}
+
+/**
+ * Before Setup, what is missing for a calorie budget and the way to it: a weigh-in is logged here, and
+ * the details on Profile. Nothing once both are there.
+ */
+function SetupLine({
+  missing,
+  onProfile,
+  onWeighIn,
+}: {
+  missing: readonly ('details' | 'weigh-in')[];
+  onProfile: () => void;
+  onWeighIn: () => void;
+}) {
+  if (missing.length === 0) return null;
+  const hasWeighIn = !missing.includes('weigh-in');
+  if (!missing.includes('details')) {
+    return (
+      <EmptyLine
+        words="Log your weight to see your calorie budget"
+        action="Log weight"
+        onAction={onWeighIn}
+      />
+    );
+  }
+  return (
+    <EmptyLine
+      words={`Add your details${hasWeighIn ? '' : ' and log your weight'} to see your calorie budget`}
+      action="Profile"
+      onAction={onProfile}
+    />
+  );
+}
+
+/** Today's weigh-in, as the day card's last row. */
+function WeightRow({ weighIn, onLog }: { weighIn?: WeighIn; onLog: () => void }) {
+  return (
+    <View>
+      <View className="border-t border-line" />
+      <View className="flex-row flex-wrap items-center justify-between gap-x-grid-2 pt-grid-1">
+        {weighIn ? (
+          <>
+            <View
+              accessible
+              accessibilityLabel={`Weight today, ${spokenKg(weighIn.kg)}`}
+              className="min-w-name flex-1 flex-row flex-wrap items-baseline justify-between gap-x-grid-2"
+            >
+              <Text className="font-language text-body text-ink">Weight</Text>
+              <Text className={`text-body ${FIGURE_SET.weighed}`}>{kg(weighIn.kg)}</Text>
+            </View>
+            <TextAction label="Edit" spoken="Edit today’s weight" onPress={onLog} />
+          </>
+        ) : (
+          <>
+            <Text className="font-language text-body text-ink-mid">No weight logged today</Text>
+            <TextAction label="Log weight" onPress={onLog} />
+          </>
+        )}
+      </View>
     </View>
   );
 }
@@ -66,6 +145,9 @@ export default function Today() {
   const day = useToday();
   const list = useCallback(() => store.listOn(day), [store, day]);
   const { found, readAgain } = useReading(list);
+  const { weighIns, readAgain: readWeighInsAgain } = useWeighIns();
+  const { profile } = useProfile();
+  const weighedToday = Array.isArray(weighIns) ? weighInOn(weighIns, day) : undefined;
   // An entry can be written after the user has come here from its form.
   const [logged] = useLogged();
   const navigation = useNavigation();
@@ -142,7 +224,22 @@ export default function Today() {
           {found === 'unreadable' ? (
             <Unreadable words="Couldn’t load today’s summary" onRetry={readAgain} />
           ) : null}
-          {Array.isArray(found) ? <Totals totals={totals} count={listed.length} /> : null}
+          {Array.isArray(profile) && Array.isArray(weighIns) ? (
+            <SetupLine
+              missing={missingForSetup(profile[0], weighIns)}
+              onProfile={() => router.navigate('/profile')}
+              onWeighIn={() => router.navigate('/log-weight')}
+            />
+          ) : null}
+          {Array.isArray(found) ? (
+            <Totals totals={totals} count={listed.length}>
+              {weighIns === 'unreadable' ? (
+                <Unreadable words="Couldn’t load your weight" onRetry={readWeighInsAgain} />
+              ) : Array.isArray(weighIns) ? (
+                <WeightRow weighIn={weighedToday} onLog={() => router.navigate('/log-weight')} />
+              ) : null}
+            </Totals>
+          ) : null}
           {listed.length > 0 ? (
             <DayHeading day={day} count={listed.length} totals={totals} />
           ) : null}

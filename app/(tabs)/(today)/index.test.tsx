@@ -4,9 +4,12 @@ import type { ReactNode } from 'react';
 
 import { ScriptedAsk } from '@/components/ScriptedAsk';
 import { TestProviders } from '@/components/TestProviders';
+import { Text } from '@/components/Text';
 import { estimatedEntry, weighedEntry } from '@/domain/entry';
 import { ScriptedClock } from '@/lifecycle/ScriptedClock';
 import { InMemoryEntryStore } from '@/storage/InMemoryEntryStore';
+import { InMemoryProfileStore } from '@/storage/InMemoryProfileStore';
+import { InMemoryWeighInStore } from '@/storage/InMemoryWeighInStore';
 
 import Today from './index';
 
@@ -30,13 +33,29 @@ const withLunches = async (...labels: string[]) => {
 };
 
 /** Opens the app on Today, over `entries`. */
-const openToday = (entries: InMemoryEntryStore, clock = atNoon(), ask?: ScriptedAsk) =>
+const openToday = (
+  entries: InMemoryEntryStore,
+  clock = atNoon(),
+  ask?: ScriptedAsk,
+  weighIns?: InMemoryWeighInStore,
+  profile?: InMemoryProfileStore,
+) =>
   renderRouter(
-    { '(tabs)/(today)/index': Today, '(tabs)/(log)/log': () => null },
+    {
+      '(tabs)/(today)/index': Today,
+      '(tabs)/(log)/log': () => null,
+      '(tabs)/(profile)/profile': () => <Text>Profile, as the tab shows it</Text>,
+    },
     {
       initialUrl: '/',
       wrapper: ({ children }: { children: ReactNode }) => (
-        <TestProviders clock={clock} entries={entries} ask={ask}>
+        <TestProviders
+          clock={clock}
+          entries={entries}
+          ask={ask}
+          weighIns={weighIns}
+          profile={profile}
+        >
           {children}
         </TestProviders>
       ),
@@ -50,6 +69,151 @@ const deleteFrom = async (row: string | RegExp) => {
     fireEvent(found, 'accessibilityAction', { nativeEvent: { actionName: 'delete' } });
   });
 };
+
+describe('Today before Setup', () => {
+  it.each([
+    [false, false, 'Add your details and log your weight to see your calorie budget', 'Profile'],
+    [false, true, 'Add your details to see your calorie budget', 'Profile'],
+    [true, false, 'Log your weight to see your calorie budget', 'Log weight'],
+  ])(
+    'names what is missing (a profile: %s, a weigh-in: %s), and the way to it',
+    async (hasProfile, hasWeighIn, words, action) => {
+      // Given a phone with or without a profile and a weigh-in
+      const profile = new InMemoryProfileStore();
+      if (hasProfile) {
+        await profile.save({
+          sex: 'male',
+          born: '1984-03-14',
+          heightCm: 181,
+          countsCalories: true,
+        });
+      }
+      const weighIns = new InMemoryWeighInStore();
+      if (hasWeighIn) await weighIns.save({ day: '2026-11-23', kg: 82 });
+
+      // When the user opens Today
+      await openToday(new InMemoryEntryStore(), atNoon(), undefined, weighIns, profile);
+
+      // Then the setup line says what is missing, with its way on
+      expect(await screen.findByText(words)).toBeOnTheScreen();
+      expect(screen.getAllByRole('button', { name: action })[0]).toBeOnTheScreen();
+    },
+  );
+});
+
+describe('Today’s setup line', () => {
+  it('takes the user to Profile for the details', async () => {
+    // Given Today with nothing set up
+    await openToday(new InMemoryEntryStore(), atNoon(), undefined, new InMemoryWeighInStore());
+
+    // When the user presses the setup line's Profile
+    await userEvent.press(await screen.findByRole('button', { name: 'Profile' }));
+
+    // Then Profile is showing
+    expect(await screen.findByText('Profile, as the tab shows it')).toBeOnTheScreen();
+  });
+});
+
+describe('Today before its reads', () => {
+  it('says nothing about setup until the profile has been read', async () => {
+    // Given a profile and no weigh-in, the profile's read not come back
+    const profile = new InMemoryProfileStore();
+    await profile.save({ sex: 'male', born: '1984-03-14', heightCm: 181, countsCalories: true });
+    const release = profile.holdNextRead();
+
+    // When the user opens Today
+    await openToday(
+      new InMemoryEntryStore(),
+      atNoon(),
+      undefined,
+      new InMemoryWeighInStore(),
+      profile,
+    );
+
+    // Then no setup line shows until the read is back, and then the one for the weigh-in alone
+    expect(await screen.findByText('No weight logged today')).toBeOnTheScreen();
+    expect(screen.queryByText(/to see your calorie budget$/)).not.toBeOnTheScreen();
+    await act(async () => release());
+    expect(await screen.findByText('Log your weight to see your calorie budget')).toBeOnTheScreen();
+  });
+});
+
+describe('Today after Setup', () => {
+  it('says nothing about setup once there are details and a weigh-in', async () => {
+    // Given a profile and a weigh-in yesterday
+    const profile = new InMemoryProfileStore();
+    await profile.save({ sex: 'male', born: '1984-03-14', heightCm: 181, countsCalories: true });
+    const weighIns = new InMemoryWeighInStore();
+    await weighIns.save({ day: '2026-11-23', kg: 82 });
+
+    // When the user opens Today
+    await openToday(new InMemoryEntryStore(), atNoon(), undefined, weighIns, profile);
+
+    // Then there is no setup line
+    expect(await screen.findByText('No weight logged today')).toBeOnTheScreen();
+    expect(screen.queryByText(/to see your calorie budget$/)).not.toBeOnTheScreen();
+  });
+});
+
+describe('Today’s weigh-in', () => {
+  it('says no weight is logged today, and offers to log one, as the day card’s last row', async () => {
+    // Given a weigh-in yesterday and none today
+    const weighIns = new InMemoryWeighInStore();
+    await weighIns.save({ day: '2026-11-23', kg: 82 });
+
+    // When the user opens Today
+    await openToday(new InMemoryEntryStore(), atNoon(), undefined, weighIns);
+
+    // Then the row says so, with the way to log one
+    expect(await screen.findByText('No weight logged today')).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Log weight' })).toBeOnTheScreen();
+  });
+
+  it('reads no weight logged once midnight has passed, the weigh-in being yesterday’s', async () => {
+    // Given Today open at 23:59 with a weigh-in that day
+    const weighIns = new InMemoryWeighInStore();
+    await weighIns.save({ day: '2026-11-24', kg: 82 });
+    const clock = new ScriptedClock();
+    clock.advance(Date.UTC(2026, 10, 24, 23, 59));
+    await openToday(new InMemoryEntryStore(), clock, undefined, weighIns);
+    expect(await screen.findByLabelText('Weight today, 82.0 kilograms')).toBeOnTheScreen();
+
+    // When midnight passes
+    await act(async () => clock.advance(2 * 60_000));
+
+    // Then the row says no weight is logged today
+    expect(await screen.findByText('No weight logged today')).toBeOnTheScreen();
+  });
+
+  it('says the weigh-ins could not be read, and never that none is logged', async () => {
+    // Given weigh-ins that cannot be read
+    const weighIns = new InMemoryWeighInStore();
+    weighIns.unreadable = true;
+
+    // When the user opens Today
+    await openToday(new InMemoryEntryStore(), atNoon(), undefined, weighIns);
+
+    // Then the row says so, with the way to try again
+    expect(await screen.findByText('Couldn’t load your weight')).toBeOnTheScreen();
+    expect(screen.queryByText('No weight logged today')).not.toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Retry' })).toBeOnTheScreen();
+  });
+
+  it('shows today’s weight to a tenth of a kilo, read out as one, with the way to change it', async () => {
+    // Given a weigh-in of 82 kg today
+    const weighIns = new InMemoryWeighInStore();
+    await weighIns.save({ day: '2026-11-24', kg: 82 });
+
+    // When the user opens Today
+    await openToday(new InMemoryEntryStore(), atNoon(), undefined, weighIns);
+
+    // Then the row says it, and offers to edit it
+    expect(await screen.findByLabelText('Weight today, 82.0 kilograms')).toBeOnTheScreen();
+    expect(screen.getByText(/^82\.0\skg$/)).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Edit today’s weight' })).toBeOnTheScreen();
+    expect(screen.queryByText('No weight logged today')).not.toBeOnTheScreen();
+  });
+});
 
 describe('Today', () => {
   it('says what the day adds up to, and what is in it', async () => {
