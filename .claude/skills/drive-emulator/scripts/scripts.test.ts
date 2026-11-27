@@ -76,6 +76,22 @@ describe('sizes.sh', () => {
     expect(output).toContain('not the whole check');
   });
 
+  it('photographs in the appearance named, and puts light back after', () => {
+    // Given a device
+
+    // When a screen is photographed in dark
+    const { output, calls } = stage(DEVICE).run(SIZES, [OUT(), 'design'], {
+      SIZES: 'default',
+      APPEARANCE: 'dark',
+    });
+
+    // Then the photos are dark, named so, and light is put back last
+    expect(output.match(/design-[a-z-]+(?=-1\.png)/g)).toEqual(['design-default-dark']);
+    expect(calls.indexOf('uimode night yes')).toBeGreaterThan(-1);
+    expect(calls.indexOf('uimode night yes')).toBeLessThan(calls.indexOf('screenshot'));
+    expect(calls.lastIndexOf('uimode night no')).toBeGreaterThan(calls.lastIndexOf('screenshot'));
+  });
+
   it('refuses a size there is not, before touching the device', () => {
     // Given a device
 

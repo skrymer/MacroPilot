@@ -9,6 +9,10 @@
 # SIZES=text photographs one, while a screen or this script is being worked on. /verify owes
 # SIZES=default on an issue, and both on an epic. A narrower screen is never checked.
 #
+# APPEARANCE=dark photographs in dark, each photo named `<route>-<size>-dark-<page>.png`; light is the
+# default. The script sets the appearance at each size and puts light back, so one set in the device
+# beforehand is undone: it took #110 a run of dark photos that came out light.
+#
 # Run emulator.sh first; METRO_PORT as there. Each size loads the bundle again, since Android recreates
 # the activity when the text size changes. Every setting is put back on exit, however it ends. Exits 1
 # when a screen could not be photographed whole.
@@ -22,6 +26,12 @@ sizes=${SIZES:-$all}
 for size in $sizes; do
   [[ " $all " == *" $size "* ]] || { echo "sizes.sh: no size $size; they are $all" >&2; exit 2; }
 done
+appearance=${APPEARANCE:-light}
+case $appearance in
+  light) night=no suffix= ;;
+  dark) night=yes suffix=-dark ;;
+  *) echo "sizes.sh: no appearance $appearance; they are light dark" >&2; exit 2 ;;
+esac
 mkdir -p "$out"
 out=$(cd "$out" && pwd)
 cd "$(dirname "$0")/../../../.."
@@ -58,7 +68,7 @@ shoot() {
   ad open "macropilot://${route#/}" || { miss "$route did not open at $size"; return 0; }
   ad wait stable 800 8000 || true
   for page in $(seq 20); do
-    file="$out/$slug-$size-$page.png"
+    file="$out/$slug-$size$suffix-$page.png"
     ad screenshot "$file" --normalize-status-bar || { miss "no photo of $route at $size"; return 0; }
     if [ -n "$last" ] && cmp -s "$file" "$last"; then
       rm "$file"
@@ -75,7 +85,7 @@ for size in $sizes; do
   [ "$size" = text ] && scale=2.0
   adb shell settings put system font_scale "$scale"
   adb shell wm density reset
-  adb shell cmd uimode night no >/dev/null
+  adb shell cmd uimode night "$night" >/dev/null
   adb shell am force-stop "$app"
   ad open "$app" "$load" && ad wait text "Today" 30000 || { miss "the bundle did not load at $size"; continue; }
   for route in "$@"; do shoot "$size" "$route"; done
