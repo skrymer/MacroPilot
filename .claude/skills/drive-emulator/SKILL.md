@@ -94,4 +94,5 @@ adb shell settings put system font_scale 1.0; adb shell wm density reset
 ad settings appearance light; ad settings airplane off; ad close
 adb shell settings put global auto_time 1; adb shell settings put global auto_time_zone 1
 adb shell cmd alarm set-timezone Australia/Brisbane
+adb shell input keyevent KEYCODE_WAKEUP; adb shell wm dismiss-keyguard
 ```

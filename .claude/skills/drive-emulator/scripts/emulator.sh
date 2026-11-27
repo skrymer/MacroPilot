@@ -48,6 +48,11 @@ booted() { [ "$(adb -s "$serial" shell getprop sys.boot_completed 2>/dev/null | 
 for _ in $(seq 90); do booted && break; sleep 2; done
 booted || stop "$serial did not finish booting within 3 minutes"
 
+# A screen asleep has no accessibility tree to read, so a flow fails at its first step. WAKEUP does
+# nothing to a screen awake, where POWER would put it to sleep.
+adb -s "$serial" shell input keyevent KEYCODE_WAKEUP
+adb -s "$serial" shell wm dismiss-keyguard
+
 adb -s "$serial" shell pm path "$app" >/dev/null 2>&1 ||
   stop "$app is not installed on $serial; build and install it (rn-dev, Commands)"
 
