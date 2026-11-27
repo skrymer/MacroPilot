@@ -1,10 +1,13 @@
 import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
+import { SymbolView } from 'expo-symbols';
 import { useState } from 'react';
-import { Platform, Pressable } from 'react-native';
+import { Platform, Pressable, View } from 'react-native';
 
 import { FieldFrame } from './FieldFrame';
+import { FAULT_SIGN } from './signs';
 import { Text } from './Text';
 import { useRipple } from './useRipple';
+import { useTint } from './useTint';
 
 /** A date as `2026-11-24` at midnight on the phone, which is how the system's picker takes one. */
 const asDate = (date: string) =>
@@ -55,6 +58,7 @@ export function DateField({
   fault?: string;
 }) {
   const ripple = useRipple('page');
+  const tint = useTint();
   const [open, setOpen] = useState(false);
   const shown = value === '' ? undefined : dateWords(value);
   const end = asDate(before);
@@ -91,6 +95,12 @@ export function DateField({
         ) : (
           <Text className="font-language-italic text-body text-ink-dim">Not chosen</Text>
         )}
+        {/* A field at fault carries the sign at its end, as a text field does: the hue is never alone. */}
+        {fault ? (
+          <View pointerEvents="none" className="absolute right-3">
+            <SymbolView name={FAULT_SIGN} size={20} tintColor={tint.fault} />
+          </View>
+        ) : null}
       </Pressable>
       {open ? (
         <DateTimePicker

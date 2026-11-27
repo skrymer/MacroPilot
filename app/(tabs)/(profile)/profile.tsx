@@ -58,7 +58,7 @@ export default function Profile() {
       contentContainerClassName="gap-grid-2 px-page py-grid-2"
     >
       {found === 'unread' ? null : found === 'unreadable' ? (
-        <Unreadable words="Couldn’t load your details" onRetry={() => void readAgain()} />
+        <Unreadable words="Couldn’t load your profile" onRetry={() => void readAgain()} />
       ) : details ? (
         <Saved details={details} />
       ) : (

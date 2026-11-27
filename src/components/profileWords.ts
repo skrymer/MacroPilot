@@ -6,8 +6,16 @@ export const SEXES = [
 
 /** Two named answers rather than a switch: off is a way of using the app, not a setting turned down. */
 export const TRACKING = [
-  { label: 'Calories and weight', value: true },
-  { label: 'Weight only', value: false },
+  {
+    label: 'Calories and weight',
+    value: true,
+    detail: 'Log what you eat against a calorie budget and a protein floor.',
+  },
+  {
+    label: 'Weight only',
+    value: false,
+    detail: 'Weigh in and track your goal. MacroPilot never asks what you ate.',
+  },
 ] as const;
 
 /** The words of the answer that is `value`. */

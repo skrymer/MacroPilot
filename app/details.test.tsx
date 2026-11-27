@@ -126,15 +126,15 @@ describe('Your details', () => {
 
     // Then the form stays, filled, and says it was not saved
     expect(
-      await screen.findByText('Could not save your details. What you gave is still here.'),
+      await screen.findByText('Could not save profile. What you gave is still here.'),
     ).toBeOnTheScreen();
     expect(screen.getByLabelText('Height (cm)')).toHaveDisplayValue('181');
     expect(screen.getByRole('radio', { name: 'Male' })).toBeChecked();
   });
 
   it.each([
-    ['300', 'Enter a height above 0 and below 300 cm'],
-    ['0', 'Enter a height above 0 and below 300 cm'],
+    ['300', 'Height must be less than 300'],
+    ['0', 'Height must be greater than 0'],
     ['1.5.0', 'Enter a number'],
   ])('refuses a height of %s beside its field', async (typed, why) => {
     // Given the form open
@@ -162,9 +162,7 @@ describe('Your details', () => {
     await user.press(screen.getByRole('button', { name: 'Save profile' }));
 
     // Then the field says why
-    expect(
-      await screen.findByText('Choose a birth date before today, within the last 120 years'),
-    ).toBeOnTheScreen();
+    expect(await screen.findByText('Birth date must be in the past')).toBeOnTheScreen();
   });
 
   it('keeps calorie tracking off when the user chooses weight only', async () => {
@@ -238,7 +236,7 @@ describe('Your details', () => {
     await openApp('/details', profile);
 
     // Then it says so, offers to leave, and to try again, which opens the form filled
-    expect(await screen.findByText('Couldn’t load your details')).toBeOnTheScreen();
+    expect(await screen.findByText('Couldn’t load your profile')).toBeOnTheScreen();
     expect(screen.queryByRole('button', { name: 'Cancel' })).toBeOnTheScreen();
     profile.unreadable = false;
     await userEvent.press(screen.getByRole('button', { name: 'Retry' }));
@@ -260,7 +258,7 @@ describe('Your details', () => {
     await waitFor(() =>
       expect(screen.queryByRole('button', { name: 'Cancel' })).not.toBeOnTheScreen(),
     );
-    expect(screen.getByText('Couldn’t load your details')).toBeOnTheScreen();
+    expect(screen.getByText('Couldn’t load your profile')).toBeOnTheScreen();
   });
 
   it('chooses no birth date when the wheels are only opened and shut', async () => {
@@ -277,6 +275,27 @@ describe('Your details', () => {
     expect(screen.queryByRole('button', { name: 'Birth date, not chosen' })).toBeOnTheScreen();
   });
 
+  it('says what each way of tracking means, under the choice', async () => {
+    // Given the empty form, which says what counting calories means
+    const profile = new InMemoryProfileStore();
+    await openApp('/details', profile);
+    const user = userEvent.setup();
+    expect(
+      await screen.findByText('Log what you eat against a calorie budget and a protein floor.'),
+    ).toBeOnTheScreen();
+
+    // When weight only is chosen
+    await user.press(screen.getByRole('radio', { name: 'Weight only' }));
+
+    // Then it says what that means instead
+    expect(
+      screen.queryByText('Weigh in and track your goal. MacroPilot never asks what you ate.'),
+    ).toBeOnTheScreen();
+    expect(
+      screen.queryByText('Log what you eat against a calorie budget and a protein floor.'),
+    ).not.toBeOnTheScreen();
+  });
+
   it('refuses a form with nothing given, and says what each field needs', async () => {
     // Given the form open with nothing in it
     const profile = new InMemoryProfileStore();
@@ -288,7 +307,7 @@ describe('Your details', () => {
 
     // Then nothing is kept, and each field and the button say why
     expect(await screen.findByText('Choose your sex')).toBeOnTheScreen();
-    expect(screen.getByText('Choose your birth date')).toBeOnTheScreen();
+    expect(screen.getByText('Enter your birth date')).toBeOnTheScreen();
     expect(screen.getByText('Enter your height in cm')).toBeOnTheScreen();
     expect(screen.getByText('Not saved. A field above needs changing.')).toBeOnTheScreen();
     expect(await profile.read()).toBeUndefined();

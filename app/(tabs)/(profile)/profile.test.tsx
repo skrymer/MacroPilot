@@ -70,7 +70,7 @@ describe('Profile', () => {
     await profile.save({ sex: 'male', born: '1984-03-14', heightCm: 181, countsCalories: true });
     profile.unreadable = true;
     await openProfile(profile);
-    expect(await screen.findByText('Couldn’t load your details')).toBeOnTheScreen();
+    expect(await screen.findByText('Couldn’t load your profile')).toBeOnTheScreen();
     expect(screen.queryByText('No details yet')).not.toBeOnTheScreen();
     profile.unreadable = false;
 

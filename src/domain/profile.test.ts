@@ -1,4 +1,39 @@
-import { ageOn, isBirthDate, isHeight, newProfile } from './profile';
+import {
+  ageOn,
+  birthDateFault,
+  heightFault,
+  isBirthDate,
+  isHeight,
+  MAX_HEIGHT_CM,
+  newProfile,
+} from './profile';
+
+describe('heightFault', () => {
+  it('names which end a height is past, each its own', () => {
+    // Given nothing
+
+    // When 0 cm and 300 cm are judged
+    const faults = [heightFault(0), heightFault(MAX_HEIGHT_CM)];
+
+    // Then the first is not above zero, and the second is not below the tallest
+    expect(faults).toEqual(['not above zero', 'not below the tallest']);
+  });
+});
+
+describe('birthDateFault', () => {
+  it('names which rule a birth date breaks, each its own', () => {
+    // Given today, 27 November 2026
+
+    // When today, and a day more than 120 years ago, are judged
+    const faults = [
+      birthDateFault('2026-11-27', '2026-11-27'),
+      birthDateFault('1906-11-26', '2026-11-27'),
+    ];
+
+    // Then the first is not in the past, and the second is not within a life
+    expect(faults).toEqual(['not past', 'too long ago']);
+  });
+});
 
 const PROFILE = { sex: 'male', born: '1984-03-14', heightCm: 181, countsCalories: true } as const;
 
