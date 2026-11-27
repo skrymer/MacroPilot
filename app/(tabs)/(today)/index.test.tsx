@@ -151,6 +151,26 @@ describe('Today’s ring', () => {
     expect(screen.queryByText('Couldn’t load your targets')).toBeOnTheScreen();
   });
 
+  it('shows no day card while the targets are still being read, never the card before Setup', async () => {
+    // Given a review on the 24th, and the reviews slow to be read
+    const reviews = new InMemoryReviewStore();
+    await reviews.save({
+      day: '2026-11-24',
+      trendKg: 75,
+      maintenanceKcal: 2000,
+      budgetKcal: 2000,
+      proteinFloorG: 150,
+    });
+    reviews.holdReads();
+
+    // When the user opens Today, and the day's entries have been read
+    await openToday(new InMemoryEntryStore(), atNoon(), undefined, undefined, undefined, reviews);
+    await screen.findByText('Log a weighed food, or an estimate.');
+
+    // Then the totals card of a day without targets is not shown in the ring's place
+    expect(screen.queryByLabelText(/today, nothing logged yet$/)).not.toBeOnTheScreen();
+  });
+
   it('says 0 kcal left on a day at exactly its budget, not over it', async () => {
     // Given a review of 1176 kcal on the 24th, and 400 g of oats (1176 kcal) logged that day
     const reviews = new InMemoryReviewStore();

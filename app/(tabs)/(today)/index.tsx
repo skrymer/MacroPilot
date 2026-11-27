@@ -318,7 +318,8 @@ export default function Today() {
               onWeighIn={() => router.navigate('/log-weight')}
             />
           ) : null}
-          {Array.isArray(found) ? (
+          {/* Not before the targets are read, or a day held to one shows first as one without. */}
+          {Array.isArray(found) && reviews !== 'unread' ? (
             heldTo ? (
               <RingCard totals={totals} count={listed.length} review={heldTo}>
                 {weightRow}

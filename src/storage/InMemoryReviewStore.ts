@@ -8,6 +8,7 @@ export class InMemoryReviewStore implements ReviewStore {
   unreadable = false;
   unwritable = false;
   private writable: Promise<void> = Promise.resolve();
+  private readable: Promise<void> = Promise.resolve();
   private reviews: Review[] = [];
 
   /** Every write waits from here until what this gives back is called. */
@@ -23,7 +24,15 @@ export class InMemoryReviewStore implements ReviewStore {
     this.reviews = [...this.reviews.filter(({ day }) => day < review.day), review];
   }
 
+  /** Every read waits from here until what this gives back is called. */
+  holdReads(): () => void {
+    const { until, release } = held();
+    this.readable = until;
+    return release;
+  }
+
   async list(): Promise<Review[]> {
+    await this.readable;
     if (this.unreadable) throw new Error('The reviews cannot be read');
     return [...this.reviews];
   }
