@@ -9,6 +9,7 @@ import { estimatedEntry, weighedEntry } from '@/domain/entry';
 import { ScriptedClock } from '@/lifecycle/ScriptedClock';
 import { InMemoryEntryStore } from '@/storage/InMemoryEntryStore';
 import { InMemoryProfileStore } from '@/storage/InMemoryProfileStore';
+import { InMemoryReviewStore } from '@/storage/InMemoryReviewStore';
 import { InMemoryWeighInStore } from '@/storage/InMemoryWeighInStore';
 
 import Today from './index';
@@ -39,6 +40,7 @@ const openToday = (
   ask?: ScriptedAsk,
   weighIns?: InMemoryWeighInStore,
   profile?: InMemoryProfileStore,
+  reviews?: InMemoryReviewStore,
 ) =>
   renderRouter(
     {
@@ -55,6 +57,7 @@ const openToday = (
           ask={ask}
           weighIns={weighIns}
           profile={profile}
+          reviews={reviews}
         >
           {children}
         </TestProviders>
@@ -111,6 +114,30 @@ describe('Today’s setup line', () => {
 
     // Then Profile is showing
     expect(await screen.findByText('Profile, as the tab shows it')).toBeOnTheScreen();
+  });
+});
+
+describe('Today’s ring', () => {
+  it('says the kcal left and the day’s verdict once the day is held to a review', async () => {
+    // Given a review of 2000 kcal and 150 g on the 24th, and 400 g of oats (1176 kcal) logged that day
+    const reviews = new InMemoryReviewStore();
+    await reviews.save({
+      day: '2026-11-24',
+      trendKg: 75,
+      maintenanceKcal: 2000,
+      budgetKcal: 2000,
+      proteinFloorG: 150,
+    });
+    const entries = new InMemoryEntryStore([OATS]);
+    await entries.add(weighedEntry(OATS, 400, '2026-11-24'));
+
+    // When the user opens Today
+    await openToday(entries, atNoon(), undefined, undefined, undefined, reviews);
+
+    // Then the ring card says what is left, and where the day stands, as one
+    expect(await screen.findByLabelText(/^In progress, 824 kcal left/)).toBeOnTheScreen();
+    expect(screen.getByText('824')).toBeOnTheScreen();
+    expect(screen.getByText('kcal left')).toBeOnTheScreen();
   });
 });
 

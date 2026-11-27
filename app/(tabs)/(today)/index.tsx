@@ -19,12 +19,15 @@ import { Unreadable } from '@/components/Unreadable';
 import { useDelete } from '@/components/useDelete';
 import { useFailedInView } from '@/components/useFailedInView';
 import { totalsOf, type Totals as DayTotals } from '@/domain/dailyLog';
+import { reviewFor, type Review } from '@/domain/review';
 import { missingForSetup } from '@/domain/setup';
 import { shownName } from '@/domain/shownName';
+import { dayVerdict, type Verdict } from '@/domain/verdict';
 import { weighInOn, type WeighIn } from '@/domain/weighIn';
 import { useToday } from '@/lifecycle/useToday';
 import type { LoggedEntry } from '@/storage/EntryStore';
 import { useEntryStore } from '@/storage/EntryStoreContext';
+import { useReviewStore } from '@/storage/ReviewStoreContext';
 import { useReading } from '@/storage/useReading';
 import { useProfile } from '@/storage/useProfile';
 import { useWeighIns } from '@/storage/useWeighIns';
@@ -53,6 +56,48 @@ function Totals({
         {count === 0 ? (
           <Text className="font-language text-label text-ink-mid">Nothing logged yet</Text>
         ) : null}
+      </View>
+      <View className="mt-grid-2">{children}</View>
+    </View>
+  );
+}
+
+const VERDICT_WORDS: Record<Verdict, string> = {
+  'over budget': 'Over budget',
+  'slightly over': 'Slightly over',
+  'on target': 'On target',
+  'in progress': 'In progress',
+};
+
+/**
+ * The day card once the day is held to a review: what is left of the budget or how far past it, and
+ * the day's verdict in words, read out as one; the card's last row is the caller's.
+ */
+function RingCard({
+  totals,
+  review,
+  children,
+}: {
+  totals: DayTotals;
+  review: Review;
+  children: ReactNode;
+}) {
+  const left = Math.round(review.budgetKcal - totals.calories);
+  const centre = String(Math.abs(left));
+  const unit = left < 0 ? 'kcal over' : 'kcal left';
+  const verdict = VERDICT_WORDS[dayVerdict(totals, review)];
+  return (
+    <View className="rounded-card bg-surface p-grid-2">
+      <View
+        accessible
+        accessibilityLabel={`${verdict}, ${centre} ${unit}`}
+        className="items-center"
+      >
+        <Text className="font-weighed text-figure text-ink">{centre}</Text>
+        <Text className="font-language text-label text-ink-mid">{unit}</Text>
+        <Text className="mt-grid-1 text-center font-language-bold text-body text-ink-mid">
+          {verdict}
+        </Text>
       </View>
       <View className="mt-grid-2">{children}</View>
     </View>
@@ -147,6 +192,11 @@ export default function Today() {
   const { found, readAgain } = useReading(list);
   const { weighIns, readAgain: readWeighInsAgain } = useWeighIns();
   const { profile } = useProfile();
+  const reviewStore = useReviewStore();
+  const listReviews = useCallback(() => reviewStore.list(), [reviewStore]);
+  const { found: reviews } = useReading(listReviews);
+  // The review this day is held to: the latest dated on or before it.
+  const heldTo = Array.isArray(reviews) ? reviewFor(reviews, day) : undefined;
   const weighedToday = Array.isArray(weighIns) ? weighInOn(weighIns, day) : undefined;
   // An entry can be written after the user has come here from its form.
   const [logged] = useLogged();
@@ -174,6 +224,12 @@ export default function Today() {
   const shown = all ? listed : listed.slice(-LAST);
   const asksForRest = listed.length > LAST;
   const faultInView = useFailedInView(shown, deletion.fault);
+  const weightRow =
+    weighIns === 'unreadable' ? (
+      <Unreadable words="Couldn’t load your weight" onRetry={readWeighInsAgain} />
+    ) : Array.isArray(weighIns) ? (
+      <WeightRow weighIn={weighedToday} onLog={() => router.navigate('/log-weight')} />
+    ) : null;
   return (
     <FlatList
       {...faultInView.list}
@@ -231,13 +287,13 @@ export default function Today() {
               onWeighIn={() => router.navigate('/log-weight')}
             />
           ) : null}
-          {Array.isArray(found) ? (
+          {Array.isArray(found) && heldTo ? (
+            <RingCard totals={totals} review={heldTo}>
+              {weightRow}
+            </RingCard>
+          ) : Array.isArray(found) ? (
             <Totals totals={totals} count={listed.length}>
-              {weighIns === 'unreadable' ? (
-                <Unreadable words="Couldn’t load your weight" onRetry={readWeighInsAgain} />
-              ) : Array.isArray(weighIns) ? (
-                <WeightRow weighIn={weighedToday} onLog={() => router.navigate('/log-weight')} />
-              ) : null}
+              {weightRow}
             </Totals>
           ) : null}
           {listed.length > 0 ? (

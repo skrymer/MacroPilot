@@ -46,6 +46,9 @@ jest.mock('@/storage/SqliteEntryStore', () => ({
 jest.mock('@/storage/SqliteFoodStore', () => ({
   SqliteFoodStore: jest.requireActual('@/storage/InMemoryFoodStore').InMemoryFoodStore,
 }));
+jest.mock('@/storage/SqliteReviewStore', () => ({
+  SqliteReviewStore: jest.requireActual('@/storage/InMemoryReviewStore').InMemoryReviewStore,
+}));
 jest.mock('@/storage/SqliteWeighInStore', () => ({
   SqliteWeighInStore: jest.requireActual('@/storage/InMemoryWeighInStore').InMemoryWeighInStore,
 }));
