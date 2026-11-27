@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react-native';
+import { act, screen, userEvent } from '@testing-library/react-native';
 import { renderRouter } from 'expo-router/testing-library';
 import type { ReactNode } from 'react';
 
@@ -46,6 +46,39 @@ describe('Profile', () => {
     ).toBeOnTheScreen();
     expect(screen.getByRole('button', { name: 'Add your details' })).toBeOnTheScreen();
     expect(screen.queryByLabelText('Height (cm)')).not.toBeOnTheScreen();
+  });
+
+  it('says nothing before the profile is read, not even that there is none', async () => {
+    // Given a profile saved, whose read has not come back
+    const profile = new InMemoryProfileStore();
+    await profile.save({ sex: 'male', born: '1984-03-14', heightCm: 181, countsCalories: true });
+    const release = profile.holdNextRead();
+
+    // When the user opens Profile
+    await openProfile(profile);
+
+    // Then it says nothing until the read comes back with the details
+    expect(await screen.findByRole('header', { name: 'Profile' })).toBeOnTheScreen();
+    expect(screen.queryByText('No details yet')).not.toBeOnTheScreen();
+    await act(async () => release());
+    expect(await screen.findByLabelText('Sex, Male')).toBeOnTheScreen();
+  });
+
+  it('says a profile that cannot be read could not be, and reads it again when asked', async () => {
+    // Given a profile saved in a store that cannot be read, and Profile open on it
+    const profile = new InMemoryProfileStore();
+    await profile.save({ sex: 'male', born: '1984-03-14', heightCm: 181, countsCalories: true });
+    profile.unreadable = true;
+    await openProfile(profile);
+    expect(await screen.findByText('Couldn’t load your details')).toBeOnTheScreen();
+    expect(screen.queryByText('No details yet')).not.toBeOnTheScreen();
+    profile.unreadable = false;
+
+    // When the user asks to try again
+    await userEvent.press(screen.getByRole('button', { name: 'Retry' }));
+
+    // Then the details are shown
+    expect(await screen.findByLabelText('Sex, Male')).toBeOnTheScreen();
   });
 
   it('shows a saved profile as rows under its heading, each read out as one', async () => {

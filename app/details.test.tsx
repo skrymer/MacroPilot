@@ -1,8 +1,9 @@
-import { fireEvent, screen, userEvent } from '@testing-library/react-native';
+import { act, fireEvent, screen, userEvent } from '@testing-library/react-native';
 import { Stack } from 'expo-router';
 import { renderRouter } from 'expo-router/testing-library';
 import type { ReactNode } from 'react';
 
+import { ScriptedAsk } from '@/components/ScriptedAsk';
 import { TestProviders } from '@/components/TestProviders';
 import { ScriptedClock } from '@/lifecycle/ScriptedClock';
 import { InMemoryProfileStore } from '@/storage/InMemoryProfileStore';
@@ -18,13 +19,13 @@ const onTheDay = () => {
 };
 
 /** Opens the app at `initialUrl`, over `profile`. */
-const openApp = (initialUrl: string, profile: InMemoryProfileStore) =>
+const openApp = (initialUrl: string, profile: InMemoryProfileStore, ask?: ScriptedAsk) =>
   renderRouter(
     { _layout: () => <Stack />, '(tabs)/(profile)/profile': Profile, details: Details },
     {
       initialUrl,
       wrapper: ({ children }: { children: ReactNode }) => (
-        <TestProviders profile={profile} clock={onTheDay()}>
+        <TestProviders profile={profile} clock={onTheDay()} ask={ask}>
           {children}
         </TestProviders>
       ),
@@ -62,6 +63,129 @@ describe('Your details', () => {
     expect(screen.getByLabelText('Height, 168.5 centimetres')).toBeOnTheScreen();
     expect(screen.getByLabelText('Calorie tracking, Calories and weight')).toBeOnTheScreen();
     expect(screen.queryByRole('button', { name: 'Save profile' })).not.toBeOnTheScreen();
+  });
+
+  it('opens filled with the saved details when they are to be changed', async () => {
+    // Given a profile saved, and Profile open on it
+    const profile = new InMemoryProfileStore();
+    await profile.save({
+      sex: 'female',
+      born: '1984-03-14',
+      heightCm: 168.5,
+      countsCalories: false,
+    });
+    await openApp('/profile', profile);
+    const user = userEvent.setup();
+
+    // When the user asks to change them
+    await user.press(await screen.findByRole('button', { name: 'Change details' }));
+
+    // Then the form says so, and holds each detail as it was saved
+    expect(await screen.findByRole('header', { name: 'Change details' })).toBeOnTheScreen();
+    expect(await screen.findByDisplayValue('168.5')).toBeOnTheScreen();
+    expect(screen.getByRole('radio', { name: 'Female' })).toBeChecked();
+    expect(screen.getByRole('radio', { name: 'Weight only' })).toBeChecked();
+    expect(screen.getByRole('button', { name: 'Birth date, 14 March 1984' })).toBeOnTheScreen();
+  });
+
+  it('asks before changed details are left, and leaves them as they were once told to', async () => {
+    // Given the saved details opened to be changed, a height changed, and the form left
+    const profile = new InMemoryProfileStore();
+    await profile.save({ sex: 'male', born: '1984-03-14', heightCm: 181, countsCalories: true });
+    const ask = new ScriptedAsk();
+    await openApp('/profile', profile, ask);
+    const user = userEvent.setup();
+    await user.press(await screen.findByRole('button', { name: 'Change details' }));
+    await user.clear(await screen.findByLabelText('Height (cm)'));
+    await user.type(screen.getByLabelText('Height (cm)'), '182');
+    await user.press(screen.getByRole('button', { name: 'Cancel' }));
+    expect(ask.question).toEqual({ title: 'Discard these changes?', loses: 'Discard' });
+
+    // When the user says to discard them
+    await act(async () => ask.answer(true));
+
+    // Then Profile shows the details as they were
+    expect(await screen.findByLabelText('Height, 181 centimetres')).toBeOnTheScreen();
+    expect((await profile.read())?.heightCm).toBe(181);
+  });
+
+  it('keeps what was given when the save fails, and says so above the button', async () => {
+    // Given the form filled over a store that cannot be written
+    const profile = new InMemoryProfileStore();
+    profile.unwritable = true;
+    await openApp('/details', profile);
+    const user = userEvent.setup();
+    await user.press(await screen.findByRole('radio', { name: 'Male' }));
+    await pickDate(user, '1990-01-02');
+    await user.type(screen.getByLabelText('Height (cm)'), '181');
+
+    // When the user saves it
+    await user.press(screen.getByRole('button', { name: 'Save profile' }));
+
+    // Then the form stays, filled, and says it was not saved
+    expect(
+      await screen.findByText('Could not save your details. What you gave is still here.'),
+    ).toBeOnTheScreen();
+    expect(screen.getByLabelText('Height (cm)')).toHaveDisplayValue('181');
+    expect(screen.getByRole('radio', { name: 'Male' })).toBeChecked();
+  });
+
+  it.each([
+    ['300', 'Enter a height above 0 and below 300 cm'],
+    ['0', 'Enter a height above 0 and below 300 cm'],
+    ['1.5.0', 'Enter a number'],
+  ])('refuses a height of %s beside its field', async (typed, why) => {
+    // Given the form open
+    const profile = new InMemoryProfileStore();
+    await openApp('/details', profile);
+    const user = userEvent.setup();
+
+    // When the height is typed and left
+    await user.type(await screen.findByLabelText('Height (cm)'), typed);
+    await user.press(screen.getByRole('radio', { name: 'Male' }));
+
+    // Then the field says why
+    expect(await screen.findByText(why)).toBeOnTheScreen();
+  });
+
+  it('refuses a birth date from today, should the picker give one', async () => {
+    // Given the form open
+    const profile = new InMemoryProfileStore();
+    await openApp('/details', profile);
+    const user = userEvent.setup();
+    await screen.findByRole('button', { name: 'Save profile' });
+
+    // When today is chosen and the form saved
+    await pickDate(user, '2026-11-27');
+    await user.press(screen.getByRole('button', { name: 'Save profile' }));
+
+    // Then the field says why
+    expect(
+      await screen.findByText('Choose a birth date before today, within the last 120 years'),
+    ).toBeOnTheScreen();
+  });
+
+  it('keeps calorie tracking off when the user chooses weight only', async () => {
+    // Given the form filled, and weight only chosen
+    const profile = new InMemoryProfileStore();
+    await openApp('/details', profile);
+    const user = userEvent.setup();
+    await user.press(await screen.findByRole('radio', { name: 'Male' }));
+    await pickDate(user, '1990-01-02');
+    await user.type(screen.getByLabelText('Height (cm)'), '181');
+    await user.press(screen.getByRole('radio', { name: 'Weight only' }));
+
+    // When the user saves it
+    await user.press(screen.getByRole('button', { name: 'Save profile' }));
+
+    // Then it is kept so
+    expect(await screen.findByLabelText('Calorie tracking, Weight only')).toBeOnTheScreen();
+    expect(await profile.read()).toEqual({
+      sex: 'male',
+      born: '1990-01-02',
+      heightCm: 181,
+      countsCalories: false,
+    });
   });
 
   it('refuses a form with nothing given, and says what each field needs', async () => {

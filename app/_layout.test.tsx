@@ -7,6 +7,8 @@ import { Text } from '@/components/Text';
 import FoodsStack from './(tabs)/(foods)/_layout';
 import Foods from './(tabs)/(foods)/foods';
 import LogStack from './(tabs)/(log)/_layout';
+import ProfileStack from './(tabs)/(profile)/_layout';
+import Profile from './(tabs)/(profile)/profile';
 import Log from './(tabs)/(log)/log';
 import TodayStack from './(tabs)/(today)/_layout';
 import Today from './(tabs)/(today)/index';
@@ -16,6 +18,7 @@ import NotFound from './+not-found';
 import RootLayout from './_layout';
 import AddFood from './add-food';
 import Design from './design';
+import Details from './details';
 import LogFood from './log-food';
 
 // NativeWind compiles the stylesheet in Metro; Jest has no CSS loader, and the classes reach the
@@ -42,6 +45,9 @@ jest.mock('@/storage/SqliteEntryStore', () => ({
 jest.mock('@/storage/SqliteFoodStore', () => ({
   SqliteFoodStore: jest.requireActual('@/storage/InMemoryFoodStore').InMemoryFoodStore,
 }));
+jest.mock('@/storage/SqliteProfileStore', () => ({
+  SqliteProfileStore: jest.requireActual('@/storage/InMemoryProfileStore').InMemoryProfileStore,
+}));
 
 /** React Native's development flag, which a test sets to stand for a release build. */
 const build = globalThis as unknown as { __DEV__: boolean };
@@ -57,6 +63,9 @@ const openAt = (initialUrl: string) =>
       '(tabs)/(log)/log': Log,
       '(tabs)/(foods)/_layout': FoodsStack,
       '(tabs)/(foods)/foods': Foods,
+      '(tabs)/(profile)/_layout': ProfileStack,
+      '(tabs)/(profile)/profile': Profile,
+      details: Details,
       'log-food': LogFood,
       '(tabs)/developer': Developer,
       'add-food': AddFood,
@@ -109,6 +118,22 @@ describe('RootLayout', () => {
     // Then Foods shows it
     expect(await screen.findByText('Rolled oats')).toBeOnTheScreen();
     expect(screen.getByText('276 kcal')).toBeOnTheScreen();
+  });
+
+  it('keeps details saved on the details form where Profile reads them', async () => {
+    // Given Profile's way in to the details form, over the store the root layout makes
+    await openAt('/profile');
+    const user = userEvent.setup();
+    await user.press(await screen.findByRole('button', { name: 'Add your details' }));
+    await user.press(await screen.findByRole('radio', { name: 'Male' }));
+    await user.press(screen.getByRole('button', { name: /^Birth date, / }));
+    await user.type(screen.getByLabelText('Height (cm)'), '181');
+
+    // When they are saved
+    await user.press(screen.getByRole('button', { name: 'Save profile' }));
+
+    // Then Profile shows them
+    expect(await screen.findByLabelText('Sex, Male')).toBeOnTheScreen();
   });
 
   it('keeps an entry logged on Log where Today reads it', async () => {

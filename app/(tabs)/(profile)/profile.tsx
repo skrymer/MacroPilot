@@ -1,14 +1,13 @@
 import { useRouter } from 'expo-router';
-import { useCallback } from 'react';
 import { ScrollView, View } from 'react-native';
 
 import { Button } from '@/components/Button';
 import { cm } from '@/components/figures';
 import { Notice } from '@/components/Notice';
 import { Text } from '@/components/Text';
+import { Unreadable } from '@/components/Unreadable';
 import type { Profile as Details } from '@/domain/profile';
-import { useProfileStore } from '@/storage/ProfileStoreContext';
-import { useReading } from '@/storage/useReading';
+import { useProfile } from '@/storage/useProfile';
 
 const SEX = { male: 'Male', female: 'Female' } as const;
 
@@ -36,6 +35,7 @@ function Detail({ label, value, spoken }: { label: string; value: string; spoken
 }
 
 function Saved({ details }: { details: Details }) {
+  const router = useRouter();
   return (
     <>
       <Text accessibilityRole="header" className="font-language-bold text-body text-ink">
@@ -57,19 +57,14 @@ function Saved({ details }: { details: Details }) {
           value={details.countsCalories ? 'Calories and weight' : 'Weight only'}
         />
       </View>
-      <Button label="Change details" onPress={() => undefined} secondary />
+      <Button label="Change details" onPress={() => router.navigate('/details')} secondary />
     </>
   );
 }
 
 export default function Profile() {
   const router = useRouter();
-  const store = useProfileStore();
-  const list = useCallback(
-    () => store.read().then((saved) => (saved === undefined ? [] : [saved])),
-    [store],
-  );
-  const { found } = useReading(list);
+  const { profile: found, readAgain } = useProfile();
   const [details] = Array.isArray(found) ? found : [];
   return (
     // The page's root, or iOS's large title does not follow its scroll.
@@ -77,7 +72,9 @@ export default function Profile() {
       contentInsetAdjustmentBehavior="automatic"
       contentContainerClassName="gap-grid-2 px-page py-grid-2"
     >
-      {details ? (
+      {found === 'unread' ? null : found === 'unreadable' ? (
+        <Unreadable words="Couldn’t load your details" onRetry={() => void readAgain()} />
+      ) : details ? (
         <Saved details={details} />
       ) : (
         <Notice
