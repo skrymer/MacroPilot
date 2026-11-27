@@ -23,6 +23,10 @@ export default function TabsLayout() {
         <NativeTabs.Trigger.Label>Foods</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf="fork.knife" md="restaurant" />
       </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="(profile)">
+        <NativeTabs.Trigger.Label>Profile</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf="person.crop.circle" md="person" />
+      </NativeTabs.Trigger>
       {/* Last, and only in a development build; the page itself also refuses a release build. */}
       <NativeTabs.Trigger name="developer" hidden={!__DEV__}>
         <NativeTabs.Trigger.Label>Developer</NativeTabs.Trigger.Label>

@@ -1,0 +1,24 @@
+# The system's date dialog offers only a birth date the form would take: before today, and within 120
+# years. Today is pressed in it, and is not chosen. The dialog is the system's, which Jest cannot see
+# (ADR 0011).
+appId: com.skrymer.macropilot
+---
+- runFlow: steps/start.yaml
+- evalScript: ${output.year = String(new Date().getFullYear())}
+- evalScript: ${output.day = String(new Date().getDate())}
+- evalScript: ${output.today = output.day + ' ' + ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec'][new Date().getMonth()] + ' ' + output.year}
+- openLink: 'macropilot://details'
+- tapOn: 'Birth date, Choose a date'
+# The dialog opens thirty years back; its year list goes to this year.
+- tapOn: '[0-9]{4}'
+- repeat:
+    times: 6
+    while:
+      notVisible: '${output.year}'
+    commands:
+      - scroll
+- tapOn: '${output.year}'
+- tapOn: '${output.day}'
+- tapOn: 'OK'
+- assertVisible: 'Birth date, .*[0-9]{4}'
+- assertNotVisible: 'Birth date, ${output.today}'

@@ -6,6 +6,9 @@ export const kcal = (calories: number) => `${Math.round(calories)}\u00a0kcal`;
 
 export const grams = (weight: number) => `${THOUSANDS.format(Math.round(weight))}\u00a0g`;
 
+/** A height in cm, as it was given. */
+export const cm = (height: number) => `${height}${String.fromCharCode(0xa0)}cm`;
+
 /** A day's calories in its tally, the one place they have their thousands apart. */
 export const talliedKcal = (calories: number) =>
   `${THOUSANDS.format(Math.round(calories))}\u00a0kcal`;
@@ -20,3 +23,6 @@ const spoken = (figure: number, unit: string) =>
 export const spokenKcal = (calories: number) => spoken(calories, 'calorie');
 
 export const spokenGrams = (weight: number) => spoken(weight, 'gram');
+
+/** A height as it was given, unrounded, as `cm` shows it. */
+export const spokenCm = (height: number) => `${height} centimetres`;

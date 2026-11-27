@@ -7,6 +7,8 @@ import { EntryStoreProvider } from '@/storage/EntryStoreContext';
 import { FoodStoreProvider } from '@/storage/FoodStoreContext';
 import { InMemoryEntryStore } from '@/storage/InMemoryEntryStore';
 import { InMemoryFoodStore } from '@/storage/InMemoryFoodStore';
+import { InMemoryProfileStore } from '@/storage/InMemoryProfileStore';
+import { ProfileStoreProvider } from '@/storage/ProfileStoreContext';
 
 import { AskProvider } from './AskContext';
 import { LoggedProvider } from './LoggedContext';
@@ -21,18 +23,21 @@ export function TestProviders({
   clock,
   foods,
   entries,
+  profile,
   ask,
   children,
 }: {
   clock?: ScriptedClock;
   foods?: InMemoryFoodStore;
   entries?: InMemoryEntryStore;
+  profile?: InMemoryProfileStore;
   ask?: ScriptedAsk;
   children: ReactNode;
 }) {
   const [quietClock] = useState(() => new ScriptedClock());
   const [noFoods] = useState(() => new InMemoryFoodStore());
   const [noEntries] = useState(() => new InMemoryEntryStore());
+  const [noProfile] = useState(() => new InMemoryProfileStore());
   const [unanswered] = useState(() => new ScriptedAsk());
   // The phone's two stores are tables of one database.
   useEffect(() => (foods ?? noFoods).loggedIn(entries ?? noEntries));
@@ -40,12 +45,14 @@ export function TestProviders({
     <ClockProvider clock={clock ?? quietClock}>
       <FoodStoreProvider store={foods ?? noFoods}>
         <EntryStoreProvider store={entries ?? noEntries}>
-          <AskProvider ask={ask ?? unanswered}>
-            <LoggedProvider>
-              {/* The root's, as `app/_layout.tsx` gives it: a swipe is seen only under it. */}
-              <GestureHandlerRootView style={{ flex: 1 }}>{children}</GestureHandlerRootView>
-            </LoggedProvider>
-          </AskProvider>
+          <ProfileStoreProvider store={profile ?? noProfile}>
+            <AskProvider ask={ask ?? unanswered}>
+              <LoggedProvider>
+                {/* The root's, as `app/_layout.tsx` gives it: a swipe is seen only under it. */}
+                <GestureHandlerRootView style={{ flex: 1 }}>{children}</GestureHandlerRootView>
+              </LoggedProvider>
+            </AskProvider>
+          </ProfileStoreProvider>
         </EntryStoreProvider>
       </FoodStoreProvider>
     </ClockProvider>

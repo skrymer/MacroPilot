@@ -91,6 +91,17 @@ describe('forms/first-fault-shown', () => {
     expect(reported).not.toContain('forms/first-fault-shown');
   });
 
+  it('counts a field drawn through a Controller, as a choice or a date is', () => {
+    // Given a form of one text field and a choice, which can put a fault out of view as two fields do
+    const source = `const c = <><Controller name="sex" render={() => null} /><FormField name="height" /></>;`;
+
+    // When it is linted
+    const reported = lint(source, SCREEN);
+
+    // Then the rule reports it
+    expect(reported).toContain('forms/first-fault-shown');
+  });
+
   it('reports fields mapped from a list, which are several though written once', () => {
     // Given fields made from a list, as Add food makes its six
     const source = `const c = F.map((n) => <FormField key={n} name={n} />);`;

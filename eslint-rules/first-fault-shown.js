@@ -26,7 +26,8 @@ module.exports = {
         .getAncestors(node)
         .some((up) => up.type === 'CallExpression' && up.callee.property?.name === 'map');
     return {
-      'JSXOpeningElement[name.name="FormField"]': (node) => {
+      // A choice or a date is drawn through a Controller, and can be out of view as a text field can.
+      'JSXOpeningElement[name.name=/^(FormField|Controller)$/]': (node) => {
         several ||= first !== undefined || isMapped(node);
         first ??= node;
       },
