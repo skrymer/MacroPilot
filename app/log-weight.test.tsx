@@ -95,6 +95,26 @@ describe('Log weight', () => {
     expect(line).toBeTruthy();
   });
 
+  it('shows the weight on Today though the user left before its write landed', async () => {
+    // Given the form over Today with a weight typed, over storage that is slow to write
+    const weighIns = new InMemoryWeighInStore();
+    const release = weighIns.holdWrites();
+    await openApp('/', weighIns);
+    const user = userEvent.setup();
+    await user.press(await screen.findByRole('button', { name: 'Log weight' }));
+    await user.type(await screen.findByLabelText('Weight (kg)'), '75.3');
+    await user.press(screen.getByRole('button', { name: 'Save weight' }));
+
+    // When the user goes back to Today at once, and then the write lands
+    await act(() => router.back());
+    await screen.findByText('No weight logged today');
+    await act(async () => release());
+
+    // Then it is kept, and Today shows it
+    await waitFor(async () => expect(await weighIns.list()).toHaveLength(1));
+    expect(await screen.findByLabelText('Weight today, 75.3 kilograms')).toBeOnTheScreen();
+  });
+
   it('keeps the day it was opened on, when midnight passes with it open', async () => {
     // Given a weigh-in on the 27th, opened from Edit at 23:59 and changed
     const weighIns = new InMemoryWeighInStore();
