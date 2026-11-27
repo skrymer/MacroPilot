@@ -10,6 +10,7 @@ import { FoodRow } from '@/components/FoodRow';
 import { FoodsNotice } from '@/components/FoodsNotice';
 import { Hairline } from '@/components/Hairline';
 import { useLogged, type Logged } from '@/components/LoggedContext';
+import { VALID_SIGN } from '@/components/signs';
 import { Text } from '@/components/Text';
 import { useTint } from '@/components/useTint';
 import type { Food } from '@/domain/food';
@@ -32,11 +33,7 @@ function LoggedLine({ logged: { name, entry } }: { logged: Logged }) {
       accessibilityLiveRegion="polite"
       className="flex-row items-center gap-grid-2 rounded-card bg-surface p-grid-2"
     >
-      <SymbolView
-        name={{ ios: 'checkmark.circle.fill', android: 'check_circle' }}
-        size={22}
-        tintColor={tint.valid}
-      />
+      <SymbolView name={VALID_SIGN} size={22} tintColor={tint.valid} />
       <View className="flex-1">
         <Text className="font-language-bold text-body text-ink">{title}</Text>
         <Text className="font-language text-label text-ink-mid">{words.shown}</Text>

@@ -4,6 +4,7 @@ import { View, type KeyboardTypeOptions } from 'react-native';
 
 import { fieldLook } from './fieldLook';
 import { Input } from './Input';
+import { FAULT_SIGN, VALID_SIGN } from './signs';
 import { Text } from './Text';
 import { useTint } from './useTint';
 
@@ -20,14 +21,8 @@ type FormFieldProps<Typed extends FieldValues, Said> = {
 
 /** Each look's field, and the sign at its end, so the hue is never alone (DESIGN.md, *Forms*). */
 const LOOKS = {
-  fault: {
-    field: 'border-2 border-fault bg-fault/10 pr-11',
-    sign: { ios: 'exclamationmark.triangle.fill', android: 'warning' },
-  },
-  valid: {
-    field: 'border-2 border-valid bg-valid/10 pr-11',
-    sign: { ios: 'checkmark.circle.fill', android: 'check_circle' },
-  },
+  fault: { field: 'border-2 border-fault bg-fault/10 pr-11', sign: FAULT_SIGN },
+  valid: { field: 'border-2 border-valid bg-valid/10 pr-11', sign: VALID_SIGN },
   rest: { field: 'border border-edge bg-surface-lift', sign: undefined },
 } as const;
 
@@ -53,7 +48,7 @@ export function FormField<Typed extends FieldValues, Said>({
       render={({ field: { onChange, ...field }, fieldState }) => {
         const { error } = fieldState;
         const look = fieldLook(fieldState);
-        const { sign } = LOOKS[look];
+        const { field: drawn, sign } = LOOKS[look];
         return (
           <View className="gap-1">
             <Text
@@ -75,14 +70,15 @@ export function FormField<Typed extends FieldValues, Said>({
                 keyboardType={keyboardType}
                 autoFocus={autoFocus}
                 onChangeText={onChange}
-                className={`font-language text-body ${LOOKS[look].field}`}
+                className={`font-language text-body ${drawn}`}
               />
               {sign ? (
                 <View pointerEvents="none" className="absolute right-3">
                   <SymbolView
                     name={sign}
                     size={20}
-                    tintColor={look === 'fault' ? tint.fault : tint.valid}
+                    // A look with a sign is named for its token.
+                    tintColor={tint[look]}
                   />
                 </View>
               ) : null}

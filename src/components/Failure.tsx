@@ -1,6 +1,7 @@
 import { SymbolView } from 'expo-symbols';
 import { View } from 'react-native';
 
+import { FAULT_SIGN } from './signs';
 import { Text } from './Text';
 import { useTint } from './useTint';
 
@@ -12,11 +13,7 @@ export function Failure({ words }: { words: string }) {
   const tint = useTint();
   return (
     <View className="flex-row items-center gap-grid-1">
-      <SymbolView
-        name={{ ios: 'exclamationmark.triangle.fill', android: 'warning' }}
-        size={18}
-        tintColor={tint.fault}
-      />
+      <SymbolView name={FAULT_SIGN} size={18} tintColor={tint.fault} />
       <Text accessibilityRole="alert" className="flex-1 font-language-bold text-body text-fault">
         {words}
       </Text>
