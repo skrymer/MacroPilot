@@ -12,6 +12,7 @@
 //                                           photographs serve
 //   charters.mjs gates <issue>              exits 1 unless every gate ran on the code as it stands
 import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import {
   existsSync,
   mkdirSync,
@@ -25,6 +26,8 @@ import {
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { parseArgs } from 'node:util';
+
+import ts from 'typescript';
 
 const FORM = /^explore\s+\S.*\swith\s+\S.*\sto discover\s+\S.*$/i;
 /** A small change takes few charters: its last ones were spent on what no user would meet. */
@@ -42,15 +45,51 @@ const git = (args, env = process.env) =>
  * under a newer timestamp of its own, and git then takes a same-size edit made within the second for
  * no edit at all.
  */
-function codeNow(paths = [':/']) {
+function treeNow() {
   const dir = mkdtempSync(path.join(tmpdir(), 'code-'));
   try {
     const env = { ...process.env, GIT_INDEX_FILE: path.join(dir, 'index') };
-    execFileSync('git', ['add', '-A', '--', ...paths], { env, stdio: 'ignore' });
+    execFileSync('git', ['add', '-A', ':/'], { env, stdio: 'ignore' });
     return git(['write-tree'], env);
   } finally {
     rmSync(dir, { recursive: true });
   }
+}
+
+const SCRIPT = /\.(m|c)?(j|t)sx?$/;
+const printer = ts.createPrinter({ removeComments: true });
+
+/** A script as it runs: its comments and its layout left out, since neither changes what it does. */
+function asItRuns(file, text) {
+  const kind = /x$/.test(file) ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
+  return printer.printFile(ts.createSourceFile(file, text, ts.ScriptTarget.Latest, false, kind));
+}
+
+/**
+ * The working copy as it stands, untracked files included, as one hash: every file read whole, and a
+ * script as it runs, so that a change to comments alone leaves it as it was.
+ */
+function codeNow(paths = [':/']) {
+  const top = git(['rev-parse', '--show-toplevel']);
+  const files = git([
+    '-C',
+    top,
+    'ls-files',
+    '--cached',
+    '--others',
+    '--exclude-standard',
+    '--',
+    ...paths,
+  ])
+    .split('\n')
+    .filter((file) => file && existsSync(path.join(top, file)))
+    .sort();
+  const hash = createHash('sha256');
+  for (const file of files) {
+    const text = readFileSync(path.join(top, file), 'utf8');
+    hash.update(`${file}\0${SCRIPT.test(file) ? asItRuns(file, text) : text}\0`);
+  }
+  return hash.digest('hex');
 }
 
 const dirOf = (issue) => path.resolve(git(['rev-parse', '--git-path', `break-it/${issue}`]));
@@ -81,12 +120,12 @@ function loadOnThisCode(issue) {
  * The lines of the app the change adds and removes, its tests left out. An epic is explored on main,
  * where nothing differs from origin/main, so it names the commit it started from.
  */
-function changedLines(base, code) {
+function changedLines(base) {
   const counts = git([
     'diff',
     '--numstat',
     base,
-    code,
+    treeNow(),
     '--',
     ':/app',
     ':/src',
@@ -112,7 +151,7 @@ function head(issue, { base = branchPoint() }) {
   mkdirSync(dirOf(issue), { recursive: true });
   const code = codeNow();
   const kept = existsSync(stateFile(issue)) && load(issue).code === code;
-  if (!kept) save(issue, { code, charters: [], lines: changedLines(base, code) });
+  if (!kept) save(issue, { code, charters: [], lines: changedLines(base) });
   console.log(dirOf(issue));
 }
 
