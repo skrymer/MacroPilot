@@ -5,6 +5,7 @@ import { Appearance, Pressable, ScrollView, useColorScheme, View } from 'react-n
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle } from 'react-native-svg';
 
+import { DayRing as BuiltRing } from '@/components/DayRing';
 import { Failure } from '@/components/Failure';
 import { Link } from '@/components/Link';
 import { FAULT_SIGN, VALID_SIGN } from '@/components/signs';
@@ -295,32 +296,34 @@ const DAYS: Day[] = [
   },
 ];
 
-const DayRing = ({
+/** The ring Today draws, its day in the specimen's state; protein's arc is drawn with its words. */
+const DaySpecimen = ({
   state,
   centre,
   unit,
   proteinLeft,
   calories,
-  protein,
   stroke,
   text,
   figure = 'text-ink',
 }: Day) => (
   <Card>
-    <Ring
-      label={`${state}, ${centre} ${unit}, ${proteinLeft}`}
-      arcs={[
-        { radius: 110, width: 14, filled: calories, stroke },
-        { radius: 88, width: 8, filled: protein, stroke: 'stroke-within' },
-      ]}
-    >
-      <Text className={`font-weighed text-figure ${figure}`}>{centre}</Text>
-      <Text className="font-language text-label text-ink-mid">{unit}</Text>
-    </Ring>
+    <View accessible accessibilityLabel={`${state}, ${centre} ${unit}, ${proteinLeft}`}>
+      <BuiltRing share={Math.min(calories, 1)} standing={STANDING_OF[stroke] ?? 'within'}>
+        <Text className={`font-weighed text-figure ${figure}`}>{centre}</Text>
+        <Text className="font-language text-label text-ink-mid">{unit}</Text>
+      </BuiltRing>
+    </View>
     <Text className={`mt-3 text-center font-language-bold text-body ${text}`}>{state}</Text>
     <Text className="text-center font-language text-label text-ink-mid">{proteinLeft}</Text>
   </Card>
 );
+
+const STANDING_OF: Record<string, 'within' | 'slightly-over' | 'over'> = {
+  'stroke-within': 'within',
+  'stroke-slightly-over': 'slightly-over',
+  'stroke-over': 'over',
+};
 
 type EntrySpecimen = { name: string; detail: string; first?: boolean; children: ReactNode };
 
@@ -445,7 +448,7 @@ export default function Design() {
         note="The full circle is the target. Outer is calories, inner and thinner is protein."
       >
         {DAYS.map((day) => (
-          <DayRing key={day.state} {...day} />
+          <DaySpecimen key={day.state} {...day} />
         ))}
       </Section>
 
