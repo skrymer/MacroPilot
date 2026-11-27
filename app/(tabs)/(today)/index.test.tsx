@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 
 import { ScriptedAsk } from '@/components/ScriptedAsk';
 import { TestProviders } from '@/components/TestProviders';
+import { Text } from '@/components/Text';
 import { estimatedEntry, weighedEntry } from '@/domain/entry';
 import { ScriptedClock } from '@/lifecycle/ScriptedClock';
 import { InMemoryEntryStore } from '@/storage/InMemoryEntryStore';
@@ -40,7 +41,11 @@ const openToday = (
   profile?: InMemoryProfileStore,
 ) =>
   renderRouter(
-    { '(tabs)/(today)/index': Today, '(tabs)/(log)/log': () => null },
+    {
+      '(tabs)/(today)/index': Today,
+      '(tabs)/(log)/log': () => null,
+      '(tabs)/(profile)/profile': () => <Text>Profile, as the tab shows it</Text>,
+    },
     {
       initialUrl: '/',
       wrapper: ({ children }: { children: ReactNode }) => (
@@ -94,6 +99,43 @@ describe('Today before Setup', () => {
       expect(screen.getAllByRole('button', { name: action })[0]).toBeOnTheScreen();
     },
   );
+});
+
+describe('Today’s setup line', () => {
+  it('takes the user to Profile for the details', async () => {
+    // Given Today with nothing set up
+    await openToday(new InMemoryEntryStore(), atNoon(), undefined, new InMemoryWeighInStore());
+
+    // When the user presses the setup line's Profile
+    await userEvent.press(await screen.findByRole('button', { name: 'Profile' }));
+
+    // Then Profile is showing
+    expect(await screen.findByText('Profile, as the tab shows it')).toBeOnTheScreen();
+  });
+});
+
+describe('Today before its reads', () => {
+  it('says nothing about setup until the profile has been read', async () => {
+    // Given a profile and no weigh-in, the profile's read not come back
+    const profile = new InMemoryProfileStore();
+    await profile.save({ sex: 'male', born: '1984-03-14', heightCm: 181, countsCalories: true });
+    const release = profile.holdNextRead();
+
+    // When the user opens Today
+    await openToday(
+      new InMemoryEntryStore(),
+      atNoon(),
+      undefined,
+      new InMemoryWeighInStore(),
+      profile,
+    );
+
+    // Then no setup line shows until the read is back, and then the one for the weigh-in alone
+    expect(await screen.findByText('No weight logged today')).toBeOnTheScreen();
+    expect(screen.queryByText(/to see your calorie budget$/)).not.toBeOnTheScreen();
+    await act(async () => release());
+    expect(await screen.findByText('Log your weight to see your calorie budget')).toBeOnTheScreen();
+  });
 });
 
 describe('Today after Setup', () => {

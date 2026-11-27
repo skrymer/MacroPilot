@@ -1,10 +1,11 @@
-import { screen, userEvent } from '@testing-library/react-native';
-import { Stack } from 'expo-router';
+import { act, screen, userEvent, waitFor } from '@testing-library/react-native';
+import { router, Stack } from 'expo-router';
 import { renderRouter } from 'expo-router/testing-library';
 import type { ReactNode } from 'react';
 
 import { TestProviders } from '@/components/TestProviders';
 import { ScriptedClock } from '@/lifecycle/ScriptedClock';
+import { InMemoryProfileStore } from '@/storage/InMemoryProfileStore';
 import { InMemoryWeighInStore } from '@/storage/InMemoryWeighInStore';
 
 import Today from './(tabs)/(today)/index';
@@ -18,7 +19,12 @@ const onTheDay = () => {
 };
 
 /** Opens the app at `initialUrl`, over `weighIns`. */
-const openApp = (initialUrl: string, weighIns: InMemoryWeighInStore, clock = onTheDay()) =>
+const openApp = (
+  initialUrl: string,
+  weighIns: InMemoryWeighInStore,
+  clock = onTheDay(),
+  profile?: InMemoryProfileStore,
+) =>
   renderRouter(
     {
       _layout: () => <Stack />,
@@ -29,7 +35,7 @@ const openApp = (initialUrl: string, weighIns: InMemoryWeighInStore, clock = onT
     {
       initialUrl,
       wrapper: ({ children }: { children: ReactNode }) => (
-        <TestProviders weighIns={weighIns} clock={clock}>
+        <TestProviders weighIns={weighIns} clock={clock} profile={profile}>
           {children}
         </TestProviders>
       ),
@@ -71,6 +77,39 @@ describe('Log weight', () => {
     weighIns.unreadable = false;
     await userEvent.press(screen.getByRole('button', { name: 'Retry' }));
     expect(await screen.findByLabelText('Weight (kg)')).toBeOnTheScreen();
+  });
+
+  it('opens from the setup line when details are saved and only a weigh-in is missing', async () => {
+    // Given Today with details and no weigh-in
+    const profile = new InMemoryProfileStore();
+    await profile.save({ sex: 'male', born: '1984-03-14', heightCm: 181, countsCalories: true });
+    await openApp('/', new InMemoryWeighInStore(), onTheDay(), profile);
+    const line = await screen.findByText('Log your weight to see your calorie budget');
+    const [fromLine] = screen.getAllByRole('button', { name: 'Log weight' });
+
+    // When the user presses the line's Log weight
+    await userEvent.press(fromLine as NonNullable<typeof fromLine>);
+
+    // Then the form is open, the line under it
+    expect(await screen.findByLabelText('Weight (kg)')).toBeOnTheScreen();
+    expect(line).toBeTruthy();
+  });
+
+  it('leaves by its X when the weigh-ins could not be read', async () => {
+    // Given the form over Today, its weigh-ins unreadable
+    const weighIns = new InMemoryWeighInStore();
+    weighIns.unreadable = true;
+    await openApp('/', weighIns);
+    await act(() => router.navigate('/log-weight'));
+    await screen.findByRole('button', { name: 'Cancel' });
+
+    // When the user leaves by the X
+    await userEvent.press(screen.getByRole('button', { name: 'Cancel' }));
+
+    // Then the form is gone, its X with it
+    await waitFor(() =>
+      expect(screen.queryByRole('button', { name: 'Cancel' })).not.toBeOnTheScreen(),
+    );
   });
 
   it('keeps the weight typed when the save fails, and says so above the button', async () => {

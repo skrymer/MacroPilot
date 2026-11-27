@@ -49,6 +49,16 @@ describe('isWeight', () => {
     expect(refused).toBe(false);
   });
 
+  it('takes 20 kg and 400 kg, the ends (Stryker: `>=` and `<=` taken for `>` and `<`)', () => {
+    // Given nothing
+
+    // When each end is given
+    const ends = [isWeight(20), isWeight(400)];
+
+    // Then both are weights
+    expect(ends).toEqual([true, true]);
+  });
+
   it('refuses a weight over 400 kg', () => {
     // Given nothing
 
