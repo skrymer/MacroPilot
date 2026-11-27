@@ -26,6 +26,7 @@ Every run pays for lessons. Left in the conversation they die with it. This rout
    Digest: <absolute path to digest.txt>
    Gate reports: <each gate's report, as it was reported>
    Memory index: <absolute path to MEMORY.md>
+   Also: every place TDD was not kept, and what would make it hold (*TDD, every time*, below)
    ```
 
    Never mine it in this conversation, and add no view of what went wrong. While another session works in this checkout, tell the miner to use Read alone: the Bash guard rolls that session's edits back as if the miner's command wrote them.
@@ -35,6 +36,18 @@ Every run pays for lessons. Left in the conversation they die with it. This rout
 4. **Prove a mechanical lesson**: the test, rule or script has to fail on the thing that went wrong. A lesson applied but not shown to bite is prose.
 
 5. **Report**: one line a lesson, with its evidence, its home, and applied or not.
+
+## TDD, every time
+
+Every post-mortem looks for ways to keep TDD better, whether or not anything went wrong (the user's word, 28 November 2026). The miner is asked, and the report answers, where the run bent it and what would stop that next time:
+
+- **Production code before its red**, or a red that was a query finding nothing rather than an assertion failing.
+- **A test written after the code it covers**, passing at once, with no red shown against a copy that lacks the guarantee (rn-dev, *Transactions*).
+- **A committed test changed or removed**, and how (`test-guard.sh` refuses it; a refusal is evidence too).
+- **A probity refusal**: was the refused code right, and was the way round it a red, a measurement, or a worse version of the code?
+- **A when with two actions**, a missing given/when/then, an absence-versus-zero guard with no zero case.
+
+The preferred fix is mechanical: a hook, a lint rule, a check in a script, a refusal. A sentence in a skill is the fallback, when no check can be written. "TDD held throughout" is a result, said with the evidence that shows it.
 
 ## What it may change
 
