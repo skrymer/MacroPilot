@@ -75,25 +75,33 @@ const VERDICT_WORDS: Record<Verdict, string> = {
  */
 function RingCard({
   totals,
+  count,
   review,
   children,
 }: {
   totals: DayTotals;
+  count: number;
   review: Review;
   children: ReactNode;
 }) {
   const left = Math.round(review.budgetKcal - totals.calories);
   const centre = String(Math.abs(left));
   const unit = left < 0 ? 'kcal over' : 'kcal left';
-  const verdict = VERDICT_WORDS[dayVerdict(totals, review)];
+  // An empty day is an empty track, and says so rather than that it is in progress.
+  const verdict = count === 0 ? 'Nothing logged yet' : VERDICT_WORDS[dayVerdict(totals, review)];
+  // A day of estimates alone is set lighter and says so (DESIGN.md, *Figures*).
+  const about = totals.estimated;
   return (
     <View className="rounded-card bg-surface p-grid-2">
       <View
         accessible
-        accessibilityLabel={`${verdict}, ${centre} ${unit}`}
+        accessibilityLabel={`${verdict}, ${about ? 'about ' : ''}${centre} ${unit}`}
         className="items-center"
       >
-        <Text className="font-weighed text-figure text-ink">{centre}</Text>
+        {about ? <Text className="font-language text-label text-ink-mid">about</Text> : null}
+        <Text className={`text-figure ${FIGURE_SET[about ? 'estimated' : 'weighed']}`}>
+          {centre}
+        </Text>
         <Text className="font-language text-label text-ink-mid">{unit}</Text>
         <Text className="mt-grid-1 text-center font-language-bold text-body text-ink-mid">
           {verdict}
@@ -288,7 +296,7 @@ export default function Today() {
             />
           ) : null}
           {Array.isArray(found) && heldTo ? (
-            <RingCard totals={totals} review={heldTo}>
+            <RingCard totals={totals} count={listed.length} review={heldTo}>
               {weightRow}
             </RingCard>
           ) : Array.isArray(found) ? (

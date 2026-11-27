@@ -141,6 +141,93 @@ describe('Today’s ring', () => {
   });
 });
 
+describe('Today’s ring past the budget', () => {
+  it('says how far over, and over budget past the tolerance', async () => {
+    // Given a review of 1000 kcal on the 24th, and 400 g of oats (1176 kcal) logged that day
+    const reviews = new InMemoryReviewStore();
+    await reviews.save({
+      day: '2026-11-24',
+      trendKg: 75,
+      maintenanceKcal: 1000,
+      budgetKcal: 1000,
+      proteinFloorG: 150,
+    });
+    const entries = new InMemoryEntryStore([OATS]);
+    await entries.add(weighedEntry(OATS, 400, '2026-11-24'));
+
+    // When the user opens Today
+    await openToday(entries, atNoon(), undefined, undefined, undefined, reviews);
+
+    // Then it says 176 kcal over, and over budget
+    expect(await screen.findByLabelText(/^Over budget, 176 kcal over/)).toBeOnTheScreen();
+    expect(screen.getByText('kcal over')).toBeOnTheScreen();
+  });
+});
+
+describe('Today’s ring on an empty day', () => {
+  it('says nothing is logged yet in place of a verdict, with the whole budget left', async () => {
+    // Given a review of 2000 kcal on the 24th, and nothing logged that day
+    const reviews = new InMemoryReviewStore();
+    await reviews.save({
+      day: '2026-11-24',
+      trendKg: 75,
+      maintenanceKcal: 2000,
+      budgetKcal: 2000,
+      proteinFloorG: 150,
+    });
+
+    // When the user opens Today
+    await openToday(new InMemoryEntryStore(), atNoon(), undefined, undefined, undefined, reviews);
+
+    // Then it says so, never In progress
+    expect(await screen.findByLabelText(/^Nothing logged yet, 2000 kcal left/)).toBeOnTheScreen();
+    expect(screen.queryByText('In progress')).not.toBeOnTheScreen();
+  });
+});
+
+describe('Today’s ring on a day of estimates', () => {
+  it('says about over what is left when nothing in the day was weighed', async () => {
+    // Given a review of 2000 kcal on the 24th, and two estimates of 100 kcal that day
+    const reviews = new InMemoryReviewStore();
+    await reviews.save({
+      day: '2026-11-24',
+      trendKg: 75,
+      maintenanceKcal: 2000,
+      budgetKcal: 2000,
+      proteinFloorG: 150,
+    });
+    const entries = await withLunches('pub lunch', 'cake');
+
+    // When the user opens Today
+    await openToday(entries, atNoon(), undefined, undefined, undefined, reviews);
+
+    // Then the figure is said to be about, as an estimate is
+    expect(await screen.findByLabelText(/^In progress, about 1800 kcal left/)).toBeOnTheScreen();
+    expect(screen.getByText('about')).toBeOnTheScreen();
+  });
+});
+
+describe('Today before its first review', () => {
+  it('has no ring on a day before the first review, only the totals card', async () => {
+    // Given the first review dated the 25th, and Today the 24th
+    const reviews = new InMemoryReviewStore();
+    await reviews.save({
+      day: '2026-11-25',
+      trendKg: 75,
+      maintenanceKcal: 2000,
+      budgetKcal: 2000,
+      proteinFloorG: 150,
+    });
+
+    // When the user opens Today
+    await openToday(new InMemoryEntryStore(), atNoon(), undefined, undefined, undefined, reviews);
+
+    // Then epic 1's totals card stands, never a budget
+    expect(await screen.findByLabelText(/today, nothing logged yet$/)).toBeOnTheScreen();
+    expect(screen.queryByText('kcal left')).not.toBeOnTheScreen();
+  });
+});
+
 describe('Today before its reads', () => {
   it('says nothing about setup until the profile has been read', async () => {
     // Given a profile and no weigh-in, the profile's read not come back
