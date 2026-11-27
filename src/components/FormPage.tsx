@@ -36,6 +36,9 @@ export function FormPage({
       <KeyboardAvoidingView behavior="padding" className="flex-1">
         <ScrollView
           ref={scroll}
+          // iOS's bar is glass over the sheet: what scrolls starts under it unless inset for it, which
+          // hid the first field (the user's word, 27 November 2026, recorded on #87).
+          contentInsetAdjustmentBehavior="automatic"
           keyboardShouldPersistTaps="handled"
           // What scrolls is the one card the fields stand in, so a field's `onLayout` is still measured
           // from the top of what scrolls.
