@@ -64,6 +64,20 @@ describe("probity's rules", () => {
     expect(told).toContain('its touch target is measured too, and is made no smaller');
   });
 
+  it('let a control the keyboard covers be driven by its bounds against the keyboard’s frame', () => {
+    // Given the config's rule
+
+    // When it judges a write
+    const told = prompt();
+
+    // Then the device rule takes the measurement a flow cannot make, and a repair of it is not a
+    // change to what can be pressed
+    expect(told).toContain('whether the keyboard covers a control');
+    expect(told).toContain("the keyboard's frame from `dumpsys window`");
+    expect(told).toContain('A flow cannot show it');
+    expect(told).toContain('Bringing a covered control out from under the keyboard is this');
+  });
+
   it('let code move into a new file as a refactor, once its source was read and its tests ran green', () => {
     // Given the config's rule
 

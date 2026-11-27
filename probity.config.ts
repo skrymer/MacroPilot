@@ -110,14 +110,19 @@ const DEVICE_RULE = `### A change only the device can show
 This takes precedence over the red and green rules above, for a production write of which all of
 these hold. It then needs no failing test:
 
-  - Its only effect is what takes focus as a page opens, whether the keyboard is up, how the platform
-    presents a page (full height, a sheet, its detents), or where a page is scrolled to. Scrolling
-    what is already on a page into view is this, and not a change to what is shown.
+  - Its only effect is what takes focus as a page opens, whether the keyboard is up, whether the keyboard covers a control,
+    how the platform presents a page (full height, a sheet, its detents), or where a page is
+    scrolled to. Scrolling what is already on a page into view is this, and not a change to what is
+    shown. Bringing a covered control out from under the keyboard is this, and not a change to what
+    can be pressed: the control was always meant to be reached.
   - It leaves alone a value, a word, a role, a label, where a press leads, stored data, a computation,
     and anything drawn.
   - The session shows, before the write, the fault on the emulator, as a measurement in a command's
     output: whether the keyboard is shown, what has focus, or where an element stands. A measurement
     after agent-device has pressed or filled is of its headless keyboard and is not one.
+    Whether the keyboard covers a control is the control's bounds from the screen's hierarchy against
+    the keyboard's frame from \`dumpsys window\`, with the real keyboard up. A flow cannot show it:
+    a covered control stays in the hierarchy, so a flow finds it visible either way.
     How iOS presents a page, which the Android emulator cannot show, needs instead the user's word
     for that page, quoted in the session with its date and where it is recorded.
   - It is the least that could repair that fault, and the tests of the file pass.
