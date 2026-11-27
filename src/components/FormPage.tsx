@@ -3,8 +3,8 @@ import { KeyboardAvoidingView, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from './Button';
+import { Failure } from './Failure';
 import { FormHeader } from './FormHeader';
-import { Text } from './Text';
 
 /**
  * A form, presented the platform's way under the system's header with its X (DESIGN.md, *Forms*). Its
@@ -45,11 +45,7 @@ export function FormPage({
         </ScrollView>
         {/* Out of the scroll view, so that the keyboard never hides them. */}
         <View className="gap-grid-1 px-page py-grid-1">
-          {fault ? (
-            <Text accessibilityRole="alert" className="font-language-bold text-body text-ink">
-              {fault}
-            </Text>
-          ) : null}
+          {fault ? <Failure words={fault} /> : null}
           <Button label={action} onPress={onAction} />
         </View>
       </KeyboardAvoidingView>
