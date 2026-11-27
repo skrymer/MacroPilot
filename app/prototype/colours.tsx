@@ -5,15 +5,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import { cssInterop, vars } from 'nativewind';
 import { createContext, useContext, useState } from 'react';
-import {
-  Appearance,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  useColorScheme,
-  View,
-} from 'react-native';
+import { Appearance, Platform, Pressable, ScrollView, useColorScheme, View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 
 import { Hairline } from '@/components/Hairline';
@@ -769,7 +761,8 @@ export function Form({
 }) {
   const style = { faultStyle, palette, edge };
   return (
-    <KeyboardAvoidingView behavior="padding" className="flex-1">
+    // The look of a form, decided; its keyboard is FormPage's, and not judged here.
+    <View className="flex-1">
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
         keyboardShouldPersistTaps="handled"
@@ -800,7 +793,7 @@ export function Form({
           look={{ secondary: 'outlined', press: 'platform', palette }}
         />
       </View>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 

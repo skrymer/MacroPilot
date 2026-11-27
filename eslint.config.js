@@ -17,6 +17,7 @@ const noBarePressable = require('./eslint-rules/no-bare-pressable');
 const tokensOnly = require('./eslint-rules/tokens-only');
 const firstFaultShown = require('./eslint-rules/first-fault-shown');
 const onTouched = require('./eslint-rules/on-touched');
+const formPage = require('./eslint-rules/form-page');
 
 /**
  * The domain core is framework-free, and this rule is what enforces it — see
@@ -132,6 +133,7 @@ const A11Y = {
 const formsPlugin = {
   rules: {
     'first-fault-shown': firstFaultShown,
+    'form-page': formPage,
     'keyboard-avoided': keyboardAvoided,
     'no-coerced-number': noCoercedNumber,
     'no-watch': noWatch,

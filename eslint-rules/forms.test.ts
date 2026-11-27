@@ -149,6 +149,63 @@ describe('forms/first-fault-shown', () => {
   });
 });
 
+describe('forms/form-page', () => {
+  it('reports a form whose fields stand outside FormPage', () => {
+    // Given a screen with a field and no FormPage, which keeps the keyboard off its button
+    const source = `const c = <ScrollView><FormField name="grams" /></ScrollView>;`;
+
+    // When it is linted
+    const reported = lint(source, SCREEN);
+
+    // Then the rule reports it
+    expect(reported).toContain('forms/form-page');
+  });
+
+  it('accepts a form whose fields stand in FormPage', () => {
+    // Given a screen with its field in FormPage
+    const source = `const c = <FormPage title="Log entry"><FormField name="grams" /></FormPage>;`;
+
+    // When it is linted
+    const reported = lint(source, SCREEN);
+
+    // Then the rule is silent
+    expect(reported).not.toContain('forms/form-page');
+  });
+
+  it('reports a screen that keeps the keyboard off its own button, as FormPage does', () => {
+    // Given a screen with its own keyboard avoidance, which misses where the page starts in its sheet
+    const source = `const c = <KeyboardAvoidingView behavior="padding"><Text>Hi</Text></KeyboardAvoidingView>;`;
+
+    // When it is linted
+    const reported = lint(source, SCREEN);
+
+    // Then the rule reports it
+    expect(reported).toContain('forms/form-page');
+  });
+
+  it('accepts FormPage keeping the keyboard off its button', () => {
+    // Given FormPage's own keyboard avoidance
+    const source = `const c = <KeyboardAvoidingView behavior="padding"><Text>Hi</Text></KeyboardAvoidingView>;`;
+
+    // When it is linted
+    const reported = lint(source, 'src/components/FormPage.tsx');
+
+    // Then the rule is silent
+    expect(reported).not.toContain('forms/form-page');
+  });
+
+  it('accepts a test of the field itself, which is not a form', () => {
+    // Given the field rendered alone in its own test
+    const source = `const c = <FormField name="name" />;`;
+
+    // When it is linted
+    const reported = lint(source, 'src/components/FormField.test.tsx');
+
+    // Then the rule is silent
+    expect(reported).not.toContain('forms/form-page');
+  });
+});
+
 describe('forms/on-touched', () => {
   it('reports a form judged only when it is sent', () => {
     // Given a form with React Hook Form's default mode, which shows a fault only after a refused save
