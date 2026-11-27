@@ -61,6 +61,8 @@ describe('Your details', () => {
     expect(await screen.findByLabelText('Sex, Female')).toBeOnTheScreen();
     expect(screen.getByLabelText('Birth date, 14 March 1984')).toBeOnTheScreen();
     expect(screen.getByLabelText('Height, 168.5 centimetres')).toBeOnTheScreen();
+    // Its figure joined to its unit by a no-break space, which `\s` matches.
+    expect(screen.getByText(/^168\.5\scm$/)).toBeOnTheScreen();
     expect(screen.getByLabelText('Calorie tracking, Calories and weight')).toBeOnTheScreen();
     expect(screen.queryByRole('button', { name: 'Save profile' })).not.toBeOnTheScreen();
   });
@@ -186,6 +188,44 @@ describe('Your details', () => {
       heightCm: 181,
       countsCalories: false,
     });
+  });
+
+  it('opens with nothing chosen, the wheels shut, and says it adds the details', async () => {
+    // Given no profile saved
+    const profile = new InMemoryProfileStore();
+
+    // When the form opens
+    await openApp('/details', profile);
+
+    // Then it says what it does, and that no birth date is chosen, without the picker open
+    expect(await screen.findByRole('header', { name: 'Add your details' })).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Birth date, not chosen' })).toBeOnTheScreen();
+    expect(screen.queryByLabelText('Birth date')).not.toBeOnTheScreen();
+    expect(screen.getByRole('radio', { name: 'Male' })).not.toBeChecked();
+    expect(screen.getByRole('radio', { name: 'Female' })).not.toBeChecked();
+  });
+
+  it('opens the wheels on the saved birth date, and leaves a form untouched without asking', async () => {
+    // Given the saved details opened to be changed, and the birth date's wheels opened and shut
+    const profile = new InMemoryProfileStore();
+    await profile.save({ sex: 'male', born: '1984-03-14', heightCm: 181, countsCalories: true });
+    const ask = new ScriptedAsk();
+    await openApp('/profile', profile, ask);
+    const user = userEvent.setup();
+    await user.press(await screen.findByRole('button', { name: 'Change details' }));
+    const field = await screen.findByRole('button', { name: 'Birth date, 14 March 1984' });
+    expect(screen.queryByLabelText('Birth date')).not.toBeOnTheScreen();
+    await user.press(field);
+    expect(screen.getByLabelText('Birth date')).toBeOnTheScreen();
+    await user.press(screen.getByRole('button', { name: 'Birth date, 14 March 1984' }));
+    expect(screen.queryByLabelText('Birth date')).not.toBeOnTheScreen();
+
+    // When the user leaves it
+    await user.press(screen.getByRole('button', { name: 'Cancel' }));
+
+    // Then nothing is asked, and Profile shows the details as they were
+    expect(await screen.findByLabelText('Birth date, 14 March 1984')).toBeOnTheScreen();
+    expect(ask.question).toBeUndefined();
   });
 
   it('refuses a form with nothing given, and says what each field needs', async () => {

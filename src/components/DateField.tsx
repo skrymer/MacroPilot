@@ -80,6 +80,8 @@ export function DateField({
           <Text className="font-language-italic text-body text-ink-dim">Not chosen</Text>
         )}
       </Pressable>
+      {/* The press that opens it chooses a date, so it is never open on none; the check keeps the
+          picker from being handed an invalid date should that change. */}
       {open && value !== '' ? (
         <DateTimePicker
           accessibilityLabel={label}

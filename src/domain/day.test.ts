@@ -10,6 +10,16 @@ describe('yearsBefore', () => {
     // Then it is 28 February 1998, a day that exists
     expect(day).toBe('1998-02-28');
   });
+
+  it('keeps a leap day in a year that has one', () => {
+    // Given 29 February 2028
+
+    // When 120 years before it is asked
+    const day = yearsBefore('2028-02-29', 120);
+
+    // Then it is 29 February 1908, a leap year (Stryker: the leap year taken for none)
+    expect(day).toBe('1908-02-29');
+  });
 });
 
 describe('dayOf', () => {

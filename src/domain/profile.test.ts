@@ -108,4 +108,14 @@ describe('ageOn', () => {
     // Then they are 41
     expect(age).toBe(41);
   });
+
+  it('counts a birthday on the day itself, and after it', () => {
+    // Given someone born on 14 March 1984
+
+    // When their age is asked on their 42nd birthday and in June
+    const ages = [ageOn('1984-03-14', '2026-03-14'), ageOn('1984-03-14', '2026-06-01')];
+
+    // Then they are 42 on both (Stryker: `<` to `<=`, and the month and day compared whole)
+    expect(ages).toEqual([42, 42]);
+  });
 });
