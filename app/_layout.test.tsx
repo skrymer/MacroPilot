@@ -2,6 +2,8 @@ import { act, screen, userEvent } from '@testing-library/react-native';
 import { router } from 'expo-router';
 import { renderRouter } from 'expo-router/testing-library';
 
+import { Text } from '@/components/Text';
+
 import FoodsStack from './(tabs)/(foods)/_layout';
 import Foods from './(tabs)/(foods)/foods';
 import LogStack from './(tabs)/(log)/_layout';
@@ -58,6 +60,8 @@ const openAt = (initialUrl: string) =>
       '(tabs)/developer': Developer,
       'add-food': AddFood,
       design: Design,
+      // A prototype, as the prototype skill puts one under app/prototype/: none is kept in the app.
+      'prototype/x': () => <Text accessibilityRole="header">Prototype</Text>,
     },
     { initialUrl },
   );
@@ -147,6 +151,28 @@ describe('RootLayout', () => {
     // Then Today is showing, and the design reference is not
     expect(await screen.findByRole('header', { name: 'Today' })).toBeOnTheScreen();
     expect(screen.queryByRole('header', { name: 'Trim' })).not.toBeOnTheScreen();
+  });
+
+  it('opens a prototype in a development build', async () => {
+    // Given a development build, as Jest's is
+
+    // When the app opens on a prototype, as a deep link would
+    await openAt('/prototype/x');
+
+    // Then it is showing
+    expect(await screen.findByRole('header', { name: 'Prototype' })).toBeOnTheScreen();
+  });
+
+  it('sends a release build that opens a prototype to Today', async () => {
+    // Given a release build
+    build.__DEV__ = false;
+
+    // When the app opens on a prototype, as a deep link would
+    await openAt('/prototype/x');
+
+    // Then Today is showing, and the prototype is not
+    expect(await screen.findByRole('header', { name: 'Today' })).toBeOnTheScreen();
+    expect(screen.queryByRole('header', { name: 'Prototype' })).not.toBeOnTheScreen();
   });
 
   it('leaves no second Today to go back to when a release build already open is sent away', async () => {

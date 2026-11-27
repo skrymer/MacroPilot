@@ -6,7 +6,6 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import Svg, { Circle } from 'react-native-svg';
 
 import { Failure } from '@/components/Failure';
-import { Link } from '@/components/Link';
 import { FAULT_SIGN, VALID_SIGN } from '@/components/signs';
 import { Text } from '@/components/Text';
 import { useRipple } from '@/components/useRipple';
@@ -419,14 +418,6 @@ export default function Design() {
           Food has no colour. Colour is only where your day stands against its targets.
         </Text>
         <AppearanceSwitch />
-        {__DEV__ ? (
-          <Link
-            href="/prototype/colours"
-            className="font-language-bold text-body text-ink underline"
-          >
-            Colours prototype
-          </Link>
-        ) : null}
 
         <Section
           title="The day ring"

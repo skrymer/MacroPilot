@@ -143,7 +143,7 @@ describe('design/no-bare-pressable', () => {
     expect(reported).not.toContain('design/no-bare-pressable');
   });
 
-  it.each([['app/design.tsx'], ['app/prototype/colours.tsx']])(
+  it.each([['app/design.tsx'], ['app/prototype/x.tsx']])(
     'accepts a Pressable in %s, which draws a control as a specimen',
     (file) => {
       // Given the design page or a prototype, whose controls are specimens of a component to be
