@@ -4,7 +4,7 @@ import { FlatList, View } from 'react-native';
 
 import { dayWords } from '@/components/dayWords';
 import { CardSlice } from '@/components/CardSlice';
-import { DayRing } from '@/components/DayRing';
+import { DayRing, type Standing } from '@/components/DayRing';
 import { DeletableRow } from '@/components/DeletableRow';
 import { EmptyLine } from '@/components/EmptyLine';
 import { entryFigures, entryWords, tallyWords, totalsWords } from '@/components/entryWords';
@@ -28,9 +28,9 @@ import { weighInOn, type WeighIn } from '@/domain/weighIn';
 import { useToday } from '@/lifecycle/useToday';
 import type { LoggedEntry } from '@/storage/EntryStore';
 import { useEntryStore } from '@/storage/EntryStoreContext';
-import { useReviewsWritten, useReviewStore } from '@/storage/ReviewStoreContext';
 import { useReading } from '@/storage/useReading';
 import { useProfile } from '@/storage/useProfile';
+import { useReviews } from '@/storage/useReviews';
 import { useWeighIns } from '@/storage/useWeighIns';
 
 const PROTEIN_SET = { ...FIGURE_SET, weighed: 'font-language text-ink-mid' };
@@ -63,31 +63,20 @@ function Totals({
   );
 }
 
-/** Where a day stands against its budget alone, the hue its arc and figure take. */
-const STANDING = {
-  'over budget': 'over',
-  'slightly over': 'slightly-over',
-  'on target': 'within',
-  'in progress': 'within',
-} as const satisfies Record<Verdict, 'within' | 'slightly-over' | 'over'>;
+/**
+ * How each verdict is shown: its words and their ink, and where the day stands against its budget
+ * alone, the hue its arc takes and, past the budget, its figure (`ink` there; within, the figure is
+ * set as any figure is).
+ */
+const VERDICT = {
+  'over budget': { words: 'Over budget', ink: 'text-over', standing: 'over' },
+  'slightly over': { words: 'Slightly over', ink: 'text-slightly-over', standing: 'slightly-over' },
+  'on target': { words: 'On target', ink: 'text-within', standing: 'within' },
+  'in progress': { words: 'In progress', ink: 'text-ink-mid', standing: 'within' },
+} as const satisfies Record<Verdict, { words: string; ink: string; standing: Standing }>;
 
-/** The figure past its budget; within it, the figure is set as any figure is. */
-const STANDING_INK = { 'slightly-over': 'text-slightly-over', over: 'text-over' } as const;
-
-/** A verdict that has a standing to say takes its hue; one still in progress does not. */
-const VERDICT_INK: Record<Verdict, string> = {
-  'over budget': 'text-over',
-  'slightly over': 'text-slightly-over',
-  'on target': 'text-within',
-  'in progress': 'text-ink-mid',
-};
-
-const VERDICT_WORDS: Record<Verdict, string> = {
-  'over budget': 'Over budget',
-  'slightly over': 'Slightly over',
-  'on target': 'On target',
-  'in progress': 'In progress',
-};
+/** An empty day is an empty track, and says so rather than that it is in progress. */
+const NOTHING_LOGGED = { words: 'Nothing logged yet', ink: 'text-ink-mid' };
 
 /**
  * The day card once the day is held to a review: what is left of the budget or how far past it, and
@@ -107,19 +96,19 @@ function RingCard({
   const left = Math.round(review.budgetKcal - totals.calories);
   const centre = String(Math.abs(left));
   const unit = left < 0 ? 'kcal over' : 'kcal left';
-  // An empty day is an empty track, and says so rather than that it is in progress.
-  const judged = dayVerdict(totals, review);
-  const verdict = count === 0 ? 'Nothing logged yet' : VERDICT_WORDS[judged];
+  const judged = VERDICT[dayVerdict(totals, review)];
+  const verdict = count === 0 ? NOTHING_LOGGED : judged;
   // The arc, the figure and the verdict say one thing: where the day stands (DESIGN.md, *The axes*).
-  const standing = STANDING[judged];
+  const { standing } = judged;
   // A day of estimates alone is set lighter and says so (DESIGN.md, *Figures*).
   const about = totals.estimated;
+  const kind = about ? 'estimated' : 'weighed';
   const share = Math.min(totals.calories / review.budgetKcal, 1);
   return (
     <View className="rounded-card bg-surface p-grid-2">
       <View
         accessible
-        accessibilityLabel={`${verdict}, ${about ? 'about ' : ''}${centre} ${unit}`}
+        accessibilityLabel={`${verdict.words}, ${about ? 'about ' : ''}${centre} ${unit}`}
         className="items-center"
       >
         <DayRing share={share} standing={standing}>
@@ -127,20 +116,16 @@ function RingCard({
           <Text
             className={`text-figure ${
               standing === 'within'
-                ? FIGURE_SET[about ? 'estimated' : 'weighed']
-                : `${about ? 'font-estimated' : 'font-weighed'} ${STANDING_INK[standing]}`
+                ? FIGURE_SET[kind]
+                : `${about ? 'font-estimated' : 'font-weighed'} ${judged.ink}`
             }`}
           >
             {centre}
           </Text>
           <Text className="font-language text-label text-ink-mid">{unit}</Text>
         </DayRing>
-        <Text
-          className={`mt-grid-1 text-center font-language-bold text-body ${
-            count === 0 ? 'text-ink-mid' : VERDICT_INK[judged]
-          }`}
-        >
-          {verdict}
+        <Text className={`mt-grid-1 text-center font-language-bold text-body ${verdict.ink}`}>
+          {verdict.words}
         </Text>
       </View>
       <View className="mt-grid-2">{children}</View>
@@ -236,15 +221,7 @@ export default function Today() {
   const { found, readAgain } = useReading(list);
   const { weighIns, readAgain: readWeighInsAgain } = useWeighIns();
   const { profile } = useProfile();
-  const reviewStore = useReviewStore();
-  const listReviews = useCallback(() => reviewStore.list(), [reviewStore]);
-  const { found: reviews, readAgain: readReviewsAgain } = useReading(listReviews);
-  // A review can land after the user has come back here from the form that ran it.
-  const reviewsWritten = useReviewsWritten();
-  const readReviews = useEffectEvent(() => void readReviewsAgain());
-  useEffect(() => {
-    if (reviewsWritten > 0) readReviews();
-  }, [reviewsWritten]);
+  const { reviews } = useReviews();
   // The review this day is held to: the latest dated on or before it.
   const heldTo = Array.isArray(reviews) ? reviewFor(reviews, day) : undefined;
   const weighedToday = Array.isArray(weighIns) ? weighInOn(weighIns, day) : undefined;
@@ -337,14 +314,16 @@ export default function Today() {
               onWeighIn={() => router.navigate('/log-weight')}
             />
           ) : null}
-          {Array.isArray(found) && heldTo ? (
-            <RingCard totals={totals} count={listed.length} review={heldTo}>
-              {weightRow}
-            </RingCard>
-          ) : Array.isArray(found) ? (
-            <Totals totals={totals} count={listed.length}>
-              {weightRow}
-            </Totals>
+          {Array.isArray(found) ? (
+            heldTo ? (
+              <RingCard totals={totals} count={listed.length} review={heldTo}>
+                {weightRow}
+              </RingCard>
+            ) : (
+              <Totals totals={totals} count={listed.length}>
+                {weightRow}
+              </Totals>
+            )
           ) : null}
           {listed.length > 0 ? (
             <DayHeading day={day} count={listed.length} totals={totals} />

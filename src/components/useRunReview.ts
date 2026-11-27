@@ -12,13 +12,12 @@ export function useRunReview() {
   const weighIns = useWeighInStore();
   const reviews = useReviewStore();
   return async (today: string, replacedToday = false) => {
-    const due = reviewDue({
-      profile: await profiles.read(),
-      weighIns: await weighIns.list(),
-      reviews: await reviews.list(),
-      today,
-      replacedToday,
-    });
+    const [profile, weighed, held] = await Promise.all([
+      profiles.read(),
+      weighIns.list(),
+      reviews.list(),
+    ]);
+    const due = reviewDue({ profile, weighIns: weighed, reviews: held, today, replacedToday });
     if (due) await reviews.save(due);
   };
 }

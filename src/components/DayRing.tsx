@@ -10,6 +10,9 @@ const RING = 240;
 /** The calorie arc's length all the way round, at its radius of 110. */
 const AROUND = 2 * Math.PI * 110;
 
+/** Where a day stands against its budget alone: the hue its arc takes. */
+export type Standing = 'within' | 'slightly-over' | 'over';
+
 /**
  * The day ring (DESIGN.md, *Signature: the rings*): the full circle is the target; calories outside
  * and thick as a share of the budget, in the day's standing; protein inside and thin, its track alone
@@ -22,7 +25,7 @@ export function DayRing({
 }: {
   /** The day's calories as a share of the budget, at most 1. */
   share: number;
-  standing: 'within' | 'slightly-over' | 'over';
+  standing: Standing;
   children: ReactNode;
 }) {
   const tint = useTint();

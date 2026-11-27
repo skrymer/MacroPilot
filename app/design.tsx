@@ -5,7 +5,7 @@ import { Appearance, Pressable, ScrollView, useColorScheme, View } from 'react-n
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle } from 'react-native-svg';
 
-import { DayRing as BuiltRing } from '@/components/DayRing';
+import { DayRing as BuiltRing, type Standing } from '@/components/DayRing';
 import { Failure } from '@/components/Failure';
 import { Link } from '@/components/Link';
 import { FAULT_SIGN, VALID_SIGN } from '@/components/signs';
@@ -235,7 +235,7 @@ type Day = {
   proteinLeft: string;
   calories: number;
   protein: number;
-  stroke: string;
+  standing: Standing;
   text: string;
   /** Ink until the day is past its budget, then the verdict's own hue. */
   figure?: string;
@@ -249,7 +249,7 @@ const DAYS: Day[] = [
     proteinLeft: '132\u00A0g protein to go',
     calories: 0,
     protein: 0,
-    stroke: 'stroke-within',
+    standing: 'within',
     text: 'text-ink-mid',
   },
   {
@@ -259,7 +259,7 @@ const DAYS: Day[] = [
     proteinLeft: '69\u00A0g protein to go',
     calories: 0.66,
     protein: 0.48,
-    stroke: 'stroke-within',
+    standing: 'within',
     text: 'text-ink-mid',
   },
   {
@@ -269,7 +269,7 @@ const DAYS: Day[] = [
     proteinLeft: 'protein floor met',
     calories: 0.98,
     protein: 1,
-    stroke: 'stroke-within',
+    standing: 'within',
     text: 'text-within',
   },
   {
@@ -279,7 +279,7 @@ const DAYS: Day[] = [
     proteinLeft: 'protein floor met',
     calories: 1,
     protein: 1,
-    stroke: 'stroke-slightly-over',
+    standing: 'slightly-over',
     text: 'text-slightly-over',
     figure: 'text-slightly-over',
   },
@@ -290,7 +290,7 @@ const DAYS: Day[] = [
     proteinLeft: '26\u00A0g protein to go',
     calories: 1,
     protein: 0.8,
-    stroke: 'stroke-over',
+    standing: 'over',
     text: 'text-over',
     figure: 'text-over',
   },
@@ -303,13 +303,13 @@ const DaySpecimen = ({
   unit,
   proteinLeft,
   calories,
-  stroke,
+  standing,
   text,
   figure = 'text-ink',
 }: Day) => (
   <Card>
     <View accessible accessibilityLabel={`${state}, ${centre} ${unit}, ${proteinLeft}`}>
-      <BuiltRing share={Math.min(calories, 1)} standing={STANDING_OF[stroke] ?? 'within'}>
+      <BuiltRing share={Math.min(calories, 1)} standing={standing}>
         <Text className={`font-weighed text-figure ${figure}`}>{centre}</Text>
         <Text className="font-language text-label text-ink-mid">{unit}</Text>
       </BuiltRing>
@@ -318,12 +318,6 @@ const DaySpecimen = ({
     <Text className="text-center font-language text-label text-ink-mid">{proteinLeft}</Text>
   </Card>
 );
-
-const STANDING_OF: Record<string, 'within' | 'slightly-over' | 'over'> = {
-  'stroke-within': 'within',
-  'stroke-slightly-over': 'slightly-over',
-  'stroke-over': 'over',
-};
 
 type EntrySpecimen = { name: string; detail: string; first?: boolean; children: ReactNode };
 
