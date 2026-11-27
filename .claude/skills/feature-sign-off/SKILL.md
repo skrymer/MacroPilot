@@ -32,7 +32,7 @@ Address what each surfaces *before* starting the next. When a gate is done, reco
 - **What is Not stated shown as a figure.** A food with no protein figure is not 0 g; how each case is shown is `DESIGN.md`'s *Figures* (an empty day is 0 kcal, which is known). `/verify` and the screen test's sibling case.
 - **A dash standing in for an unknown.** A dash reads as zero. FAIL, not a nitpick.
 - **A known zero hidden as if unknown.** The other direction of the same trap: 0 g of protein is a fact. Stryker has no truthiness mutator, so the explicit zero case is caught by discipline.
-- **A day decided in UTC**, or by adding 24 hours across a summer-time change. `/code-review` and `/mutation-test`; a test puts the phone outside UTC.
+- **A day decided in UTC**, or by adding 24 hours across a summer-time change; or the other way, a chosen date held as a `Date` at the phone's midnight (rn-dev's *Gotchas*). `/code-review` and `/mutation-test`; a test puts the phone outside UTC.
 - **Rounding in more than one place.** A total of rounded figures and a rounded total disagree, and both look right. `/code-review`.
 - **Domain logic that crept into a screen.** `/check-adrs`. The ESLint rule catches the import but not a total derived inline from props.
 - **A colour that is right in one appearance.** `/verify` walks both.
