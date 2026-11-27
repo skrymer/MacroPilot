@@ -382,7 +382,24 @@ describe('charters.mjs gates', () => {
     // Then the four run before the fix are to run again, and verify is not
     expect(status).toBe(1);
     expect(output).toContain('code-review stale');
+    expect(output).toContain('mutation-test stale');
     expect(output).toContain('verify ok');
+  });
+
+  it('keeps mutation-test on a fix to the prose alone, which Stryker does not read', () => {
+    // Given five gates recorded, then a skill and a document edited after them
+    const { root } = gated();
+    mkdirSync(path.join(root, '.claude/skills/x'), { recursive: true });
+    writeFileSync(path.join(root, '.claude/skills/x/SKILL.md'), '# x\n');
+    writeFileSync(path.join(root, 'DESIGN.md'), '# Trim\n');
+
+    // When its gates are checked
+    const { status, output } = run(root, 'gates', '8');
+
+    // Then mutation-test still stands, and the gates that read prose are to run again
+    expect(status).toBe(1);
+    expect(output).toContain('mutation-test ok');
+    expect(output).toContain('code-review stale');
   });
 
   it('refuses a gate it does not know', () => {
