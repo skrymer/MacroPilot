@@ -7,6 +7,8 @@ import type { SqlDatabase } from './SqlDatabase';
  *
  * An entry is of a food, with its grams, or has a label of its own, and never half of each.
  *
+ * There is one profile, in the row whose id is 1.
+ *
  * Nothing is migrated in development (ADR 0008): after a change here, the app is deleted from the
  * phone before it is installed again.
  */
@@ -35,6 +37,13 @@ const SCHEMA = `
     )
   );
   CREATE INDEX IF NOT EXISTS entries_by_day ON entries (day);
+  CREATE TABLE IF NOT EXISTS profile (
+    id INTEGER PRIMARY KEY CHECK (id = 1),
+    sex TEXT NOT NULL CHECK (sex IN ('male', 'female')),
+    born TEXT NOT NULL,
+    height_cm REAL NOT NULL,
+    counts_calories INTEGER NOT NULL CHECK (counts_calories IN (0, 1))
+  );
 `;
 
 /** Made on every call rather than once, so a call after one that failed can succeed. */
