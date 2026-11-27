@@ -171,6 +171,27 @@ describe('Today’s ring', () => {
     expect(screen.queryByLabelText(/today, nothing logged yet$/)).not.toBeOnTheScreen();
   });
 
+  it('shows the ring once targets slow to be read have been read', async () => {
+    // Given a review on the 24th, the reviews slow to be read, and Today open with its entries read
+    const reviews = new InMemoryReviewStore();
+    await reviews.save({
+      day: '2026-11-24',
+      trendKg: 75,
+      maintenanceKcal: 2000,
+      budgetKcal: 2000,
+      proteinFloorG: 150,
+    });
+    const release = reviews.holdReads();
+    await openToday(new InMemoryEntryStore(), atNoon(), undefined, undefined, undefined, reviews);
+    await screen.findByText('Log a weighed food, or an estimate.');
+
+    // When the reviews are read
+    await act(async () => release());
+
+    // Then the ring card stands
+    expect(await screen.findByLabelText(/^Nothing logged yet, 2000 kcal left/)).toBeOnTheScreen();
+  });
+
   it('says 0 kcal left on a day at exactly its budget, not over it', async () => {
     // Given a review of 1176 kcal on the 24th, and 400 g of oats (1176 kcal) logged that day
     const reviews = new InMemoryReviewStore();
