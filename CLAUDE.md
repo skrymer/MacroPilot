@@ -55,6 +55,7 @@ Then commit on a feature branch, push, open a PR, and merge when CI is green, wi
 
 - Production code is written with Edit or Write, where probity judges it; the Bash guard rolls back anything else. A source file is deleted with Bash, in a command of its own; a test or a lint rule is the user's to delete. A refusal needs a real failing test, or the measured fault when only the pixels or the device can show it, or for how iOS presents a page the user's recorded word ([`0001`](./docs/adr/0001-a-unit-owes-its-own-test-when-it-owns-something.md)).
 - Never `gate | tail && commit`, nor a measurement and the merge in one command: check the gate's own status, read the number, then write the PR; run `git status` before `git add -A`.
+- Two sessions never share a checkout. One that finds another working here (`ListAgents`, `git worktree list`) works in its own `git worktree add`: the Bash guard snapshots the checkout on every command, and rolls back the other session's edits as if Bash wrote them.
 - Regroup commits on the merge-base. A conflicting PR gets `origin/main` merged in, never a rebase and force-push.
 
 ## Stack

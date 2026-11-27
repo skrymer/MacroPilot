@@ -1,4 +1,6 @@
 import { spawn, spawnSync, type ChildProcess } from 'node:child_process';
+import http from 'node:http';
+import type { AddressInfo } from 'node:net';
 import {
   chmodSync,
   existsSync,
@@ -158,6 +160,24 @@ describe('emulator.sh', () => {
     expect(status).toBe(1);
     expect(output).toContain('memory');
     expect(calls).not.toContain('emulator -avd');
+  });
+
+  it('wakes the screen, since a flow cannot read one asleep', () => {
+    // Given an emulator running, with its screen put to sleep
+    const { run } = stage({
+      adb: [
+        '[ "$1" = devices ] && printf "List of devices attached\\nemulator-5554\\tdevice\\n"',
+        '[[ "$*" == *getprop* ]] && echo 1',
+        'exit 0',
+      ].join('\n'),
+    });
+
+    // When the emulator is asked for
+    const { calls } = run(EMULATOR, []);
+
+    // Then it is woken, and nothing locks it
+    expect(calls).toContain('adb -s emulator-5554 shell input keyevent KEYCODE_WAKEUP');
+    expect(calls).toContain('adb -s emulator-5554 shell wm dismiss-keyguard');
   });
 });
 
@@ -332,5 +352,72 @@ describe('spacing.mjs', () => {
     for (const [name, px] of Object.entries(spacing)) {
       expect(output).toContain(`${name} ${parseInt(px)}dp`);
     }
+  });
+});
+
+describe('mutant-proxy.mjs', () => {
+  const MUTANT = path.join(__dirname, 'mutant-proxy.mjs');
+  let metro: http.Server;
+  let proxy: ChildProcess | undefined;
+
+  afterEach(() => {
+    proxy?.kill();
+    metro?.close();
+  });
+
+  /** A Metro on a free port serving a manifest that names itself, and a bundle holding `source`. */
+  const serve = (source: string) =>
+    new Promise<number>((resolve) => {
+      metro = http.createServer((req, res) => {
+        const port = (metro.address() as AddressInfo).port;
+        if (req.url!.includes('.bundle')) {
+          res.writeHead(200, { 'content-type': 'application/javascript' });
+          res.end(source);
+        } else {
+          res.writeHead(200, { 'content-type': 'application/json' });
+          res.end(JSON.stringify({ bundleUrl: `http://127.0.0.1:${port}/index.bundle` }));
+        }
+      });
+      metro.listen(0, () => resolve((metro.address() as AddressInfo).port));
+    });
+
+  /** The proxy in front of `up`, once it says it is listening. */
+  const start = (up: number, port: number, from: string, to: string) =>
+    new Promise<void>((resolve, reject) => {
+      proxy = spawn('node', [MUTANT, from, to], {
+        env: { ...process.env, METRO_PORT: String(up), PROXY_PORT: String(port) },
+      });
+      let output = '';
+      proxy.stderr!.on('data', (chunk: Buffer) => (output += chunk.toString()));
+      proxy.on('exit', (code) => reject(new Error(`proxy exited ${code}: ${output}`)));
+      proxy.stdout!.on('data', (chunk: Buffer) => {
+        if (chunk.toString().includes('mutant proxy on')) resolve();
+      });
+    });
+
+  const PROXY_PORT = 18083;
+
+  it('serves the bundle with the one source string replaced', async () => {
+    // Given a Metro whose bundle reads the grams, and a proxy replacing them
+    const up = await serve('const grams = entry.grams;');
+    await start(up, PROXY_PORT, 'entry.grams', '100');
+
+    // When the bundle is fetched through the proxy
+    const body = await (await fetch(`http://127.0.0.1:${PROXY_PORT}/index.bundle`)).text();
+
+    // Then it holds the mutant
+    expect(body).toBe('const grams = 100;');
+  });
+
+  it("points the manifest's bundle at itself, so the app loads the mutant", async () => {
+    // Given a Metro and a proxy in front of it
+    const up = await serve('');
+    await start(up, PROXY_PORT, 'a', 'b');
+
+    // When the manifest is fetched through the proxy
+    const body = await (await fetch(`http://127.0.0.1:${PROXY_PORT}/`)).text();
+
+    // Then its bundle is the proxy's
+    expect(JSON.parse(body).bundleUrl).toBe(`http://127.0.0.1:${PROXY_PORT}/index.bundle`);
   });
 });

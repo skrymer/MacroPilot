@@ -28,7 +28,7 @@ Every run pays for lessons. Left in the conversation they die with it. This rout
    Memory index: <absolute path to MEMORY.md>
    ```
 
-   Never mine it in this conversation, and add no view of what went wrong.
+   Never mine it in this conversation, and add no view of what went wrong. While another session works in this checkout, tell the miner to use Read alone: the Bash guard rolls that session's edits back as if the miner's command wrote them.
 
 3. **Apply what it proposes, or say why not.** On its own branch and pull request (`post-mortem-<n>`), never the feature's: a changed file voids the results verify just recorded. Use `write-a-skill` for a skill. A new test, rule or script is test-first.
 
