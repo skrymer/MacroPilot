@@ -12,6 +12,7 @@ import TodayStack from './(tabs)/(today)/_layout';
 import Today from './(tabs)/(today)/index';
 import TabsLayout from './(tabs)/_layout';
 import Developer from './(tabs)/developer';
+import NotFound from './+not-found';
 import RootLayout from './_layout';
 import AddFood from './add-food';
 import Design from './design';
@@ -60,6 +61,7 @@ const openAt = (initialUrl: string) =>
       '(tabs)/developer': Developer,
       'add-food': AddFood,
       design: Design,
+      '+not-found': NotFound,
       // A prototype, as the prototype skill puts one under app/prototype/: none is kept in the app.
       'prototype/x': () => <Text accessibilityRole="header">Prototype</Text>,
     },
@@ -173,6 +175,28 @@ describe('RootLayout', () => {
     // Then Today is showing, and the prototype is not
     expect(await screen.findByRole('header', { name: 'Today' })).toBeOnTheScreen();
     expect(screen.queryByRole('header', { name: 'Prototype' })).not.toBeOnTheScreen();
+  });
+
+  it('shows the router’s own page for a link to no page in a development build', async () => {
+    // Given a development build, as Jest's is
+
+    // When the app opens on a link that matches no page
+    await openAt('/no-such-page');
+
+    // Then the router says so
+    expect(await screen.findByText('Unmatched Route')).toBeOnTheScreen();
+  });
+
+  it('sends a release build that opens a link to no page to Today', async () => {
+    // Given a release build
+    build.__DEV__ = false;
+
+    // When the app opens on a link that matches no page
+    await openAt('/no-such-page');
+
+    // Then Today is showing, and not the router's own page for an unmatched route
+    expect(await screen.findByRole('header', { name: 'Today' })).toBeOnTheScreen();
+    expect(screen.queryByText('Unmatched Route')).not.toBeOnTheScreen();
   });
 
   it('leaves no second Today to go back to when a release build already open is sent away', async () => {

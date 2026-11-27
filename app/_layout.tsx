@@ -33,13 +33,16 @@ const foodStore = new SqliteFoodStore(database);
 const entryStore = new SqliteEntryStore(database);
 const ask = new SystemAsk();
 
-/** The design page and a prototype under `app/prototype/`, which only a development build opens. */
-const DEVELOPMENT_PAGE = /^(design|prototype)(\/|$)/;
+/**
+ * What a release build sends to Today: the design page and a prototype under `app/prototype/`, which
+ * only a development build opens, and a link that matches no page.
+ */
+const TODAY_IN_RELEASE = /^(design|prototype|\+not-found)(\/|$)/;
 
 /**
- * Stands in a release build for a page of a development one, since Expo Router ships every route
- * file. It goes back to the Today already open, where `Redirect` and `Stack.Protected` would each
- * stack another over it.
+ * Stands in a release build for a page `TODAY_IN_RELEASE` matches. It goes back to the Today already
+ * open, where `Redirect` and `Stack.Protected` would each stack another over it, and opens Today when
+ * none is, as on a cold start from a link.
  */
 function BackToToday() {
   const router = useRouter();
@@ -69,7 +72,7 @@ export default function RootLayout() {
                       contentStyle: { backgroundColor: 'transparent' },
                     }}
                     screenLayout={({ route, children }) =>
-                      !__DEV__ && DEVELOPMENT_PAGE.test(route.name) ? <BackToToday /> : children
+                      !__DEV__ && TODAY_IN_RELEASE.test(route.name) ? <BackToToday /> : children
                     }
                   >
                     {/* DESIGN.md, Forms: every form is iOS's page sheet and Android's page rising over
