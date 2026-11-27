@@ -1,9 +1,8 @@
 // THROWAWAY: the Profile tab (epic 2). See app/prototype/NOTES.md.
-import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
 import { useState, type ReactNode } from 'react';
-import { Platform, Pressable, ScrollView, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 
 import { Button } from '@/components/Button';
 import { Failure } from '@/components/Failure';
@@ -18,11 +17,9 @@ const nbsp = String.fromCharCode(0xa0);
 
 type Variant = 'A' | 'B';
 type State =
-  | 'empty'
   | 'beforeSetup'
   | 'noGoal'
   | 'goalSet'
-  | 'detailsForm'
   | 'goalForm'
   | 'goalRefused'
   | 'weightForm'
@@ -34,11 +31,9 @@ const VARIANTS: Chip<Variant>[] = [
 ];
 
 const STATES: Chip<State>[] = [
-  { label: 'Not filled', value: 'empty' },
   { label: 'Before Setup', value: 'beforeSetup' },
   { label: 'No goal', value: 'noGoal' },
   { label: 'Goal set', value: 'goalSet' },
-  { label: 'Details form', value: 'detailsForm' },
   { label: 'Goal form', value: 'goalForm' },
   { label: 'Goal refused', value: 'goalRefused' },
   { label: 'Weight form', value: 'weightForm' },
@@ -46,7 +41,6 @@ const STATES: Chip<State>[] = [
 ];
 
 const TITLES: Partial<Record<State, string>> = {
-  detailsForm: 'Your details',
   goalForm: 'Set goal',
   goalRefused: 'Set goal',
   weightForm: 'Log weight',
@@ -61,30 +55,6 @@ const Heading = ({ children }: { children: string }) => (
 
 const Card = ({ children }: { children: ReactNode }) => (
   <View className="gap-grid-2 rounded-card bg-surface p-grid-2">{children}</View>
-);
-
-/** A label and what it holds, one row of a card. */
-const Detail = ({ label, value, first }: { label: string; value: string; first?: boolean }) => (
-  <View>
-    {first ? null : <View className="border-t border-line" />}
-    <View className="min-h-target flex-row flex-wrap items-center justify-between gap-x-grid-2 py-grid-1">
-      <Text className="font-language text-body text-ink">{label}</Text>
-      <Text className="font-language text-body text-ink-mid">{value}</Text>
-    </View>
-  </View>
-);
-
-const Details = () => (
-  <>
-    <Heading>Your details</Heading>
-    <View className="rounded-card bg-surface px-grid-2">
-      <Detail first label="Sex" value="Male" />
-      <Detail label="Birth date" value="14 March 1984" />
-      <Detail label="Height" value={`181${nbsp}cm`} />
-      <Detail label="Calorie tracking" value="Calories and weight" />
-    </View>
-    <Button label="Change details" onPress={() => undefined} secondary />
-  </>
 );
 
 /** A field as Trim draws one: its label above, its fault's words under the label. */
@@ -122,82 +92,6 @@ const Field = ({
           </View>
         ) : null}
       </View>
-    </View>
-  );
-};
-
-/** Two or more answers, one chosen: a segmented choice in ink. */
-const Segments = ({ label, options }: { label: string; options: string[] }) => {
-  const [chosen, setChosen] = useState(options[0]);
-  return (
-    <View className="gap-1">
-      <Text className="font-language text-label text-ink-mid">{label}</Text>
-      <View
-        accessibilityRole="radiogroup"
-        className="flex-row overflow-hidden rounded-2xl border border-ink"
-      >
-        {options.map((option) => (
-          <Pressable
-            key={option}
-            accessibilityRole="radio"
-            accessibilityState={{ selected: chosen === option }}
-            onPress={() => setChosen(option)}
-            className={`min-h-target min-w-target flex-1 items-center justify-center px-2 ${
-              chosen === option ? 'bg-ink' : ''
-            }`}
-          >
-            <Text
-              className={`text-center font-language-bold text-label ${
-                chosen === option ? 'text-ground' : 'text-ink'
-              }`}
-            >
-              {option}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
-    </View>
-  );
-};
-
-const BIRTH = new Date(1984, 2, 14);
-
-/** The platform's own date picker: iOS's compact one in place, Android's dialog from a field. */
-const BirthDate = () => {
-  const [born, setBorn] = useState(BIRTH);
-  const shown = born.toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
-  return (
-    <View className="gap-1">
-      <Text className="font-language text-label text-ink-mid">Birth date</Text>
-      {Platform.OS === 'ios' ? (
-        <View className="items-start">
-          <DateTimePicker
-            value={born}
-            mode="date"
-            display="compact"
-            onChange={(_, date) => date && setBorn(date)}
-          />
-        </View>
-      ) : (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={`Birth date, ${shown}`}
-          onPress={() =>
-            DateTimePickerAndroid.open({
-              value: born,
-              mode: 'date',
-              onChange: (_, date) => date && setBorn(date),
-            })
-          }
-          className="min-h-target min-w-target justify-center rounded-2xl border border-edge bg-surface-lift px-3"
-        >
-          <Text className="font-language text-body text-ink">{shown}</Text>
-        </Pressable>
-      )}
     </View>
   );
 };
@@ -284,40 +178,8 @@ const GoalCard = ({ state, variant }: { state: State; variant: Variant }) => {
   );
 };
 
-/** The quiet empty state, with a sign for a person rather than Notice's knife and fork. */
-const NotFilled = () => {
-  const tint = useTint();
-  return (
-    <View className="items-center gap-grid-1 px-page py-grid-3">
-      <SymbolView
-        name={{ ios: 'person.crop.circle', android: 'person' }}
-        size={32}
-        tintColor={tint['ink-mid']}
-      />
-      <Text className="text-center font-language-bold text-body text-ink">No details yet</Text>
-      <Text className="text-center font-language text-label text-ink-mid">
-        Your sex, birth date and height set your first calorie budget and protein floor.
-      </Text>
-      <View className="mt-grid-1 self-stretch">
-        <Button label="Add your details" onPress={() => undefined} secondary />
-      </View>
-    </View>
-  );
-};
-
 function Body({ state, variant }: { state: State; variant: Variant }) {
   switch (state) {
-    case 'empty':
-      return <NotFilled />;
-    case 'detailsForm':
-      return (
-        <Form action="Save profile">
-          <Segments label="Sex" options={['Male', 'Female']} />
-          <BirthDate />
-          <Field label="Height (cm)" value="181" />
-          <Segments label="Calorie tracking" options={['Calories and weight', 'Weight only']} />
-        </Form>
-      );
     case 'goalForm':
     case 'goalRefused':
       return (
@@ -345,7 +207,6 @@ function Body({ state, variant }: { state: State; variant: Variant }) {
         <>
           <Heading>Goal</Heading>
           <GoalCard state={state} variant={variant} />
-          <Details />
         </>
       );
   }
