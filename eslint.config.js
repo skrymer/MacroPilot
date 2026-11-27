@@ -9,13 +9,14 @@ const noWatch = require('./eslint-rules/no-watch');
 const noFontScalingOff = require('./eslint-rules/no-font-scaling-off');
 const pressableRole = require('./eslint-rules/pressable-role');
 const touchTarget = require('./eslint-rules/touch-target');
-const keyboardAvoided = require('./eslint-rules/keyboard-avoided');
 const noCoercedNumber = require('./eslint-rules/no-coerced-number');
 const noDarkVariant = require('./eslint-rules/no-dark-variant');
 const noDashPlaceholder = require('./eslint-rules/no-dash-placeholder');
 const noBarePressable = require('./eslint-rules/no-bare-pressable');
 const tokensOnly = require('./eslint-rules/tokens-only');
 const firstFaultShown = require('./eslint-rules/first-fault-shown');
+const onTouched = require('./eslint-rules/on-touched');
+const formPage = require('./eslint-rules/form-page');
 
 /**
  * The domain core is framework-free, and this rule is what enforces it — see
@@ -131,9 +132,10 @@ const A11Y = {
 const formsPlugin = {
   rules: {
     'first-fault-shown': firstFaultShown,
-    'keyboard-avoided': keyboardAvoided,
+    'form-page': formPage,
     'no-coerced-number': noCoercedNumber,
     'no-watch': noWatch,
+    'on-touched': onTouched,
   },
 };
 

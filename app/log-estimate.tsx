@@ -15,8 +15,9 @@ export default function LogEstimate() {
     control,
     handleSubmit,
     setError,
-    formState: { errors },
+    formState: { errors, isSubmitted },
   } = useForm({
+    mode: 'onTouched',
     resolver: zodResolver(estimateForm),
     defaultValues: { label: '', calories: '', protein: '' },
   });
@@ -30,7 +31,7 @@ export default function LogEstimate() {
     <FormPage
       title="Log an estimate"
       onCancel={leave}
-      fault={formFault(errors)}
+      fault={formFault({ errors, isSubmitted })}
       action="Log estimated entry"
       onAction={log}
       scroll={scroll}

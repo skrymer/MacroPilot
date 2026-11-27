@@ -1,14 +1,15 @@
-import type { ComponentRef, ReactNode, Ref } from 'react';
-import { KeyboardAvoidingView, ScrollView, View } from 'react-native';
+import { useState, type ComponentRef, type ReactNode, type Ref } from 'react';
+import { Dimensions, KeyboardAvoidingView, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from './Button';
-import { CancelButton } from './CancelButton';
-import { Text } from './Text';
+import { Failure } from './Failure';
+import { FormHeader } from './FormHeader';
 
 /**
- * A form on a full-height page with *Cancel* (DESIGN.md, *Asking and telling*). Its fields are the
- * scroll view's own children, so a field's `onLayout` is measured from the top of what scrolls.
+ * A form, presented the platform's way under the system's header with its X (DESIGN.md, *Forms*). Its
+ * fields are the scroll view's own children, so a field's `onLayout` is measured from the top of what
+ * scrolls.
  */
 export function FormPage({
   title,
@@ -28,29 +29,36 @@ export function FormPage({
   scroll?: Ref<ComponentRef<typeof ScrollView>>;
   children: ReactNode;
 }) {
+  // Where the page starts on the screen, below Android's bar or in iOS's sheet. The keyboard is
+  // measured on the screen and the page from its parent, so without it the button stays under the
+  // keyboard by the distance between them. It is the screen less the page, which reaches the bottom
+  // of the screen on both platforms: `measureInWindow` does not see where iOS's sheet stands, and
+  // left the button under the keyboard there (the user's word, 27 November 2026, recorded on #87).
+  const [top, setTop] = useState(0);
   return (
-    <SafeAreaView className="flex-1 bg-ground">
-      <KeyboardAvoidingView behavior="padding" className="flex-1">
+    // The header keeps the top inset.
+    <SafeAreaView
+      onLayout={(e) => setTop(Dimensions.get('screen').height - e.nativeEvent.layout.height)}
+      edges={['bottom', 'left', 'right']}
+      className="flex-1 bg-ground"
+    >
+      <FormHeader title={title} onCancel={onCancel} />
+      <KeyboardAvoidingView behavior="padding" keyboardVerticalOffset={top} className="flex-1">
         <ScrollView
           ref={scroll}
+          // iOS's bar is glass over the sheet: what scrolls starts under it unless inset for it, which
+          // hid the first field (the user's word, 27 November 2026, recorded on #87).
+          contentInsetAdjustmentBehavior="automatic"
           keyboardShouldPersistTaps="handled"
-          contentContainerClassName="gap-grid-2 px-page pb-grid-2"
+          // What scrolls is the one card the fields stand in, so a field's `onLayout` is still measured
+          // from the top of what scrolls.
+          contentContainerClassName="m-page gap-grid-2 rounded-card bg-surface p-grid-2"
         >
-          <View className="items-start">
-            <CancelButton onPress={onCancel} />
-            <Text accessibilityRole="header" className="font-language-bold text-title text-ink">
-              {title}
-            </Text>
-          </View>
           {children}
         </ScrollView>
         {/* Out of the scroll view, so that the keyboard never hides them. */}
         <View className="gap-grid-1 px-page py-grid-1">
-          {fault ? (
-            <Text accessibilityRole="alert" className="font-language-bold text-body text-ink">
-              {fault}
-            </Text>
-          ) : null}
+          {fault ? <Failure words={fault} /> : null}
           <Button label={action} onPress={onAction} />
         </View>
       </KeyboardAvoidingView>

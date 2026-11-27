@@ -1,12 +1,13 @@
 import { cssInterop } from 'nativewind';
 import type { ReactNode } from 'react';
-import { SymbolView, type AndroidSymbol, type SFSymbol } from 'expo-symbols';
+import { SymbolView } from 'expo-symbols';
 import { Appearance, Pressable, ScrollView, useColorScheme, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle } from 'react-native-svg';
 
 import { Failure } from '@/components/Failure';
 import { Link } from '@/components/Link';
+import { FAULT_SIGN, VALID_SIGN } from '@/components/signs';
 import { Text } from '@/components/Text';
 import { useRipple } from '@/components/useRipple';
 import { useTint } from '@/components/useTint';
@@ -38,11 +39,6 @@ const Card = ({ children }: { children: ReactNode }) => (
 
 /** The no-break space between a figure and its unit (DESIGN.md, *Figures*). */
 const NBSP = String.fromCharCode(0xa0);
-
-type Sign = { ios: SFSymbol; android: AndroidSymbol };
-
-const WARNING: Sign = { ios: 'exclamationmark.triangle.fill', android: 'warning' };
-const TICK: Sign = { ios: 'checkmark.circle.fill', android: 'check_circle' };
 
 /** What failed, where it failed: the app's own `Failure`, `fault` with the warning sign. */
 const Failed = ({ words }: { words: string }) => (
@@ -80,7 +76,7 @@ const Field = ({
         <Text className="font-language text-body text-ink">{value}</Text>
         {state ? (
           <SymbolView
-            name={state === 'fault' ? WARNING : TICK}
+            name={state === 'fault' ? FAULT_SIGN : VALID_SIGN}
             size={20}
             tintColor={state === 'fault' ? tint.fault : tint.valid}
           />
@@ -182,7 +178,7 @@ const Logged = () => {
   const tint = useTint();
   return (
     <View className="mb-3 flex-row items-center gap-3 rounded-card bg-surface p-4">
-      <SymbolView name={TICK} size={22} tintColor={tint.valid} />
+      <SymbolView name={VALID_SIGN} size={22} tintColor={tint.valid} />
       <View className="flex-1">
         <Text className="font-language-bold text-body text-ink">Logged: Rolled oats</Text>
         <Text className="font-language text-label text-ink-mid">

@@ -110,14 +110,19 @@ const DEVICE_RULE = `### A change only the device can show
 This takes precedence over the red and green rules above, for a production write of which all of
 these hold. It then needs no failing test:
 
-  - Its only effect is what takes focus as a page opens, whether the keyboard is up, how the platform
-    presents a page (full height, a sheet, its detents), or where a page is scrolled to. Scrolling
-    what is already on a page into view is this, and not a change to what is shown.
+  - Its only effect is what takes focus as a page opens, whether the keyboard is up, whether the keyboard covers a control,
+    how the platform presents a page (full height, a sheet, its detents), or where a page is
+    scrolled to. Scrolling what is already on a page into view is this, and not a change to what is
+    shown. Bringing a covered control out from under the keyboard is this, and not a change to what
+    can be pressed: the control was always meant to be reached.
   - It leaves alone a value, a word, a role, a label, where a press leads, stored data, a computation,
     and anything drawn.
   - The session shows, before the write, the fault on the emulator, as a measurement in a command's
     output: whether the keyboard is shown, what has focus, or where an element stands. A measurement
     after agent-device has pressed or filled is of its headless keyboard and is not one.
+    Whether the keyboard covers a control is the control's bounds from the screen's hierarchy against
+    the keyboard's frame from \`dumpsys window\`, with the real keyboard up. A flow cannot show it:
+    a covered control stays in the hierarchy, so a flow finds it visible either way.
     How iOS presents a page, which the Android emulator cannot show, needs instead the user's word
     for that page, quoted in the session with its date and where it is recorded.
   - It is the least that could repair that fault, and the tests of the file pass.
@@ -138,12 +143,32 @@ the same flow passing after it is the green. The flow must fail for the behaviou
 an assertion of what is on the screen, and the write is the least that makes it pass. Anything Jest
 can drive keeps its Jest test.`;
 
+/**
+ * The validator sees the recent session, the file's current content and the pending write, and no
+ * other file. A helper moved into a new file therefore looks like behaviour that "appears nowhere
+ * else", and is refused as net new, though the defaults allow the extraction. This names what shows
+ * the code already exists. Code only a flow exercises (Android's form X, which Jest's iOS never
+ * renders) has the flow as its covering test.
+ */
+const REFACTOR_RULE = `### A refactor that moves code
+
+A write that moves existing code into another file, or makes a file use code moved so, is a refactor
+under green and needs no failing test, when all of these hold:
+
+  - The code it moves is in a file read in the session before the write, or in that file's own
+    current content, so the behaviour is seen to exist already.
+  - The tests that cover that code were run in the session before the write and passed. Where Jest
+    does not render the code, a flow under e2e/ counts as those tests, run green by
+    \`agent-device test\`.
+  - It preserves what the code does. Anything else in the same write is judged by the rules above.`;
+
 function testFirstRules(defaults: string) {
   return [
     scopeObservedFailureToProductionWrites(defaults),
     PIXELS_RULE,
     DEVICE_RULE,
     FLOW_RULE,
+    REFACTOR_RULE,
   ].join('\n\n');
 }
 

@@ -1,11 +1,12 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useForm } from 'react-hook-form';
+import { ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { CancelButton } from '@/components/CancelButton';
 import { FoodsNotice } from '@/components/FoodsNotice';
 import { FormField } from '@/components/FormField';
+import { FormHeader } from '@/components/FormHeader';
 import { FormPage } from '@/components/FormPage';
 import { gramsForm } from '@/components/gramsForm';
 import { Text } from '@/components/Text';
@@ -22,6 +23,7 @@ function GramsForm({ food }: { food: Food }) {
     setError,
     formState: { errors },
   } = useForm({
+    mode: 'onTouched',
     resolver: zodResolver(gramsForm),
     defaultValues: { grams: '' },
   });
@@ -30,13 +32,17 @@ function GramsForm({ food }: { food: Food }) {
     entryOn: ({ grams }, day) => ({ name: food.name, entry: weighedEntry(food, grams, day) }),
   });
   return (
+    // The bar holds one line, so it says what the form does, and the page names the food whole.
     <FormPage
-      title={`Log ${shownName(food.name)}`}
+      title="Log entry"
       onCancel={leave}
       fault={errors.root?.message}
       action="Log entry"
       onAction={log}
     >
+      <Text accessibilityRole="header" className="font-language-bold text-title text-ink">
+        {shownName(food.name)}
+      </Text>
       <FormField
         control={control}
         name="grams"
@@ -56,12 +62,16 @@ export default function LogFood() {
   // A link can put another food on this page, and what was typed is not of it.
   if (food) return <GramsForm key={food.id} food={food} />;
   return (
-    <SafeAreaView className="flex-1 bg-ground px-page">
-      <CancelButton onPress={() => router.dismissTo('/log')} />
-      {foods === 'unreadable' ? <FoodsNotice foods={foods} readAgain={readAgain} /> : null}
-      {Array.isArray(foods) ? (
-        <Text className="font-language text-body text-ink">This food is not in your foods</Text>
-      ) : null}
+    <SafeAreaView edges={['bottom', 'left', 'right']} className="flex-1 bg-ground">
+      <FormHeader title="Log entry" onCancel={() => router.dismissTo('/log')} />
+      {/* iOS's bar is glass over the sheet, and what stands under it is hidden unless inset for it
+          (the user's word, 27 November 2026, recorded on #87). */}
+      <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerClassName="px-page">
+        {foods === 'unreadable' ? <FoodsNotice foods={foods} readAgain={readAgain} /> : null}
+        {Array.isArray(foods) ? (
+          <Text className="font-language text-body text-ink">This food is not in your foods</Text>
+        ) : null}
+      </ScrollView>
     </SafeAreaView>
   );
 }

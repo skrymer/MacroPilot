@@ -178,6 +178,46 @@ describe('Log', () => {
     expect(await stores.entries.listOn('2026-11-24')).toHaveLength(0);
   });
 
+  it('says the grams are wrong as soon as the field is left, before they are logged', async () => {
+    // Given Log open on a food
+    await openLog(await storesOf(OATS));
+    const user = userEvent.setup();
+
+    // When its form is opened, 0 typed and the field left
+    await weigh(user, /^Log Rolled oats/, '0');
+
+    // Then the fault is said
+    expect(await screen.findByText('Grams must be greater than 0')).toBeOnTheScreen();
+  });
+
+  it('says an estimate’s field is wrong as soon as it is left, before it is logged', async () => {
+    // Given the estimate open
+    await openLog(await storesOf());
+    const user = userEvent.setup();
+    await user.press(await screen.findByRole('button', { name: 'Log an estimate instead' }));
+
+    // When 0 calories are typed and the field left
+    await user.type(await screen.findByLabelText('Calories'), '0');
+
+    // Then its fault is said, and of no field not yet reached
+    expect(await screen.findByText('Calories must be at least 1')).toBeOnTheScreen();
+    expect(screen.queryByText('Enter a label for this entry')).not.toBeOnTheScreen();
+  });
+
+  it('says nothing was saved only once a save is refused, not as a field is left', async () => {
+    // Given the estimate open
+    await openLog(await storesOf());
+    const user = userEvent.setup();
+    await user.press(await screen.findByRole('button', { name: 'Log an estimate instead' }));
+
+    // When 0 calories are typed and the field left
+    await user.type(await screen.findByLabelText('Calories'), '0');
+
+    // Then the field says what is wrong, and the button says nothing of a save
+    expect(await screen.findByText('Calories must be at least 1')).toBeOnTheScreen();
+    expect(screen.queryByText('Not saved. A field above needs changing.')).not.toBeOnTheScreen();
+  });
+
   it('refuses an estimate of 0 calories beside its field, and logs nothing', async () => {
     // Given an estimate of a label and 0 calories
     const stores = await storesOf();
@@ -203,8 +243,25 @@ describe('Log', () => {
     await userEvent.press(await screen.findByRole('button', { name: /^Log Coffee/ }));
 
     // Then its form names it, and its grams are blank rather than a figure
-    expect(await screen.findByRole('header', { name: 'Log Coffee' })).toBeOnTheScreen();
+    expect(await screen.findByRole('header', { name: 'Coffee' })).toBeOnTheScreen();
     expect(screen.getByLabelText('Weight (g)')).toHaveDisplayValue('');
+  });
+
+  it('names the food in full on its form, under a bar that says what the form does', async () => {
+    // Given Log open on a food whose name is longer than a bar holds
+    const name = 'greek yoghurt with honey, walnuts and a little cinnamon, 10% fat';
+    await openLog(await storesOf({ ...OATS, name }));
+
+    // When the user presses it
+    await userEvent.press(await screen.findByRole('button', { name: /^Log Greek yoghurt/ }));
+
+    // Then the bar says Log entry, and the page names the food whole
+    expect(await screen.findByRole('header', { name: 'Log entry' })).toBeOnTheScreen();
+    expect(
+      screen.getByRole('header', {
+        name: 'Greek yoghurt with honey, walnuts and a little cinnamon, 10% fat',
+      }),
+    ).toBeOnTheScreen();
   });
 
   it('names a food’s row by what pressing it does, and by its figures', async () => {
@@ -388,7 +445,7 @@ describe('Log', () => {
     await act(() => router.navigate({ pathname: '/log-food', params: { id: 2 } }));
 
     // Then its grams are blank, not the first food's
-    expect(await screen.findByRole('header', { name: 'Log Coffee' })).toBeOnTheScreen();
+    expect(await screen.findByRole('header', { name: 'Coffee' })).toBeOnTheScreen();
     expect(screen.getByLabelText('Weight (g)')).toHaveDisplayValue('');
   });
 
@@ -400,7 +457,7 @@ describe('Log', () => {
     await user.press(screen.getByRole('button', { name: 'Log entry' }));
     await screen.findByText('Logged: Rolled oats');
     await user.press(await screen.findByRole('button', { name: /^Log Coffee/ }));
-    await screen.findByRole('header', { name: 'Log Coffee' });
+    await screen.findByRole('header', { name: 'Coffee' });
     await act(() => router.navigate('/foods'));
     await screen.findByRole('header', { name: 'Foods' });
 

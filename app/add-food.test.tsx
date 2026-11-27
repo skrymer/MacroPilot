@@ -103,6 +103,19 @@ describe('Add food', () => {
     expect(screen.getByText('0 g protein per 100 g')).toBeOnTheScreen();
   });
 
+  it('says a field’s fault as soon as it is left, before anything is saved', async () => {
+    // Given Add food open
+    await openApp('/add-food', new InMemoryFoodStore());
+    const user = userEvent.setup();
+
+    // When a negative figure is typed and the field left
+    await user.type(await screen.findByLabelText('Carbohydrate per 100 g'), '-1');
+
+    // Then its fault is said beside it, and of no field not yet reached
+    expect(await screen.findByText('Carbohydrate can’t be negative')).toBeOnTheScreen();
+    expect(screen.queryByText('Enter fat per 100 g')).not.toBeOnTheScreen();
+  });
+
   it.each([
     ['left blank', '', '', undefined, undefined, '165 kcal'],
     ['0', '0', '0', 0, 0, '165 kcal'],
@@ -206,9 +219,12 @@ describe('Add food', () => {
     // When the user opens Add food
     await openApp('/add-food', foods);
 
-    // Then Cancel is met before the page's title
-    const met = await screen.findAllByText(/^(Cancel|Add food)$/);
-    expect(met.map((text) => text.children[0])).toEqual(['Cancel', 'Add food']);
+    // Then the X, heard as Cancel, is met before the page's title
+    const met = await screen.findAllByRole(/^(button|header)$/, { name: /^(Cancel|Add food)$/ });
+    expect(met).toEqual([
+      screen.getByRole('button', { name: 'Cancel' }),
+      screen.getByRole('header', { name: 'Add food' }),
+    ]);
   });
 
   it('goes back to Foods on Cancel, saving nothing', async () => {
