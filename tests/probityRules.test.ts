@@ -63,4 +63,16 @@ describe("probity's rules", () => {
     expect(told).toContain('The space inside what is pressed is this only where');
     expect(told).toContain('its touch target is measured too, and is made no smaller');
   });
+
+  it('let code move into a new file as a refactor, once its source was read and its tests ran green', () => {
+    // Given the config's rule
+
+    // When it judges a write
+    const told = prompt();
+
+    // Then an extraction is judged by where the code came from, and a flow counts as its test
+    expect(told).toContain('### A refactor that moves code');
+    expect(told).toContain('read in the session before the write');
+    expect(told).toContain('a flow under e2e/ counts as those tests');
+  });
 });

@@ -138,12 +138,32 @@ the same flow passing after it is the green. The flow must fail for the behaviou
 an assertion of what is on the screen, and the write is the least that makes it pass. Anything Jest
 can drive keeps its Jest test.`;
 
+/**
+ * The validator sees the recent session, the file's current content and the pending write, and no
+ * other file. A helper moved into a new file therefore looks like behaviour that "appears nowhere
+ * else", and is refused as net new, though the defaults allow the extraction. This names what shows
+ * the code already exists. Code only a flow exercises (Android's form X, which Jest's iOS never
+ * renders) has the flow as its covering test.
+ */
+const REFACTOR_RULE = `### A refactor that moves code
+
+A write that moves existing code into another file, or makes a file use code moved so, is a refactor
+under green and needs no failing test, when all of these hold:
+
+  - The code it moves is in a file read in the session before the write, or in that file's own
+    current content, so the behaviour is seen to exist already.
+  - The tests that cover that code were run in the session before the write and passed. Where Jest
+    does not render the code, a flow under e2e/ counts as those tests, run green by
+    \`agent-device test\`.
+  - It preserves what the code does. Anything else in the same write is judged by the rules above.`;
+
 function testFirstRules(defaults: string) {
   return [
     scopeObservedFailureToProductionWrites(defaults),
     PIXELS_RULE,
     DEVICE_RULE,
     FLOW_RULE,
+    REFACTOR_RULE,
   ].join('\n\n');
 }
 
