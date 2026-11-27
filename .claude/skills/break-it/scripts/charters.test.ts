@@ -57,6 +57,23 @@ describe('charters.mjs', () => {
     expect(output.trim()).toBe('EX-8.2');
   });
 
+  it('names the missing "with" when a charter says its attack some other way', () => {
+    // Given a stamped issue
+    const { root } = chartered();
+
+    // When a charter gives its attack as "interrupted by", without the word "with"
+    const { status, output } = run(
+      root,
+      'charter',
+      '8',
+      'explore the log form interrupted by an unknown link to discover a lost entry',
+    );
+
+    // Then it is refused, saying that "with" is what is missing
+    expect(status).toBe(1);
+    expect(output).toContain('no " with "');
+  });
+
   it('refuses a charter that names no risk', () => {
     // Given a stamped issue
     const { root } = chartered();
