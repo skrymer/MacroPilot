@@ -9,13 +9,22 @@ import { Text } from './Text';
 import { useRipple } from './useRipple';
 import { useTint } from './useTint';
 
-/** A date as `2026-11-24` at midnight on the phone, which is how the system's picker takes one. */
-const asDate = (date: string) =>
-  new Date(Number(date.slice(0, 4)), Number(date.slice(5, 7)) - 1, Number(date.slice(8, 10)));
+/**
+ * A date is a day, not a moment, so it is held at midnight in UTC, and the pickers and the words read
+ * it there. One at midnight on the phone was said a day early once the phone was moved east with the
+ * app open: what the app had made kept the zone it started in, and the picker took the new one.
+ */
+const ZONE = 'UTC';
 
-/** The day the system's picker chose, as `2026-11-24`, on the phone's own calendar. */
+/** A date as `2026-11-24` at midnight in UTC. */
+const asDate = (date: string) =>
+  new Date(
+    Date.UTC(Number(date.slice(0, 4)), Number(date.slice(5, 7)) - 1, Number(date.slice(8, 10))),
+  );
+
+/** The day the system's picker chose, as `2026-11-24`, read in UTC as it was given. */
 const asDay = (date: Date) =>
-  [date.getFullYear(), date.getMonth() + 1, date.getDate()]
+  [date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate()]
     .map((part, i) => String(part).padStart(i === 0 ? 4 : 2, '0'))
     .join('-');
 
@@ -24,9 +33,10 @@ const DATE_WORDS = new Intl.DateTimeFormat('en-GB', {
   day: 'numeric',
   month: 'short',
   year: 'numeric',
+  timeZone: ZONE,
 });
 
-/** A date as `2026-11-24` in words, `24 November 2026`. */
+/** A date as `2026-11-24` in words, `24 Nov 2026`. */
 export const dateWords = (date: string) => DATE_WORDS.format(asDate(date));
 
 /**
@@ -62,14 +72,15 @@ export function DateField({
   const [open, setOpen] = useState(false);
   const shown = value === '' ? undefined : dateWords(value);
   const end = asDate(before);
-  const bounds = {
+  const picker = {
+    timeZoneName: ZONE,
     minimumDate: asDate(earliest),
-    maximumDate: new Date(end.getFullYear(), end.getMonth(), end.getDate() - 1),
+    maximumDate: new Date(Date.UTC(end.getUTCFullYear(), end.getUTCMonth(), end.getUTCDate() - 1)),
   };
   const choose = () => {
     if (Platform.OS === 'android') {
       DateTimePickerAndroid.open({
-        ...bounds,
+        ...picker,
         value: asDate(value || starts),
         mode: 'date',
         onChange: ({ type }, date) => {
@@ -104,7 +115,7 @@ export function DateField({
       </Pressable>
       {open ? (
         <DateTimePicker
-          {...bounds}
+          {...picker}
           accessibilityLabel={label}
           value={asDate(value || starts)}
           mode="date"
