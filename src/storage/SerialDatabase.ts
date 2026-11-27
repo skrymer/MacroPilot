@@ -29,7 +29,7 @@ export class SerialDatabase implements SqlDatabase {
         await task(this.db);
         await this.db.execAsync('COMMIT');
       } catch (fault) {
-        // SQLite has already rolled back after some faults; the caller hears the fault, not that.
+        // The caller hears the task's fault, not the rollback's (ADR 0008, *Amended*).
         await this.db.execAsync('ROLLBACK').catch(() => {});
         throw fault;
       }

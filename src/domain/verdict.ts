@@ -23,8 +23,9 @@ export function dayVerdict(
   totals: Totals,
   targets: { budgetKcal: number; proteinFloorG: number },
 ): Verdict {
-  if (totals.calories > targets.budgetKcal * (1 + TOLERANCE)) return 'over budget';
-  if (againstBudget(totals.calories, targets.budgetKcal).over) return 'slightly over';
+  const { over } = againstBudget(totals.calories, targets.budgetKcal);
+  if (over && totals.calories > targets.budgetKcal * (1 + TOLERANCE)) return 'over budget';
+  if (over) return 'slightly over';
   // Protein not stated is not yet known to reach anything; it is never 0 g.
   if (totals.protein !== undefined && totals.protein >= targets.proteinFloorG) return 'on target';
   return 'in progress';
