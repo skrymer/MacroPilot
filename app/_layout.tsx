@@ -19,6 +19,7 @@ import { SystemClock } from '@/lifecycle/SystemClock';
 import { EntryStoreProvider } from '@/storage/EntryStoreContext';
 import { FoodStoreProvider } from '@/storage/FoodStoreContext';
 import { LazyDatabase } from '@/storage/LazyDatabase';
+import { SerialDatabase } from '@/storage/SerialDatabase';
 import { ProfileStoreProvider } from '@/storage/ProfileStoreContext';
 import { ReviewStoreProvider } from '@/storage/ReviewStoreContext';
 import { SqliteEntryStore } from '@/storage/SqliteEntryStore';
@@ -35,7 +36,7 @@ import '../global.css';
 LogBox.ignoreLogs(['ImageBackground is deprecated']);
 
 const clock = new SystemClock();
-const database = new LazyDatabase(() => openDatabaseAsync('macropilot.db'));
+const database = new SerialDatabase(new LazyDatabase(() => openDatabaseAsync('macropilot.db')));
 const foodStore = new SqliteFoodStore(database);
 const entryStore = new SqliteEntryStore(database);
 const profileStore = new SqliteProfileStore(database);

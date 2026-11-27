@@ -18,9 +18,8 @@ export class SqliteReviewStore implements ReviewStore {
   async save(review: Review): Promise<void> {
     const db = await withSchema(this.db);
     // Both or neither: a save that fails between the two has changed nothing.
-    await db.execAsync('BEGIN');
-    try {
-      await db.runAsync(
+    await db.withTransactionAsync(async (tx) => {
+      await tx.runAsync(
         'INSERT OR REPLACE INTO reviews (day, trend_kg, maintenance_kcal, budget_kcal, protein_floor_g) VALUES (?, ?, ?, ?, ?)',
         [
           review.day,
@@ -30,12 +29,8 @@ export class SqliteReviewStore implements ReviewStore {
           review.proteinFloorG,
         ],
       );
-      await db.runAsync('DELETE FROM reviews WHERE day > ?', [review.day]);
-      await db.execAsync('COMMIT');
-    } catch (error) {
-      await db.execAsync('ROLLBACK');
-      throw error;
-    }
+      await tx.runAsync('DELETE FROM reviews WHERE day > ?', [review.day]);
+    });
   }
 
   async list(): Promise<Review[]> {

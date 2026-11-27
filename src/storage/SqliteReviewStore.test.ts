@@ -27,6 +27,21 @@ describe('SqliteReviewStore', () => {
     ]);
   });
 
+  it('keeps both of two saves that overlap, the later day standing after the earlier', async () => {
+    // Given a store with no reviews
+    const store = new SqliteReviewStore(new BetterSqliteDatabase());
+
+    // When a review for the 20th and one for the 27th are saved at once
+    const saving = Promise.all([
+      store.save({ ...REVIEW, day: '2026-11-20' }),
+      store.save({ ...REVIEW, day: '2026-11-27' }),
+    ]);
+
+    // Then both are kept
+    await expect(saving).resolves.toBeDefined();
+    expect((await store.list()).map(({ day }) => day)).toEqual(['2026-11-20', '2026-11-27']);
+  });
+
   it('changes nothing when a save fails partway, the later review still standing alone', async () => {
     // Given a review on the 27th, and a table that refuses to have reviews deleted
     const db = new BetterSqliteDatabase();
