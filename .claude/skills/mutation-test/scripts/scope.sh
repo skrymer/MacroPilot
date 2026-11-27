@@ -25,7 +25,9 @@ source_file() { grep -E '^(src|app)/.*\.(ts|tsx)$' | grep -Ev '\.test\.tsx?$' ||
 ranges=$({
   git diff --name-only --diff-filter=d "$base" -- src app | source_file | while read -r file; do
     # Each hunk header's `+start,count`; a count of 0 is a deletion, with nothing left to mutate.
-    git diff -U0 "$base" -- "$file" | sed -n 's/^@@ [^+]*+\([0-9,]*\) @@.*/\1/p' |
+    # Whitespace is ignored: a removed wrapper re-indents every line inside it, and mutating those
+    # judges old code as this change's (29 unchanged survivors, judged again at each of #110's runs).
+    git diff -w -U0 "$base" -- "$file" | sed -n 's/^@@ [^+]*+\([0-9,]*\) @@.*/\1/p' |
       awk -F, -v file="$file" '{
         count = ($2 == "") ? 1 : $2
         if (count > 0) printf "%s:%d-%d\n", file, $1, $1 + count - 1

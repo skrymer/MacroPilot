@@ -63,6 +63,7 @@ The rules are the `agent-device` skill's. They are here because the first tester
 | Animations (*unproven*) | `ad settings animations off` for a walk-through, `on` for a charter about motion |
 | Typing | `ad fill 'role=text-field label="Grams"' "180" --settle`. `label=` alone matches the visible label too, and types nothing |
 | Permission (*unproven*) | `ad settings permission deny camera --app com.skrymer.macropilot`; a dialog already up is `ad alert` |
+| What shows for under a second (a flash on a link, a page passed through) | `adb shell 'screenrecord --bugreport --output-format=raw-frames --size 270x600 /sdcard/f.raw' &`, the action, then `adb shell pkill -2 screenrecord`; each frame carries its time. `--time-limit` does not stop raw frames, and `screenshot` takes about 3 s a frame. Delete the file after (#122's 310 ms was measured so) |
 | A release bundle | Proxy Metro's manifest with `dev=true` rewritten to `dev=false&minify=true`, and load the proxy's port. Still the dev client's red box |
 
 ## Sizes
@@ -71,7 +72,7 @@ The rules are the `agent-device` skill's. They are here because the first tester
 .claude/skills/drive-emulator/scripts/sizes.sh <out-dir> / design
 ```
 
-Photographs each route, top to bottom, at the two sizes ADR 0007 fixes. While a screen or the script is being worked on, name one. An issue owes `SIZES=default`, and an epic both. **The sizes hold a form's scale, and not its content**: one that takes a name or shows a fault is photographed with a name of 64 characters, each fault showing and the real keyboard up, and *holds* is said of what was photographed alone. **Look at every photo**: a unit lost, a word broken, text clipped or touching, a control out of reach.
+Photographs each route, top to bottom, at the two sizes ADR 0007 fixes. **It sets the appearance itself**, light unless `APPEARANCE=dark` is given, so `ad settings appearance dark` beforehand is undone and the photos come out light. While a screen or the script is being worked on, name one. An issue owes `SIZES=default`, and an epic both. **The sizes hold a form's scale, and not its content**: one that takes a name or shows a fault is photographed with a name of 64 characters, each fault showing and the real keyboard up, and *holds* is said of what was photographed alone. **Look at every photo**: a unit lost, a word broken, text clipped or touching, a control out of reach.
 
 ## Traps
 

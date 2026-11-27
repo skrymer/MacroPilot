@@ -27,7 +27,7 @@ Every rule a screen is held to is in [`platform-conventions`](../platform-conven
 
 **Prefer the platform's own component.** Check what the SDK ships first (`expo-router/native-tabs`, sheets, `expo-haptics`, `expo-symbols`) and add it with `npx expo install`. A native package means a new dev build on both platforms, so batch them. Check that it exists on **both**: SF Symbols are iOS only.
 
-**`app/design.tsx` has no test and no gate but the eye.** A change to it is not called fixed, in a report or a commit, until the photo at the size that failed has been looked at. A check that is not proven does not merge with the change it is meant to check.
+**`app/design.tsx` has no test and no gate but the eye, and `spacing.mjs`.** A change to it is not called fixed, in a report or a commit, until the photo at the size that failed has been looked at. The eye judges colour and clipping; every margin or gap an edit moves or carries over is measured with `spacing.mjs`, before and after, since a 2dp fault passes a photo (on #110 the page's `px-4` was carried onto its new root, 22 photos called clean, and code review found it at 13.7dp against 16). A check that is not proven does not merge with the change it is meant to check.
 
 ## Rendering rules this domain requires
 

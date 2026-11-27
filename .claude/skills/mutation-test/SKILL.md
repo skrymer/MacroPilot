@@ -53,6 +53,7 @@ The consequence: [`0001`](../../../docs/adr/0001-a-unit-owes-its-own-test-when-i
 - **No truthiness mutator.** `x == null ? a : b` scoring 100% says nothing about whether `x ? b : a` would be caught, and those differ for `0`, `''` and `NaN`. That matters here more than most codebases: absence is a first-class value and an unknown must never render as a zero, so every guard distinguishing absent from zero needs an explicit zero case the score will never ask for.
 - **Configuration is not mutable code.** Any tuning figure that moves into a config file is outside the mutable path by construction, and needs a test asserting the figure the rule produces at its boundary.
 - **A JSX attribute makes no mutants**, so a scope of nothing else has none. `survivors.mjs` then fails: mutate the lines by hand and run the suite.
+- **An `as const` literal makes no mutants either.** A count that falls after an `as const` or another type-only edit means mutants were never made, not that they were killed: compare the per-file counts in `reports/mutation/mutation.json` with the last run's, say so in the report, and let the last run's verdicts on the unchanged code inside stand (on #110, `usePagePresentation` went from 13 mutants to 1). `FormHeader.tsx`, `FormField.tsx` and `ShowAll.tsx` have literals hidden the same way.
 - **A `timeout` verdict is not a survivor.** It usually means the mutant produced an infinite loop, and counts as killed.
 
 ## Gotchas

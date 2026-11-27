@@ -59,6 +59,18 @@ describe('scope.sh', () => {
     expect(ranges).toEqual(['src/a.ts:3-3', 'src/a.ts:7-8']);
   });
 
+  it('leaves out a line whose only change is its indentation', () => {
+    // Given lines 2-4 re-indented since main, as a removed wrapper leaves them, and line 3 also changed
+    const dir = repo({ 'src/a.ts': 'open\n    two\n    three\n    four\nclose\n' });
+    write(dir, { 'src/a.ts': 'open\n  two\n  changed\n  four\nclose\n' });
+
+    // When the scope is taken
+    const ranges = scope(dir);
+
+    // Then it is the changed line alone
+    expect(ranges).toEqual(['src/a.ts:3-3']);
+  });
+
   it('names a file the change created whole, committed or not', () => {
     // Given one new file committed on the branch and one not yet added
     const dir = repo({ 'src/a.ts': lines(2) });
