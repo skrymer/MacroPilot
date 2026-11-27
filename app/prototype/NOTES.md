@@ -18,7 +18,7 @@
 **Settled while grilling:** page order goal card, then *Your details*; the goal asks for Setup; the details form has Sex, Birth date (the platform's own picker), Height and Calorie tracking; the goal form shows the start weight as the trend and refuses a rate that outruns maintenance; a weigh-in is 20 to 400 kg.
 **Decided here without the grilling:** the not-filled state's words (*No details yet*, *Your sex, birth date and height set your first calorie budget and protein floor.*) and a person sign, which `Notice` cannot show yet (its sign is fixed); the details are changed by an outlined *Change details* under their card; Sex and Calorie tracking are segmented choices; the goal set reads *82.4 → 75.0 kg* with *0.5 kg a week, 550 kcal a day under maintenance*; the weigh-in's refusal reads *Enter a weight from 20 to 400 kg*.
 **Verdict (27 Nov 2026):** **B** — no goal shows *Set a goal*, which opens the goal form. Chosen by the user on the iPhone.
-**Retired in part (27 Nov 2026):** the details half (*Not filled*, *Details form*, *Your details*) is built as the Profile tab and the details form, and is gone from the prototype; the goal and the weight forms stay until their slices.
+**Retired in part (27 Nov 2026):** the details half (*Not filled*, *Details form*, *Your details*) is built as the Profile tab and the details form, and is gone from the prototype; the goal form stays until its slice. The weight form is built as Log weight on Today (#128), and is gone from it too.
 **Teardown:** `app/prototype/profile.tsx`, its link in `app/design.tsx`, this section.
 
 # PROTOTYPE — the line when an entry would pass the budget (throwaway)
