@@ -17,6 +17,7 @@ export function useFormPresentation() {
     presentation: 'modal',
     headerShown: true,
     ...barHeader(tint, fontScale),
+    // A sheet's bar is flat on iOS too, as Apple's own sheets are; Android's already is.
     headerShadowVisible: false,
   } as const;
 }

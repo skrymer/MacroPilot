@@ -12,14 +12,14 @@ export const TITLE_FACE = 'B612_700Bold';
  * title kept one size at every text size, so it is scaled here.
  */
 export function barHeader(tint: Record<string, string>, fontScale: number) {
-  const title = { fontFamily: TITLE_FACE, color: tint.ink };
-  if (Platform.OS === 'ios') {
-    return { headerTintColor: tint.ink, headerTitleStyle: { ...title, fontSize: 17 } };
-  }
+  const ios = Platform.OS === 'ios';
   return {
     headerTintColor: tint.ink,
-    headerTitleStyle: { ...title, fontSize: scaledBy(fontScale, 'title') },
-    headerStyle: { backgroundColor: tint.ground },
-    headerShadowVisible: false,
+    headerTitleStyle: {
+      fontFamily: TITLE_FACE,
+      color: tint.ink,
+      fontSize: ios ? 17 : scaledBy(fontScale, 'title'),
+    },
+    ...(!ios && { headerStyle: { backgroundColor: tint.ground }, headerShadowVisible: false }),
   };
 }
