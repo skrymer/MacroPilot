@@ -23,7 +23,7 @@ export function newProfile(profile: Profile, today: string): Profile {
 export const isHeight = (cm: number) => cm > 0 && cm < 300;
 
 /** The oldest anyone can be: past it a birth date is a slip, not a life. */
-const MAX_AGE_YEARS = 120;
+export const MAX_AGE_YEARS = 120;
 
 /** Before `today` and at most 120 years before it, both dates as `2026-11-24`. */
 export function isBirthDate(born: string, today: string): boolean {

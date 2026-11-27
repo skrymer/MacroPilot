@@ -1,19 +1,22 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'expo-router';
 import { Controller, useForm } from 'react-hook-form';
+import { View } from 'react-native';
 import type { z } from 'zod';
 
 import { DateField } from '@/components/DateField';
 import { detailsForm } from '@/components/detailsForm';
 import { formFault } from '@/components/formFault';
 import { FormField } from '@/components/FormField';
+import { FormHeader } from '@/components/FormHeader';
 import { FormPage } from '@/components/FormPage';
 import { SEXES, TRACKING } from '@/components/profileWords';
 import { Segments } from '@/components/Segments';
 import { useDiscard } from '@/components/useDiscard';
+import { Unreadable } from '@/components/Unreadable';
 import { useSave } from '@/components/useSave';
 import { yearsBefore } from '@/domain/day';
-import { newProfile, type Profile } from '@/domain/profile';
+import { MAX_AGE_YEARS, newProfile, type Profile } from '@/domain/profile';
 import { useToday } from '@/lifecycle/useToday';
 import { useProfileStore } from '@/storage/ProfileStoreContext';
 import { useProfile } from '@/storage/useProfile';
@@ -81,6 +84,8 @@ function DetailsForm({ saved }: { saved?: Profile }) {
             onChange={field.onChange}
             // Where the picker stands before a birth date is chosen.
             starts={yearsBefore(today, 30)}
+            earliest={yearsBefore(today, MAX_AGE_YEARS)}
+            before={today}
             fault={fieldState.error?.message}
           />
         )}
@@ -103,8 +108,17 @@ function DetailsForm({ saved }: { saved?: Profile }) {
 }
 
 export default function Details() {
-  const { profile } = useProfile();
+  const router = useRouter();
+  const { profile, readAgain } = useProfile();
+  if (profile === 'unreadable') {
+    return (
+      <View className="flex-1 bg-ground p-page">
+        <FormHeader title="Your details" onCancel={() => router.dismissTo('/profile')} />
+        <Unreadable words="Couldn’t load your details" onRetry={() => void readAgain()} />
+      </View>
+    );
+  }
   // Nothing before the first read, which is quick (DESIGN.md, *Asking and telling*).
-  if (!Array.isArray(profile)) return null;
+  if (profile === 'unread') return null;
   return <DetailsForm saved={profile[0]} />;
 }

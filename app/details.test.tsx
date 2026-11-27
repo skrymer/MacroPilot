@@ -228,6 +228,37 @@ describe('Your details', () => {
     expect(ask.question).toBeUndefined();
   });
 
+  it('says the saved details could not be read, with the way out and a retry', async () => {
+    // Given a profile saved in a store that cannot be read
+    const profile = new InMemoryProfileStore();
+    await profile.save({ sex: 'male', born: '1984-03-14', heightCm: 181, countsCalories: true });
+    profile.unreadable = true;
+
+    // When the form opens
+    await openApp('/details', profile);
+
+    // Then it says so, offers to leave, and to try again, which opens the form filled
+    expect(await screen.findByText('Couldn’t load your details')).toBeOnTheScreen();
+    expect(screen.queryByRole('button', { name: 'Cancel' })).toBeOnTheScreen();
+    profile.unreadable = false;
+    await userEvent.press(screen.getByRole('button', { name: 'Retry' }));
+    expect(await screen.findByRole('header', { name: 'Change details' })).toBeOnTheScreen();
+  });
+
+  it('chooses no birth date when the wheels are only opened and shut', async () => {
+    // Given the empty form, its birth date's wheels opened
+    const profile = new InMemoryProfileStore();
+    await openApp('/details', profile);
+    const user = userEvent.setup();
+    await user.press(await screen.findByRole('button', { name: 'Birth date, not chosen' }));
+
+    // When they are shut without being turned
+    await user.press(screen.getByRole('button', { name: /^Birth date, / }));
+
+    // Then no date is chosen
+    expect(screen.queryByRole('button', { name: 'Birth date, not chosen' })).toBeOnTheScreen();
+  });
+
   it('refuses a form with nothing given, and says what each field needs', async () => {
     // Given the form open with nothing in it
     const profile = new InMemoryProfileStore();

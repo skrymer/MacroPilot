@@ -1,4 +1,4 @@
-import { act, screen, userEvent } from '@testing-library/react-native';
+import { act, fireEvent, screen, userEvent } from '@testing-library/react-native';
 import { router } from 'expo-router';
 import { renderRouter } from 'expo-router/testing-library';
 
@@ -127,6 +127,10 @@ describe('RootLayout', () => {
     await user.press(await screen.findByRole('button', { name: 'Add your details' }));
     await user.press(await screen.findByRole('radio', { name: 'Male' }));
     await user.press(screen.getByRole('button', { name: /^Birth date, / }));
+    // The system's wheels, turned as a finger would (ADR 0001).
+    fireEvent(screen.getByLabelText('Birth date'), 'change', {
+      nativeEvent: { timestamp: Date.UTC(1984, 2, 14) },
+    });
     await user.type(screen.getByLabelText('Height (cm)'), '181');
 
     // When they are saved

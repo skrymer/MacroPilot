@@ -28,14 +28,17 @@ export const dateWords = (date: string) => DATE_WORDS.format(asDate(date));
 
 /**
  * A date chosen with the system's own picker, from a field that says it or that none is chosen yet:
- * Android's dialog, and on iOS the wheels opened under the field, which choose the day they start on
- * as they open, as the Health app's do.
+ * Android's dialog, and on iOS the wheels opened under the field. A date is chosen only once one is
+ * set or turned to: opening the wheels to look chooses none. The picker offers only the dates the
+ * form would take.
  */
 export function DateField({
   label,
   value,
   onChange,
   starts,
+  earliest,
+  before,
   fault,
 }: {
   label: string;
@@ -44,15 +47,25 @@ export function DateField({
   onChange: (date: string) => void;
   /** Where the picker stands before a date is chosen. */
   starts: string;
+  /** The first date the picker offers. */
+  earliest: string;
+  /** The picker offers only dates before this one. */
+  before: string;
   /** Why the date will not do, said under the label. */
   fault?: string;
 }) {
   const ripple = useRipple('page');
   const [open, setOpen] = useState(false);
   const shown = value === '' ? undefined : dateWords(value);
+  const end = asDate(before);
+  const bounds = {
+    minimumDate: asDate(earliest),
+    maximumDate: new Date(end.getFullYear(), end.getMonth(), end.getDate() - 1),
+  };
   const choose = () => {
     if (Platform.OS === 'android') {
       DateTimePickerAndroid.open({
+        ...bounds,
         value: asDate(value || starts),
         mode: 'date',
         onChange: ({ type }, date) => {
@@ -61,7 +74,6 @@ export function DateField({
       });
       return;
     }
-    if (value === '') onChange(starts);
     setOpen(!open);
   };
   return (
@@ -80,17 +92,14 @@ export function DateField({
           <Text className="font-language-italic text-body text-ink-dim">Not chosen</Text>
         )}
       </Pressable>
-      {/* The press that opens it chooses a date, so it is never open on none; the check keeps the
-          picker from being handed an invalid date should that change. */}
-      {open && value !== '' ? (
+      {open ? (
         <DateTimePicker
+          {...bounds}
           accessibilityLabel={label}
-          value={asDate(value)}
+          value={asDate(value || starts)}
           mode="date"
           display="spinner"
-          onChange={(_, date) => {
-            if (date) onChange(asDay(date));
-          }}
+          onValueChange={(_, date) => onChange(asDay(date))}
         />
       ) : null}
     </FieldFrame>
