@@ -28,7 +28,7 @@ import { weighInOn, type WeighIn } from '@/domain/weighIn';
 import { useToday } from '@/lifecycle/useToday';
 import type { LoggedEntry } from '@/storage/EntryStore';
 import { useEntryStore } from '@/storage/EntryStoreContext';
-import { useReviewStore } from '@/storage/ReviewStoreContext';
+import { useReviewsWritten, useReviewStore } from '@/storage/ReviewStoreContext';
 import { useReading } from '@/storage/useReading';
 import { useProfile } from '@/storage/useProfile';
 import { useWeighIns } from '@/storage/useWeighIns';
@@ -238,7 +238,13 @@ export default function Today() {
   const { profile } = useProfile();
   const reviewStore = useReviewStore();
   const listReviews = useCallback(() => reviewStore.list(), [reviewStore]);
-  const { found: reviews } = useReading(listReviews);
+  const { found: reviews, readAgain: readReviewsAgain } = useReading(listReviews);
+  // A review can land after the user has come back here from the form that ran it.
+  const reviewsWritten = useReviewsWritten();
+  const readReviews = useEffectEvent(() => void readReviewsAgain());
+  useEffect(() => {
+    if (reviewsWritten > 0) readReviews();
+  }, [reviewsWritten]);
   // The review this day is held to: the latest dated on or before it.
   const heldTo = Array.isArray(reviews) ? reviewFor(reviews, day) : undefined;
   const weighedToday = Array.isArray(weighIns) ? weighInOn(weighIns, day) : undefined;

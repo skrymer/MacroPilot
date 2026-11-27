@@ -147,6 +147,28 @@ describe('Log weight', () => {
     expect((await reviews.list()).map(({ day }) => day)).toEqual(['2026-11-28']);
   });
 
+  it('shows the ring on Today though the user left before the first review landed', async () => {
+    // Given details saved, the form over Today with a weight typed, and slow storage for reviews
+    const profile = new InMemoryProfileStore();
+    await profile.save({ sex: 'male', born: '1984-03-14', heightCm: 181, countsCalories: true });
+    const reviews = new InMemoryReviewStore();
+    const release = reviews.holdWrites();
+    await openApp('/', new InMemoryWeighInStore(), onTheDay(), profile, reviews);
+    const user = userEvent.setup();
+    const [logWeight] = await screen.findAllByRole('button', { name: 'Log weight' });
+    await user.press(logWeight as NonNullable<typeof logWeight>);
+    await user.type(await screen.findByLabelText('Weight (kg)'), '82');
+    await user.press(screen.getByRole('button', { name: 'Save weight' }));
+
+    // When the user goes back to Today at once, and then the review lands
+    await act(() => router.back());
+    await screen.findByLabelText('Weight today, 82.0 kilograms');
+    await act(async () => release());
+
+    // Then Today shows the ring
+    expect(await screen.findByText('kcal left')).toBeOnTheScreen();
+  });
+
   it('shows the weight on Today though the user left before its write landed', async () => {
     // Given the form over Today with a weight typed, over storage that is slow to write
     const weighIns = new InMemoryWeighInStore();
