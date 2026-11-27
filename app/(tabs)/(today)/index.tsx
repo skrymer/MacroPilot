@@ -95,7 +95,8 @@ function RingCard({
 }) {
   const left = Math.round(review.budgetKcal - totals.calories);
   const centre = String(Math.abs(left));
-  const unit = left < 0 ? 'kcal over' : 'kcal left';
+  // Over is judged on the figures as kept, as the verdict is; a rounded 0 past the budget is over.
+  const unit = totals.calories > review.budgetKcal ? 'kcal over' : 'kcal left';
   const judged = VERDICT[dayVerdict(totals, review)];
   const verdict = count === 0 ? NOTHING_LOGGED : judged;
   // The arc, the figure and the verdict say one thing: where the day stands (DESIGN.md, *The axes*).
@@ -221,7 +222,7 @@ export default function Today() {
   const { found, readAgain } = useReading(list);
   const { weighIns, readAgain: readWeighInsAgain } = useWeighIns();
   const { profile } = useProfile();
-  const { reviews } = useReviews();
+  const { reviews, readAgain: readReviewsAgain } = useReviews();
   // The review this day is held to: the latest dated on or before it.
   const heldTo = Array.isArray(reviews) ? reviewFor(reviews, day) : undefined;
   const weighedToday = Array.isArray(weighIns) ? weighInOn(weighIns, day) : undefined;
@@ -306,6 +307,9 @@ export default function Today() {
         <View className="gap-grid-2 pb-grid-1">
           {found === 'unreadable' ? (
             <Unreadable words="Couldn’t load today’s summary" onRetry={readAgain} />
+          ) : null}
+          {reviews === 'unreadable' ? (
+            <Unreadable words="Couldn’t load your targets" onRetry={readReviewsAgain} />
           ) : null}
           {Array.isArray(profile) && Array.isArray(weighIns) ? (
             <SetupLine

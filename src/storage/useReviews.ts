@@ -16,5 +16,5 @@ export function useReviews() {
   useEffect(() => {
     if (written > 0) readItAgain();
   }, [written]);
-  return { reviews };
+  return { reviews, readAgain };
 }

@@ -26,4 +26,21 @@ describe('SqliteReviewStore', () => {
       { ...REVIEW, day: '2026-11-27', trendKg: 82 },
     ]);
   });
+
+  it('changes nothing when a save fails partway, the later review still standing alone', async () => {
+    // Given a review on the 27th, and a table that refuses to have reviews deleted
+    const db = new BetterSqliteDatabase();
+    const store = new SqliteReviewStore(db);
+    await store.save({ ...REVIEW, day: '2026-11-27' });
+    await db.execAsync(
+      "CREATE TRIGGER refuse BEFORE DELETE ON reviews BEGIN SELECT RAISE(ABORT, 'refused'); END;",
+    );
+
+    // When a review for the 20th is saved, which would delete the 27th's
+    const saving = store.save({ ...REVIEW, day: '2026-11-20' });
+
+    // Then the save fails, and the 20th's was not kept
+    await expect(saving).rejects.toThrow('refused');
+    expect((await store.list()).map(({ day }) => day)).toEqual(['2026-11-27']);
+  });
 });

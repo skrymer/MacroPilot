@@ -118,6 +118,39 @@ describe('Today’s setup line', () => {
 });
 
 describe('Today’s ring', () => {
+  it('says kcal over on a day less than a calorie past its budget, as its verdict does', async () => {
+    // Given a review of 1175.7 kcal on the 24th, and 400 g of oats (1176 kcal) logged that day
+    const reviews = new InMemoryReviewStore();
+    await reviews.save({
+      day: '2026-11-24',
+      trendKg: 75,
+      maintenanceKcal: 1175.7,
+      budgetKcal: 1175.7,
+      proteinFloorG: 150,
+    });
+    const entries = new InMemoryEntryStore([OATS]);
+    await entries.add(weighedEntry(OATS, 400, '2026-11-24'));
+
+    // When the user opens Today
+    await openToday(entries, atNoon(), undefined, undefined, undefined, reviews);
+
+    // Then the figure says over, as the verdict does
+    expect(await screen.findByLabelText(/^Slightly over, 0 kcal over/)).toBeOnTheScreen();
+  });
+
+  it('says the targets could not be read, rather than show the day as if none were set', async () => {
+    // Given reviews that cannot be read
+    const reviews = new InMemoryReviewStore();
+    reviews.unreadable = true;
+
+    // When the user opens Today
+    await openToday(new InMemoryEntryStore(), atNoon(), undefined, undefined, undefined, reviews);
+
+    // Then Today says so, with the way to try again
+    await screen.findByText('Nothing logged yet');
+    expect(screen.queryByText('Couldn’t load your targets')).toBeOnTheScreen();
+  });
+
   it('says 0 kcal left on a day at exactly its budget, not over it', async () => {
     // Given a review of 1176 kcal on the 24th, and 400 g of oats (1176 kcal) logged that day
     const reviews = new InMemoryReviewStore();
