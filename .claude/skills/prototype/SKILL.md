@@ -40,6 +40,6 @@ A prototype answers one design question by putting candidate screens on the real
 
 ## Verdict and retirement
 
-1. Record the verdict in NOTES.md, then where it binds: `DESIGN.md` for the look, `CONTEXT.md` for wording and terms, an ADR if it passes the three tests.
+1. Record the verdict in NOTES.md, then where it binds: `DESIGN.md` for the look, `CONTEXT.md` for wording and terms, an ADR if it passes the three tests. NOTES.md is a plan: a sentence carried from it into a skill or `DESIGN.md` is checked against the code first (on #88, *`app/design.tsx` shows each live* was not true, and its fix voided every gate).
 2. Build the winner test-first (`/tdd`, `rn-dev`) in its real screen. Lift nothing from the prototype file. A native prop the verdict rests on that no test can drive (an inset, a presentation) is written into `DESIGN.md` with the verdict, so the winner carries it and probity has the user's word for it.
 3. Retire it in its own commit (*Retire the <question> prototype*): delete its file and its NOTES.md section, its link in `app/design.tsx`, and, when `app/prototype/` is left empty, the directory and the exemption (`exempt.sh off`). A teardown that leaves `app/prototype/` empty with the negation still in place is the defect to check for: `exempt.sh status`.
