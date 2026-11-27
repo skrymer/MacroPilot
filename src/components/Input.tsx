@@ -18,7 +18,8 @@ export function Input(props: InputProps) {
       style={{ lineHeight: undefined, includeFontPadding: false, textAlignVertical: 'center' }}
       {...props}
       maxFontSizeMultiplier={ownCap(props.className) ?? 2}
-      className={`min-h-target rounded-2xl bg-surface-lift px-3 text-ink placeholder:text-ink-mid ${props.className ?? ''}`}
+      // Its fill and outline are the caller's, since they say how the field stands.
+      className={`min-h-target rounded-2xl px-3 text-ink placeholder:text-ink-mid ${props.className ?? ''}`}
     />
   );
 }

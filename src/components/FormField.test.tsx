@@ -71,9 +71,11 @@ describe('FormField', () => {
     // Then the fault is met before the field it is about
     const fault = await screen.findByText('Enter a name');
     const field = screen.getByLabelText('Name');
+    // The field stands in a box with its sign at its end.
+    const box = field.parent;
     const inReadingOrder = fault.parent?.children ?? [];
-    expect(inReadingOrder).toContain(field);
-    expect(inReadingOrder.indexOf(fault)).toBeLessThan(inReadingOrder.indexOf(field));
+    expect(inReadingOrder).toContain(box);
+    expect(inReadingOrder.indexOf(fault)).toBeLessThan(inReadingOrder.indexOf(box!));
   });
 
   it('says nothing of a fault once it is put right', async () => {

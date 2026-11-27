@@ -37,7 +37,9 @@ export function FormPage({
         <ScrollView
           ref={scroll}
           keyboardShouldPersistTaps="handled"
-          contentContainerClassName="gap-grid-2 px-page py-grid-2"
+          // What scrolls is the one card the fields stand in, so a field's `onLayout` is still measured
+          // from the top of what scrolls.
+          contentContainerClassName="m-page gap-grid-2 rounded-card bg-surface p-grid-2"
         >
           {children}
         </ScrollView>
