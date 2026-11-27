@@ -23,7 +23,7 @@ import { totalsOf, type Totals as DayTotals } from '@/domain/dailyLog';
 import { reviewFor, type Review } from '@/domain/review';
 import { missingForSetup } from '@/domain/setup';
 import { shownName } from '@/domain/shownName';
-import { dayVerdict, type Verdict } from '@/domain/verdict';
+import { againstBudget, dayVerdict, type Verdict } from '@/domain/verdict';
 import { weighInOn, type WeighIn } from '@/domain/weighIn';
 import { useToday } from '@/lifecycle/useToday';
 import type { LoggedEntry } from '@/storage/EntryStore';
@@ -93,10 +93,9 @@ function RingCard({
   review: Review;
   children: ReactNode;
 }) {
-  const left = Math.round(review.budgetKcal - totals.calories);
-  const centre = String(Math.abs(left));
-  // Over is judged on the figures as kept, as the verdict is; a rounded 0 past the budget is over.
-  const unit = totals.calories > review.budgetKcal ? 'kcal over' : 'kcal left';
+  const { kcal, over, share } = againstBudget(totals.calories, review.budgetKcal);
+  const centre = String(Math.round(kcal));
+  const unit = over ? 'kcal over' : 'kcal left';
   const judged = VERDICT[dayVerdict(totals, review)];
   const verdict = count === 0 ? NOTHING_LOGGED : judged;
   // The arc, the figure and the verdict say one thing: where the day stands (DESIGN.md, *The axes*).
@@ -104,7 +103,6 @@ function RingCard({
   // A day of estimates alone is set lighter and says so (DESIGN.md, *Figures*).
   const about = totals.estimated;
   const kind = about ? 'estimated' : 'weighed';
-  const share = Math.min(totals.calories / review.budgetKcal, 1);
   return (
     <View className="rounded-card bg-surface p-grid-2">
       <View

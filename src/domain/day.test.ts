@@ -1,4 +1,16 @@
-import { dayOf, yearsBefore } from './day';
+import { dayOf, daysBetween, yearsBefore } from './day';
+
+describe('daysBetween', () => {
+  it('counts the whole days from one date to a later one, across a leap day', () => {
+    // Given 27 February 2028, two days before a leap day
+
+    // When the days to 1 March 2028 are counted
+    const days = daysBetween('2028-02-27', '2028-03-01');
+
+    // Then there are 3, the 29th among them
+    expect(days).toBe(3);
+  });
+});
 
 describe('yearsBefore', () => {
   it('takes a leap day back to the last of February in a year that has none', () => {
