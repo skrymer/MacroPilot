@@ -57,6 +57,20 @@ describe('reviewFor', () => {
     // Then each has the latest on or before it, and the 19th none
     expect(held).toEqual([undefined, '2026-11-20', '2026-11-20', '2026-11-27']);
   });
+
+  it('holds a day to the latest review by its date, whatever order they come in', () => {
+    // Given the 27th's review handed over before the 20th's
+    const reviews = [
+      { ...REVIEW, day: '2026-11-27' },
+      { ...REVIEW, day: '2026-11-20' },
+    ];
+
+    // When the 28th asks for its review
+    const held = reviewFor(reviews, '2026-11-28');
+
+    // Then it is the 27th's
+    expect(held?.day).toBe('2026-11-27');
+  });
 });
 
 const PROFILE = { sex: 'male', born: '1984-03-14', heightCm: 181, countsCalories: true } as const;
@@ -79,5 +93,16 @@ describe('newReview', () => {
     expect(review.maintenanceKcal).toBeCloseTo(maintenance, 10);
     expect(review.budgetKcal).toBeCloseTo(maintenance, 10);
     expect(review.proteinFloorG).toBeCloseTo(163.6, 10);
+  });
+
+  it('refuses to set targets with no weigh-in to set them from', () => {
+    // Given a profile and no weigh-ins
+    const weighIns: never[] = [];
+
+    // When a review is run
+    const running = () => newReview(PROFILE, weighIns, '2026-11-28');
+
+    // Then it is refused, rather than set from no weight
+    expect(running).toThrow('A review needs a weigh-in');
   });
 });

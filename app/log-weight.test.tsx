@@ -147,6 +147,34 @@ describe('Log weight', () => {
     expect((await reviews.list()).map(({ day }) => day)).toEqual(['2026-11-28']);
   });
 
+  it('runs no review for a new day’s first weigh-in, the week’s review still standing', async () => {
+    // Given yesterday's weigh-in and its review, and the form opened from Today with today's weight
+    const profile = new InMemoryProfileStore();
+    await profile.save({ sex: 'male', born: '1984-03-14', heightCm: 181, countsCalories: true });
+    const weighIns = new InMemoryWeighInStore();
+    await weighIns.save({ day: '2026-11-27', kg: 82 });
+    const reviews = new InMemoryReviewStore();
+    await reviews.save({
+      day: '2026-11-27',
+      trendKg: 82,
+      maintenanceKcal: 2500,
+      budgetKcal: 2500,
+      proteinFloorG: 164,
+    });
+    await openApp('/', weighIns, onTheDay(), profile, reviews);
+    const user = userEvent.setup();
+    const [logWeight] = await screen.findAllByRole('button', { name: 'Log weight' });
+    await user.press(logWeight as NonNullable<typeof logWeight>);
+    await user.type(await screen.findByLabelText('Weight (kg)'), '80');
+
+    // When the user saves it and is back on Today
+    await user.press(screen.getByRole('button', { name: 'Save weight' }));
+    await screen.findByLabelText('Weight today, 80.0 kilograms');
+
+    // Then yesterday's review is the only one
+    expect((await reviews.list()).map(({ day }) => day)).toEqual(['2026-11-27']);
+  });
+
   it('shows the ring on Today though the user left before the first review landed', async () => {
     // Given details saved, the form over Today with a weight typed, and slow storage for reviews
     const profile = new InMemoryProfileStore();
