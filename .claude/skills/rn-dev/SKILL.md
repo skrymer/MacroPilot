@@ -23,7 +23,7 @@ The playbook for any change under `src/` or `app/`. Read it first, build test-fi
 
 The stores share **one** expo-sqlite connection, and SQLite keeps one transaction per connection: any call made while one is open joins it, whoever made it. So a store write of more than one statement goes through the port's `withTransactionAsync`, never a hand-rolled `BEGIN`, and never expo's own `withTransactionAsync` (the same flaw: its docs say other async queries "will be included in the transaction") or `withExclusiveTransactionAsync` (a new connection a call: foreign keys off, competing writes fail with `database is locked`, and better-sqlite3 in memory cannot mirror it).
 
-`SerialDatabase` (`src/storage/SerialDatabase.ts`) is the one implementation, wrapped round the phone's connection in `app/_layout.tsx` and round better-sqlite3 by `BetterSqliteDatabase`, so Jest runs what the phone runs. It runs every call in turn; a transaction holds the turn from `BEGIN` to `COMMIT`, and a failed `ROLLBACK` is swallowed so the caller hears the task's fault (SQLite has already rolled back after a full disk or an I/O error).
+`SerialDatabase` (`src/storage/SerialDatabase.ts`) is the one implementation, wrapped round the phone's connection in `app/_layout.tsx` and round better-sqlite3 by `BetterSqliteDatabase`, so Jest runs what the phone runs. It runs every call in turn; a transaction holds the turn from `BEGIN` to `COMMIT`, and a failed `ROLLBACK` is swallowed so the caller hears the task's fault; why, and the case that leaves open, are ADR 0008's *Amended* section.
 
 ```ts
 async save(review: Review): Promise<void> {
