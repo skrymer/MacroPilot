@@ -23,6 +23,8 @@ The playbook for any change under `src/` or `app/`. Read it first, build test-fi
 
 Every rule a screen is held to is in [`platform-conventions`](../platform-conventions/SKILL.md). A `design/*`, `a11y/*` or `forms/*` error is fixed in the code, never by weakening the rule.
 
+**A screen is built from the components that carry Trim's decisions, never drawn by hand.** [*Trim, by component*](../platform-conventions/SKILL.md#trim-by-component) names each, the lint rule that holds it, and the DESIGN.md section that gives its reason.
+
 **Prefer the platform's own component.** Check what the SDK ships first (`expo-router/native-tabs`, sheets, `expo-haptics`, `expo-symbols`) and add it with `npx expo install`. A native package means a new dev build on both platforms, so batch them. Check that it exists on **both**: SF Symbols are iOS only.
 
 **`app/design.tsx` has no test and no gate but the eye.** A change to it is not called fixed, in a report or a commit, until the photo at the size that failed has been looked at. A check that is not proven does not merge with the change it is meant to check.
