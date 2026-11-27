@@ -7,6 +7,7 @@ import { TestProviders } from '@/components/TestProviders';
 import { estimatedEntry, weighedEntry } from '@/domain/entry';
 import { ScriptedClock } from '@/lifecycle/ScriptedClock';
 import { InMemoryEntryStore } from '@/storage/InMemoryEntryStore';
+import { InMemoryWeighInStore } from '@/storage/InMemoryWeighInStore';
 
 import Today from './index';
 
@@ -30,13 +31,18 @@ const withLunches = async (...labels: string[]) => {
 };
 
 /** Opens the app on Today, over `entries`. */
-const openToday = (entries: InMemoryEntryStore, clock = atNoon(), ask?: ScriptedAsk) =>
+const openToday = (
+  entries: InMemoryEntryStore,
+  clock = atNoon(),
+  ask?: ScriptedAsk,
+  weighIns?: InMemoryWeighInStore,
+) =>
   renderRouter(
     { '(tabs)/(today)/index': Today, '(tabs)/(log)/log': () => null },
     {
       initialUrl: '/',
       wrapper: ({ children }: { children: ReactNode }) => (
-        <TestProviders clock={clock} entries={entries} ask={ask}>
+        <TestProviders clock={clock} entries={entries} ask={ask} weighIns={weighIns}>
           {children}
         </TestProviders>
       ),
@@ -50,6 +56,36 @@ const deleteFrom = async (row: string | RegExp) => {
     fireEvent(found, 'accessibilityAction', { nativeEvent: { actionName: 'delete' } });
   });
 };
+
+describe('Today’s weigh-in', () => {
+  it('says no weight is logged today, and offers to log one, as the day card’s last row', async () => {
+    // Given a weigh-in yesterday and none today
+    const weighIns = new InMemoryWeighInStore();
+    await weighIns.save({ day: '2026-11-23', kg: 82 });
+
+    // When the user opens Today
+    await openToday(new InMemoryEntryStore(), atNoon(), undefined, weighIns);
+
+    // Then the row says so, with the way to log one
+    expect(await screen.findByText('No weight logged today')).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Log weight' })).toBeOnTheScreen();
+  });
+
+  it('shows today’s weight to a tenth of a kilo, read out as one, with the way to change it', async () => {
+    // Given a weigh-in of 82 kg today
+    const weighIns = new InMemoryWeighInStore();
+    await weighIns.save({ day: '2026-11-24', kg: 82 });
+
+    // When the user opens Today
+    await openToday(new InMemoryEntryStore(), atNoon(), undefined, weighIns);
+
+    // Then the row says it, and offers to edit it
+    expect(await screen.findByLabelText('Weight today, 82.0 kilograms')).toBeOnTheScreen();
+    expect(screen.getByText(/^82\.0\skg$/)).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Edit today’s weight' })).toBeOnTheScreen();
+    expect(screen.queryByText('No weight logged today')).not.toBeOnTheScreen();
+  });
+});
 
 describe('Today', () => {
   it('says what the day adds up to, and what is in it', async () => {
