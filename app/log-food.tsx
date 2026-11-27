@@ -1,6 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useForm } from 'react-hook-form';
+import { ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { FoodsNotice } from '@/components/FoodsNotice';
@@ -61,12 +62,16 @@ export default function LogFood() {
   // A link can put another food on this page, and what was typed is not of it.
   if (food) return <GramsForm key={food.id} food={food} />;
   return (
-    <SafeAreaView edges={['bottom', 'left', 'right']} className="flex-1 bg-ground px-page">
+    <SafeAreaView edges={['bottom', 'left', 'right']} className="flex-1 bg-ground">
       <FormHeader title="Log entry" onCancel={() => router.dismissTo('/log')} />
-      {foods === 'unreadable' ? <FoodsNotice foods={foods} readAgain={readAgain} /> : null}
-      {Array.isArray(foods) ? (
-        <Text className="font-language text-body text-ink">This food is not in your foods</Text>
-      ) : null}
+      {/* iOS's bar is glass over the sheet, and what stands under it is hidden unless inset for it
+          (the user's word, 27 November 2026, recorded on #87). */}
+      <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerClassName="px-page">
+        {foods === 'unreadable' ? <FoodsNotice foods={foods} readAgain={readAgain} /> : null}
+        {Array.isArray(foods) ? (
+          <Text className="font-language text-body text-ink">This food is not in your foods</Text>
+        ) : null}
+      </ScrollView>
     </SafeAreaView>
   );
 }
