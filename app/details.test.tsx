@@ -1,5 +1,5 @@
-import { act, fireEvent, screen, userEvent } from '@testing-library/react-native';
-import { Stack } from 'expo-router';
+import { act, fireEvent, screen, userEvent, waitFor } from '@testing-library/react-native';
+import { router, Stack } from 'expo-router';
 import { renderRouter } from 'expo-router/testing-library';
 import type { ReactNode } from 'react';
 
@@ -243,6 +243,24 @@ describe('Your details', () => {
     profile.unreadable = false;
     await userEvent.press(screen.getByRole('button', { name: 'Retry' }));
     expect(await screen.findByRole('header', { name: 'Change details' })).toBeOnTheScreen();
+  });
+
+  it('leaves by its X when the saved details could not be read', async () => {
+    // Given Profile, and over it the form, whose read of the details failed
+    const profile = new InMemoryProfileStore();
+    profile.unreadable = true;
+    await openApp('/profile', profile);
+    await act(() => router.navigate('/details'));
+    await screen.findByRole('button', { name: 'Retry' });
+
+    // When the user leaves by the X
+    await userEvent.press(screen.getByRole('button', { name: 'Cancel' }));
+
+    // Then the form is gone, its X with it, and Profile says what it could not read
+    await waitFor(() =>
+      expect(screen.queryByRole('button', { name: 'Cancel' })).not.toBeOnTheScreen(),
+    );
+    expect(screen.getByText('Couldn’t load your details')).toBeOnTheScreen();
   });
 
   it('chooses no birth date when the wheels are only opened and shut', async () => {
