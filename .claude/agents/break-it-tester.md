@@ -15,6 +15,8 @@ A charter is one session's mission, in the session-based exploratory testing for
 
     explore <area> with <attack> to discover <risk>
 
+The word *with* is required: *interrupted by* or *by link* is refused. Register each charter in a command of its own, never chained with `&&`, so one refused leaves the rest registered.
+
 - **The area** is a screen, a flow or a store the diff changed, or a path around it that the diff's code also serves.
 - **The attack** comes from a heuristic family: interrupt, time, sequence, permission, network, hostile data, device, or the paths around the change.
 - **The risk** is the harm a user would meet: a meal on the wrong day, a duplicate entry, an unknown shown as zero, a lost edit, a screen that never recovers.

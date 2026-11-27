@@ -118,8 +118,10 @@ function head(issue, { base = branchPoint() }) {
 
 function charter(issue, text) {
   if (!FORM.test(text ?? '')) {
+    // The word most often left out: an attack said as "interrupted by" or "by link" names none.
+    const missing = /\swith\s/i.test(text ?? '') ? '' : ': it has no " with "';
     throw new Stop(
-      'a charter reads "explore <area> with <attack> to discover <risk>", on one line',
+      `a charter reads "explore <area> with <attack> to discover <risk>", on one line${missing}`,
     );
   }
   const state = loadOnThisCode(issue);
