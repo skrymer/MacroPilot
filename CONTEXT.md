@@ -55,6 +55,48 @@ _Avoid_: diary, journal
 The protein of the day's Entries that state it, with whether every Entry did. Where one did not it is *at least* that much; where none did it is **Not stated**; a day with no Entries has 0 g.
 _Avoid_: total protein
 
+### Targets
+
+**Profile**:
+What the targets are worked out from: sex, birth date and height in cm, and whether the user counts calories (on unless they say otherwise).
+_Avoid_: account, settings, user details
+
+**Weigh-in**:
+The user's weight on one day, 20 to 400 kg. A day has at most one; weighing in again that day replaces it.
+_Avoid_: measurement, reading
+
+**Trend Weight**:
+The user's weight with the day-to-day noise smoothed out: the first **Weigh-in**, then moved toward each later one, 10% of the way for every day since the last, compounding. It, not the latest Weigh-in, is what targets are set from.
+_Avoid_: average weight, smoothed weight
+
+**Goal**:
+A target weight below the **Trend Weight** and a rate of loss in kg a week, 0.05 to 1.5. It starts from the Trend Weight when it is set, and asks a daily deficit of rate × 7700 ÷ 7 kcal. There is one at a time; setting another replaces it. Without one, the **Calorie Budget** is maintenance.
+_Avoid_: target (alone), plan
+
+**Setup**:
+Complete once there is a **Profile** and at least one **Weigh-in**. Until then there is no **Weekly Review**, so no **Calorie Budget** and no **Protein Floor**.
+
+**Weekly Review**:
+The dated decision of what a day's targets are: a **Calorie Budget** and a **Protein Floor**, with the **Trend Weight** they were set from. A day is held to the latest Weekly Review dated on or before it, and keeps it when a later one changes the targets.
+_Avoid_: recalculation, check-in
+
+**Calorie Budget**:
+The kcal a day may take: maintenance less the **Goal**'s daily deficit.
+_Avoid_: limit, allowance, target calories
+
+**Protein Floor**:
+The protein a day should reach at least: 2 g per kg of **Trend Weight**.
+_Avoid_: protein target, protein goal
+
+**Tolerance**:
+How far past its **Calorie Budget** a day may go and be only *slightly over*: 10%.
+
+**Day's verdict**:
+Where a day stands against its targets, in words: *Over budget* past the **Tolerance**, *Slightly over* past the budget, otherwise *On target* once **Known protein** reaches the **Protein Floor** and *In progress* until then. Protein that is *at least* enough is enough; protein **Not stated** is not yet. A day has no verdict before **Setup**.
+
+**Formula seed**:
+How the first **Weekly Review** sets maintenance before there is a history to learn from: the basal rate from the **Profile** and the **Trend Weight**, times a fixed 1.4.
+
 ## Relationships
 
 - A **Weighed Entry** is of exactly one **Food**; an **Estimated Entry** is of none.
