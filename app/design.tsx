@@ -2,7 +2,7 @@ import { cssInterop } from 'nativewind';
 import type { ReactNode } from 'react';
 import { SymbolView } from 'expo-symbols';
 import { Appearance, Pressable, ScrollView, useColorScheme, View } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle } from 'react-native-svg';
 
 import { Failure } from '@/components/Failure';
@@ -405,214 +405,205 @@ const GROUNDS = [
 export default function Design() {
   const { bottom } = useSafeAreaInsets();
   return (
-    <SafeAreaView className="flex-1 bg-ground" edges={['top']}>
-      <ScrollView
-        contentContainerClassName="px-4 pt-4"
-        // Content scrolls under the home indicator, and stops clear of it.
-        contentContainerStyle={{ paddingBottom: bottom + 64 }}
+    // The system's header stands over it, and iOS's large title collapses into its bar as it scrolls.
+    <ScrollView
+      contentInsetAdjustmentBehavior="automatic"
+      contentContainerClassName="px-page pt-grid-2"
+      // Content scrolls under the home indicator, and stops clear of it.
+      contentContainerStyle={{ paddingBottom: bottom + 64 }}
+    >
+      <Text className="font-language text-body text-ink-mid">
+        Food has no colour. Colour is only where your day stands against its targets.
+      </Text>
+      <AppearanceSwitch />
+
+      <Section
+        title="The day ring"
+        note="The full circle is the target. Outer is calories, inner and thinner is protein."
       >
-        <Text accessibilityRole="header" className="font-language-bold text-figure text-ink">
-          Trim
-        </Text>
-        <Text className="mt-2 font-language text-body text-ink-mid">
-          Food has no colour. Colour is only where your day stands against its targets.
-        </Text>
-        <AppearanceSwitch />
+        {DAYS.map((day) => (
+          <DayRing key={day.state} {...day} />
+        ))}
+      </Section>
 
-        <Section
-          title="The day ring"
-          note="The full circle is the target. Outer is calories, inner and thinner is protein."
-        >
-          {DAYS.map((day) => (
-            <DayRing key={day.state} {...day} />
-          ))}
-        </Section>
+      <Section title="The goal ring" note="One arc, closing on a target weight.">
+        <Card>
+          <Ring
+            label="Goal, 4.2 kilograms to go"
+            arcs={[{ radius: 110, width: 14, filled: 0.58, stroke: 'stroke-within' }]}
+          >
+            <Text className="font-weighed text-figure text-ink">4.2</Text>
+            <Text className="font-language text-label text-ink-mid">kg to go</Text>
+          </Ring>
+        </Card>
+      </Section>
 
-        <Section title="The goal ring" note="One arc, closing on a target weight.">
-          <Card>
-            <Ring
-              label="Goal, 4.2 kilograms to go"
-              arcs={[{ radius: 110, width: 14, filled: 0.58, stroke: 'stroke-within' }]}
-            >
-              <Text className="font-weighed text-figure text-ink">4.2</Text>
-              <Text className="font-language text-label text-ink-mid">kg to go</Text>
-            </Ring>
-          </Card>
-        </Section>
+      <Section
+        title="Figures"
+        note="Weighed is solid. Estimated is lighter, and says so. An unknown is words. A known zero is a figure."
+      >
+        <View className="mb-3 rounded-card bg-surface px-page py-1">
+          <Entry first name="Chicken thigh, roasted" detail={'180\u00A0g, 46\u00A0g protein'}>
+            <Text className="font-weighed text-body text-ink">{'376\u00A0kcal'}</Text>
+          </Entry>
+          <Entry name="Lunch at the canteen" detail="Estimate, protein not stated">
+            <Text className="font-estimated text-body text-ink-mid">{'about 650\u00A0kcal'}</Text>
+          </Entry>
+          <Entry name="Black coffee" detail={'250\u00A0g, 0\u00A0g protein'}>
+            <Text className="font-weighed text-body text-ink">{'0\u00A0kcal'}</Text>
+          </Entry>
+          <Entry name="Fibre" detail={'Rye bread, per 100\u00A0g'}>
+            <Text className="font-absence text-body text-ink-dim">not stated</Text>
+          </Entry>
+        </View>
+      </Section>
 
-        <Section
-          title="Figures"
-          note="Weighed is solid. Estimated is lighter, and says so. An unknown is words. A known zero is a figure."
-        >
-          <View className="mb-3 rounded-card bg-surface px-page py-1">
-            <Entry first name="Chicken thigh, roasted" detail={'180\u00A0g, 46\u00A0g protein'}>
-              <Text className="font-weighed text-body text-ink">{'376\u00A0kcal'}</Text>
-            </Entry>
-            <Entry name="Lunch at the canteen" detail="Estimate, protein not stated">
-              <Text className="font-estimated text-body text-ink-mid">{'about 650\u00A0kcal'}</Text>
-            </Entry>
-            <Entry name="Black coffee" detail={'250\u00A0g, 0\u00A0g protein'}>
-              <Text className="font-weighed text-body text-ink">{'0\u00A0kcal'}</Text>
-            </Entry>
-            <Entry name="Fibre" detail={'Rye bread, per 100\u00A0g'}>
-              <Text className="font-absence text-body text-ink-dim">not stated</Text>
-            </Entry>
-          </View>
-        </Section>
-
-        <Section
-          title="A day's totals"
-          note="One weighed entry makes the calories solid. Protein says when it is only part of the answer."
-        >
-          <Card>
-            <Text className="font-weighed text-title text-ink">{'1425\u00A0kcal'}</Text>
-            <Text className="font-language text-label text-ink-mid">
-              {'at least 66\u00A0g protein'}
-            </Text>
-          </Card>
-          <Card>
-            <Text className="font-estimated text-title text-ink-mid">{'about 850\u00A0kcal'}</Text>
-            <Text className="font-absence text-label text-ink-dim">protein not stated</Text>
-          </Card>
-          <Card>
-            <Text className="font-weighed text-title text-ink">{'0\u00A0kcal'}</Text>
-            <Text className="mb-3 font-language text-label text-ink-mid">
-              {'0\u00A0g protein. Nothing logged yet'}
-            </Text>
-            <Action solid label="Log" />
-          </Card>
-        </Section>
-
-        <Section
-          title="Actions"
-          note="Ink, never a hue: a button expresses no verdict. A secondary is outlined. A press dims on iOS and ripples on Android."
-        >
-          <Action solid label={'Log 180\u00A0g'} />
-          <Action label="Log an estimate instead" />
-        </Section>
-
-        <Section
-          title="A list"
-          note="Its rows in one card. A row is deleted by a swipe to the left, which asks once open; a screen reader has Delete among its actions. The tally's calories are a figure. The rest of a long day is the card's last row."
-        >
-          <View className="mb-1 flex-row flex-wrap items-baseline justify-between gap-x-4">
-            <Text accessibilityRole="header" className="font-language-bold text-body text-ink">
-              Today · Thu 26 Nov
-            </Text>
-            <Text className="font-language text-label text-ink-mid">
-              {'5 entries · '}
-              <Text className="font-weighed text-ink">{`2,610${NBSP}kcal`}</Text>
-            </Text>
-          </View>
-          <View className="mb-3 rounded-card bg-surface px-page">
-            <ListRow
-              name="Lunch at the canteen"
-              detail="Estimate, protein not stated"
-              figure={`about 650${NBSP}kcal`}
-              estimated
-            />
-            <View className="border-t border-line" />
-            <ListRow
-              name="Black coffee"
-              detail={`250${NBSP}g, 0${NBSP}g protein`}
-              figure={`0${NBSP}kcal`}
-            />
-            <View className="border-t border-line" />
-            <ShowAll />
-          </View>
-          <View className="mb-3 overflow-hidden rounded-card bg-surface">
-            <SwipedRow />
-          </View>
-        </Section>
-
-        <Section
-          title="An empty list"
-          note="Under a summary, one line in the list's card with its way on. On a page with nothing else, the quiet empty state."
-        >
-          <View className="mb-3 min-h-target flex-row flex-wrap items-center justify-between gap-x-4 rounded-card bg-surface px-page py-2">
-            <Text className="font-language text-body text-ink-mid">
-              Log a weighed food, or an estimate.
-            </Text>
-            <LogAction />
-          </View>
-          <QuietEmpty />
-        </Section>
-
-        <Section
-          title="A form"
-          note="Its fields in one card. A fault in red with a sign, its words above the field; a valid field in green with a tick, judged once it is left. The button at the foot."
-        >
-          <View className="mb-3 gap-grid-2 rounded-card bg-surface p-grid-2">
-            <Field label="Label" value="Lunch at the canteen" state="valid" />
-            <Field
-              label="Calories"
-              value="six hundred"
-              state="fault"
-              fault="Enter calories as a number"
-            />
-            <Field label="Protein (optional)" value="" />
-          </View>
-          <Failed words="Not saved. A field above needs changing." />
-          <Action solid label="Log estimated entry" />
-        </Section>
-
-        <Section
-          title="Navigation"
-          note="The system's bar. A tab goes to a page. There is no More."
-        >
-          <Card>
-            {TABS.map((tab) => (
-              <Text key={tab} className="py-1 font-language text-body text-ink">
-                {tab}
-              </Text>
-            ))}
-          </Card>
-        </Section>
-
-        <Section
-          title="Asking and telling"
-          note="No toasts. What worked on another page is said in a card with a tick, and stays. A failure is said in red with its sign, where it happened."
-        >
-          <Logged />
-          <Card>
-            <Failed words="Could not save entry. What you typed is still here." />
-            <Action solid label="Log entry" />
-          </Card>
-          <Card>
-            <Failed words={'Couldn\u2019t load today\u2019s summary'} />
-            <Action label="Retry" />
-          </Card>
-          <View className="rounded-card bg-surface px-page py-1">
-            {ASKING.map(([when, what], index) => (
-              <Entry key={when} first={index === 0} name={when} detail={what}>
-                {null}
-              </Entry>
-            ))}
-          </View>
-        </Section>
-
-        <Section title="Type" note="B612, drawn for cockpit displays. Every digit is one width.">
-          <Text className="font-weighed text-figure-lg text-ink">1840</Text>
-          <Text className="font-weighed text-figure text-ink">
-            132<Text className="font-language text-unit text-ink-mid"> g</Text>
+      <Section
+        title="A day's totals"
+        note="One weighed entry makes the calories solid. Protein says when it is only part of the answer."
+      >
+        <Card>
+          <Text className="font-weighed text-title text-ink">{'1425\u00A0kcal'}</Text>
+          <Text className="font-language text-label text-ink-mid">
+            {'at least 66\u00A0g protein'}
           </Text>
-          <Text className="font-language-bold text-title text-ink">Title</Text>
-          <Text className="font-language text-body text-ink">Body, read in a few seconds</Text>
-          <Text className="font-language text-label text-ink-mid">Label</Text>
-          <Text className="font-language-bold text-eyebrow text-ink-dim">Eyebrow</Text>
-        </Section>
+        </Card>
+        <Card>
+          <Text className="font-estimated text-title text-ink-mid">{'about 850\u00A0kcal'}</Text>
+          <Text className="font-absence text-label text-ink-dim">protein not stated</Text>
+        </Card>
+        <Card>
+          <Text className="font-weighed text-title text-ink">{'0\u00A0kcal'}</Text>
+          <Text className="mb-3 font-language text-label text-ink-mid">
+            {'0\u00A0g protein. Nothing logged yet'}
+          </Text>
+          <Action solid label="Log" />
+        </Card>
+      </Section>
 
-        <Section
-          title="Grounds"
-          note="Neutral, with a cool pine tint. Nothing here means anything."
-        >
-          {GROUNDS.map(([name, background]) => (
-            <View key={name} className={`mb-2 rounded-card border border-line p-4 ${background}`}>
-              <Text className="font-language text-label text-ink">{name}</Text>
-            </View>
+      <Section
+        title="Actions"
+        note="Ink, never a hue: a button expresses no verdict. A secondary is outlined. A press dims on iOS and ripples on Android."
+      >
+        <Action solid label={'Log 180\u00A0g'} />
+        <Action label="Log an estimate instead" />
+      </Section>
+
+      <Section
+        title="A list"
+        note="Its rows in one card. A row is deleted by a swipe to the left, which asks once open; a screen reader has Delete among its actions. The tally's calories are a figure. The rest of a long day is the card's last row."
+      >
+        <View className="mb-1 flex-row flex-wrap items-baseline justify-between gap-x-4">
+          <Text accessibilityRole="header" className="font-language-bold text-body text-ink">
+            Today · Thu 26 Nov
+          </Text>
+          <Text className="font-language text-label text-ink-mid">
+            {'5 entries · '}
+            <Text className="font-weighed text-ink">{`2,610${NBSP}kcal`}</Text>
+          </Text>
+        </View>
+        <View className="mb-3 rounded-card bg-surface px-page">
+          <ListRow
+            name="Lunch at the canteen"
+            detail="Estimate, protein not stated"
+            figure={`about 650${NBSP}kcal`}
+            estimated
+          />
+          <View className="border-t border-line" />
+          <ListRow
+            name="Black coffee"
+            detail={`250${NBSP}g, 0${NBSP}g protein`}
+            figure={`0${NBSP}kcal`}
+          />
+          <View className="border-t border-line" />
+          <ShowAll />
+        </View>
+        <View className="mb-3 overflow-hidden rounded-card bg-surface">
+          <SwipedRow />
+        </View>
+      </Section>
+
+      <Section
+        title="An empty list"
+        note="Under a summary, one line in the list's card with its way on. On a page with nothing else, the quiet empty state."
+      >
+        <View className="mb-3 min-h-target flex-row flex-wrap items-center justify-between gap-x-4 rounded-card bg-surface px-page py-2">
+          <Text className="font-language text-body text-ink-mid">
+            Log a weighed food, or an estimate.
+          </Text>
+          <LogAction />
+        </View>
+        <QuietEmpty />
+      </Section>
+
+      <Section
+        title="A form"
+        note="Its fields in one card. A fault in red with a sign, its words above the field; a valid field in green with a tick, judged once it is left. The button at the foot."
+      >
+        <View className="mb-3 gap-grid-2 rounded-card bg-surface p-grid-2">
+          <Field label="Label" value="Lunch at the canteen" state="valid" />
+          <Field
+            label="Calories"
+            value="six hundred"
+            state="fault"
+            fault="Enter calories as a number"
+          />
+          <Field label="Protein (optional)" value="" />
+        </View>
+        <Failed words="Not saved. A field above needs changing." />
+        <Action solid label="Log estimated entry" />
+      </Section>
+
+      <Section title="Navigation" note="The system's bar. A tab goes to a page. There is no More.">
+        <Card>
+          {TABS.map((tab) => (
+            <Text key={tab} className="py-1 font-language text-body text-ink">
+              {tab}
+            </Text>
           ))}
-        </Section>
-      </ScrollView>
-    </SafeAreaView>
+        </Card>
+      </Section>
+
+      <Section
+        title="Asking and telling"
+        note="No toasts. What worked on another page is said in a card with a tick, and stays. A failure is said in red with its sign, where it happened."
+      >
+        <Logged />
+        <Card>
+          <Failed words="Could not save entry. What you typed is still here." />
+          <Action solid label="Log entry" />
+        </Card>
+        <Card>
+          <Failed words={'Couldn\u2019t load today\u2019s summary'} />
+          <Action label="Retry" />
+        </Card>
+        <View className="rounded-card bg-surface px-page py-1">
+          {ASKING.map(([when, what], index) => (
+            <Entry key={when} first={index === 0} name={when} detail={what}>
+              {null}
+            </Entry>
+          ))}
+        </View>
+      </Section>
+
+      <Section title="Type" note="B612, drawn for cockpit displays. Every digit is one width.">
+        <Text className="font-weighed text-figure-lg text-ink">1840</Text>
+        <Text className="font-weighed text-figure text-ink">
+          132<Text className="font-language text-unit text-ink-mid"> g</Text>
+        </Text>
+        <Text className="font-language-bold text-title text-ink">Title</Text>
+        <Text className="font-language text-body text-ink">Body, read in a few seconds</Text>
+        <Text className="font-language text-label text-ink-mid">Label</Text>
+        <Text className="font-language-bold text-eyebrow text-ink-dim">Eyebrow</Text>
+      </Section>
+
+      <Section title="Grounds" note="Neutral, with a cool pine tint. Nothing here means anything.">
+        {GROUNDS.map(([name, background]) => (
+          <View key={name} className={`mb-2 rounded-card border border-line p-4 ${background}`}>
+            <Text className="font-language text-label text-ink">{name}</Text>
+          </View>
+        ))}
+      </Section>
+    </ScrollView>
   );
 }
