@@ -403,6 +403,19 @@ describe('charters.mjs gates', () => {
     expect(output).toContain('verify ok');
   });
 
+  it('keeps every gate on a change to the code’s comments alone, which changes nothing it does', () => {
+    // Given five gates recorded, then a comment added to the code and a line of it rewrapped
+    const { root } = gated();
+    writeFileSync(path.join(root, 'a.ts'), '/** The first. */\nexport const a =\n  1;\n');
+
+    // When its gates are checked
+    const { status, output } = run(root, 'gates', '8');
+
+    // Then every gate still stands
+    expect(output).toContain('5 gates, every one on this code');
+    expect(status).toBe(0);
+  });
+
   it('keeps mutation-test on a fix to the prose alone, which Stryker does not read', () => {
     // Given five gates recorded, then a skill and a document edited after them
     const { root } = gated();
