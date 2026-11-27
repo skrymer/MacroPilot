@@ -23,6 +23,8 @@ import { ProfileStoreProvider } from '@/storage/ProfileStoreContext';
 import { SqliteEntryStore } from '@/storage/SqliteEntryStore';
 import { SqliteFoodStore } from '@/storage/SqliteFoodStore';
 import { SqliteProfileStore } from '@/storage/SqliteProfileStore';
+import { SqliteWeighInStore } from '@/storage/SqliteWeighInStore';
+import { WeighInStoreProvider } from '@/storage/WeighInStoreContext';
 
 import '../global.css';
 
@@ -35,6 +37,7 @@ const database = new LazyDatabase(() => openDatabaseAsync('macropilot.db'));
 const foodStore = new SqliteFoodStore(database);
 const entryStore = new SqliteEntryStore(database);
 const profileStore = new SqliteProfileStore(database);
+const weighInStore = new SqliteWeighInStore(database);
 const ask = new SystemAsk();
 
 /**
@@ -66,35 +69,38 @@ export default function RootLayout() {
       <FoodStoreProvider store={foodStore}>
         <EntryStoreProvider store={entryStore}>
           <ProfileStoreProvider store={profileStore}>
-            <AskProvider ask={ask}>
-              <LoggedProvider>
-                {/* Gestures are seen only under this root, the swipe on a row and the list's scroll as one. */}
-                <GestureHandlerRootView style={{ flex: 1 }}>
-                  <View className="flex-1 bg-ground">
-                    <StatusBar style="auto" />
-                    <Stack
-                      screenOptions={{
-                        headerShown: false,
-                        contentStyle: { backgroundColor: 'transparent' },
-                      }}
-                      screenLayout={({ route, children }) =>
-                        !__DEV__ && TODAY_IN_RELEASE.test(route.name) ? <BackToToday /> : children
-                      }
-                    >
-                      {/* DESIGN.md, Forms: every form is iOS's page sheet and Android's page rising over
-                        the last (the user's word, 26 November 2026). */}
-                      <Stack.Screen name="add-food" options={form} />
-                      <Stack.Screen name="log-food" options={form} />
-                      <Stack.Screen name="log-estimate" options={form} />
-                      <Stack.Screen name="details" options={form} />
-                      {/* DESIGN.md, Pages: the design page stands under the system's header, as a tab's
-                        page does. */}
-                      <Stack.Screen name="design" options={{ ...page, title: 'Trim' }} />
-                    </Stack>
-                  </View>
-                </GestureHandlerRootView>
-              </LoggedProvider>
-            </AskProvider>
+            <WeighInStoreProvider store={weighInStore}>
+              <AskProvider ask={ask}>
+                <LoggedProvider>
+                  {/* Gestures are seen only under this root, the swipe on a row and the list's scroll as one. */}
+                  <GestureHandlerRootView style={{ flex: 1 }}>
+                    <View className="flex-1 bg-ground">
+                      <StatusBar style="auto" />
+                      <Stack
+                        screenOptions={{
+                          headerShown: false,
+                          contentStyle: { backgroundColor: 'transparent' },
+                        }}
+                        screenLayout={({ route, children }) =>
+                          !__DEV__ && TODAY_IN_RELEASE.test(route.name) ? <BackToToday /> : children
+                        }
+                      >
+                        {/* DESIGN.md, Forms: every form is iOS's page sheet and Android's page rising
+                          over the last (the user's word, 26 November 2026). */}
+                        <Stack.Screen name="add-food" options={form} />
+                        <Stack.Screen name="log-food" options={form} />
+                        <Stack.Screen name="log-estimate" options={form} />
+                        <Stack.Screen name="details" options={form} />
+                        <Stack.Screen name="log-weight" options={form} />
+                        {/* DESIGN.md, Pages: the design page stands under the system's header, as a
+                          tab's page does. */}
+                        <Stack.Screen name="design" options={{ ...page, title: 'Trim' }} />
+                      </Stack>
+                    </View>
+                  </GestureHandlerRootView>
+                </LoggedProvider>
+              </AskProvider>
+            </WeighInStoreProvider>
           </ProfileStoreProvider>
         </EntryStoreProvider>
       </FoodStoreProvider>

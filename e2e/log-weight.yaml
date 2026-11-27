@@ -1,0 +1,25 @@
+# A fresh install's Today says no weight is logged; Log weight opens the form as every form opens, and
+# its one field takes focus as it opens, so what is typed at once lands in it. Saved, Today's row shows
+# it to a tenth of a kilo, and Edit opens the form filled. The happy path of weighing in, and the focus
+# Jest cannot see (ADR 0011).
+appId: com.skrymer.macropilot
+---
+- runFlow: steps/start.yaml
+- assertVisible: 'No weight logged today'
+- tapOn:
+    text: 'Log weight'
+    rightOf: 'No weight logged today'
+- assertVisible:
+    text: 'Log weight'
+    rightOf: 'Cancel'
+# No tap on the field: typed at once, it lands only if the field took focus as the form opened.
+- inputText: '82.4'
+- tapOn: 'Save weight'
+- extendedWaitUntil:
+    visible: 'Weight today, 82.4 kilograms'
+    timeout: 10000
+- assertNotVisible: 'No weight logged today'
+- tapOn: 'Edit today’s weight'
+- assertVisible: '82.4'
+- tapOn: 'Cancel'
+- assertVisible: 'Weight today, 82.4 kilograms'

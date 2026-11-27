@@ -57,6 +57,24 @@ describe('Log weight', () => {
     expect(await weighIns.list()).toEqual([]);
   });
 
+  it('keeps the weight typed when the save fails, and says so above the button', async () => {
+    // Given the form with a weight typed, over a store that cannot be written
+    const weighIns = new InMemoryWeighInStore();
+    weighIns.unwritable = true;
+    await openApp('/log-weight', weighIns);
+    const user = userEvent.setup();
+    await user.type(await screen.findByLabelText('Weight (kg)'), '82');
+
+    // When the user saves it
+    await user.press(screen.getByRole('button', { name: 'Save weight' }));
+
+    // Then the form stays, filled, and says it was not saved
+    expect(
+      await screen.findByText('Could not save weight. What you typed is still here.'),
+    ).toBeOnTheScreen();
+    expect(screen.getByLabelText('Weight (kg)')).toHaveDisplayValue('82');
+  });
+
   it('logs today’s weight from Today, and Today shows it', async () => {
     // Given Today with no weigh-in, and the form opened from its row with a weight typed
     const weighIns = new InMemoryWeighInStore();

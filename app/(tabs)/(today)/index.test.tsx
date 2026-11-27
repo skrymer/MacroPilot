@@ -96,6 +96,23 @@ describe('Today before Setup', () => {
   );
 });
 
+describe('Today after Setup', () => {
+  it('says nothing about setup once there are details and a weigh-in', async () => {
+    // Given a profile and a weigh-in yesterday
+    const profile = new InMemoryProfileStore();
+    await profile.save({ sex: 'male', born: '1984-03-14', heightCm: 181, countsCalories: true });
+    const weighIns = new InMemoryWeighInStore();
+    await weighIns.save({ day: '2026-11-23', kg: 82 });
+
+    // When the user opens Today
+    await openToday(new InMemoryEntryStore(), atNoon(), undefined, weighIns, profile);
+
+    // Then there is no setup line
+    expect(await screen.findByText('No weight logged today')).toBeOnTheScreen();
+    expect(screen.queryByText(/to see your calorie budget$/)).not.toBeOnTheScreen();
+  });
+});
+
 describe('Today’s weigh-in', () => {
   it('says no weight is logged today, and offers to log one, as the day card’s last row', async () => {
     // Given a weigh-in yesterday and none today
@@ -108,6 +125,22 @@ describe('Today’s weigh-in', () => {
     // Then the row says so, with the way to log one
     expect(await screen.findByText('No weight logged today')).toBeOnTheScreen();
     expect(screen.getByRole('button', { name: 'Log weight' })).toBeOnTheScreen();
+  });
+
+  it('reads no weight logged once midnight has passed, the weigh-in being yesterday’s', async () => {
+    // Given Today open at 23:59 with a weigh-in that day
+    const weighIns = new InMemoryWeighInStore();
+    await weighIns.save({ day: '2026-11-24', kg: 82 });
+    const clock = new ScriptedClock();
+    clock.advance(Date.UTC(2026, 10, 24, 23, 59));
+    await openToday(new InMemoryEntryStore(), clock, undefined, weighIns);
+    expect(await screen.findByLabelText('Weight today, 82.0 kilograms')).toBeOnTheScreen();
+
+    // When midnight passes
+    await act(async () => clock.advance(2 * 60_000));
+
+    // Then the row says no weight is logged today
+    expect(await screen.findByText('No weight logged today')).toBeOnTheScreen();
   });
 
   it('says the weigh-ins could not be read, and never that none is logged', async () => {
