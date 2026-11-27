@@ -1,10 +1,10 @@
 import { useNavigation, useRouter } from 'expo-router';
 import { useCallback, useEffect, useEffectEvent, useState, type ReactNode } from 'react';
 import { FlatList, View } from 'react-native';
-import Svg, { Circle } from 'react-native-svg';
 
 import { dayWords } from '@/components/dayWords';
 import { CardSlice } from '@/components/CardSlice';
+import { DayRing } from '@/components/DayRing';
 import { DeletableRow } from '@/components/DeletableRow';
 import { EmptyLine } from '@/components/EmptyLine';
 import { entryFigures, entryWords, tallyWords, totalsWords } from '@/components/entryWords';
@@ -19,7 +19,6 @@ import { TextAction } from '@/components/TextAction';
 import { Unreadable } from '@/components/Unreadable';
 import { useDelete } from '@/components/useDelete';
 import { useFailedInView } from '@/components/useFailedInView';
-import { useTint } from '@/components/useTint';
 import { totalsOf, type Totals as DayTotals } from '@/domain/dailyLog';
 import { reviewFor, type Review } from '@/domain/review';
 import { missingForSetup } from '@/domain/setup';
@@ -63,12 +62,6 @@ function Totals({
     </View>
   );
 }
-
-/** The day ring's width and height, in dp. */
-const RING = 240;
-
-/** The calorie arc's length all the way round, at its radius of 110. */
-const AROUND = 2 * Math.PI * 110;
 
 /** Where a day stands against its budget alone, the hue its arc and figure take. */
 const STANDING = {
@@ -121,7 +114,6 @@ function RingCard({
   const standing = STANDING[judged];
   // A day of estimates alone is set lighter and says so (DESIGN.md, *Figures*).
   const about = totals.estimated;
-  const tint = useTint();
   const share = Math.min(totals.calories / review.budgetKcal, 1);
   return (
     <View className="rounded-card bg-surface p-grid-2">
@@ -130,56 +122,19 @@ function RingCard({
         accessibilityLabel={`${verdict}, ${about ? 'about ' : ''}${centre} ${unit}`}
         className="items-center"
       >
-        <View className="items-center justify-center">
-          {/* The full circle is the target: the track first (DESIGN.md, *Signature: the rings*). */}
-          <Svg width={RING} height={RING}>
-            <Circle
-              cx={RING / 2}
-              cy={RING / 2}
-              r={110}
-              strokeWidth={14}
-              stroke={tint.line}
-              fill="none"
-            />
-            {/* Protein inside and thin: its track alone until its words are drawn. */}
-            <Circle
-              cx={RING / 2}
-              cy={RING / 2}
-              r={88}
-              strokeWidth={8}
-              stroke={tint.line}
-              fill="none"
-            />
-            {/* The calories as a share of the budget; none on nothing, where a round cap draws a dot. */}
-            {share > 0 ? (
-              <Circle
-                cx={RING / 2}
-                cy={RING / 2}
-                r={110}
-                strokeWidth={14}
-                stroke={tint[standing]}
-                fill="none"
-                strokeLinecap="round"
-                strokeDasharray={`${AROUND * share} ${AROUND}`}
-                rotation={-90}
-                origin={`${RING / 2}, ${RING / 2}`}
-              />
-            ) : null}
-          </Svg>
-          <View className="absolute items-center">
-            {about ? <Text className="font-language text-label text-ink-mid">about</Text> : null}
-            <Text
-              className={`text-figure ${
-                standing === 'within'
-                  ? FIGURE_SET[about ? 'estimated' : 'weighed']
-                  : `${about ? 'font-estimated' : 'font-weighed'} ${STANDING_INK[standing]}`
-              }`}
-            >
-              {centre}
-            </Text>
-            <Text className="font-language text-label text-ink-mid">{unit}</Text>
-          </View>
-        </View>
+        <DayRing share={share} standing={standing}>
+          {about ? <Text className="font-language text-label text-ink-mid">about</Text> : null}
+          <Text
+            className={`text-figure ${
+              standing === 'within'
+                ? FIGURE_SET[about ? 'estimated' : 'weighed']
+                : `${about ? 'font-estimated' : 'font-weighed'} ${STANDING_INK[standing]}`
+            }`}
+          >
+            {centre}
+          </Text>
+          <Text className="font-language text-label text-ink-mid">{unit}</Text>
+        </DayRing>
         <Text
           className={`mt-grid-1 text-center font-language-bold text-body ${
             count === 0 ? 'text-ink-mid' : VERDICT_INK[judged]
