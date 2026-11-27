@@ -42,11 +42,11 @@ const git = (args, env = process.env) =>
  * under a newer timestamp of its own, and git then takes a same-size edit made within the second for
  * no edit at all.
  */
-function codeNow() {
+function codeNow(paths = [':/']) {
   const dir = mkdtempSync(path.join(tmpdir(), 'code-'));
   try {
     const env = { ...process.env, GIT_INDEX_FILE: path.join(dir, 'index') };
-    execFileSync('git', ['add', '-A', ':/'], { env, stdio: 'ignore' });
+    execFileSync('git', ['add', '-A', '--', ...paths], { env, stdio: 'ignore' });
     return git(['write-tree'], env);
   } finally {
     rmSync(dir, { recursive: true });
@@ -163,6 +163,10 @@ function record(key, status, { note, ...files }) {
 /** feature-sign-off's gates, in order. */
 const GATES = ['simplify', 'mutation-test', 'code-review', 'check-adrs', 'verify'];
 const gatesFile = (issue) => path.join(dirOf(issue), 'gates.json');
+/** What Stryker reads: the code and its tests, and not the skills or the prose beside them. */
+const MUTABLE = [':/', ':(top,exclude).claude', ':(top,exclude,glob)**/*.md'];
+/** The code a gate is recorded on: mutation-test's goes stale only when what it mutated or ran changes. */
+const codeOf = (name) => codeNow(name === 'mutation-test' ? MUTABLE : undefined);
 const loadGates = (issue) =>
   existsSync(gatesFile(issue)) ? JSON.parse(readFileSync(gatesFile(issue), 'utf8')) : {};
 
@@ -209,17 +213,16 @@ function gate(issue, name, { photos, evidence: report }) {
   }
   mkdirSync(dirOf(issue), { recursive: true });
   const gates = loadGates(issue);
-  gates[name] = codeNow();
+  gates[name] = codeOf(name);
   writeFileSync(gatesFile(issue), JSON.stringify(gates, null, 2));
 }
 
 /** Every gate on the code as it stands: a fix made after one sends it round again. */
 function checkGates(issue) {
   const gates = loadGates(issue);
-  const code = codeNow();
   const states = GATES.map((name) => [
     name,
-    !gates[name] ? 'missing' : gates[name] === code ? 'ok' : 'stale',
+    !gates[name] ? 'missing' : gates[name] === codeOf(name) ? 'ok' : 'stale',
   ]);
   for (const [name, state] of states) console.log(`${name} ${state}`);
   const owed = states.filter(([, state]) => state !== 'ok').length;
