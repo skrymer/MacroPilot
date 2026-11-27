@@ -1,0 +1,17 @@
+# Each tab's page is headed by its name in the system's header, above the page (DESIGN.md, *Pages*).
+# Jest draws no system header (ADR 0011). The Developer tab, a development build's alone, is not one of
+# the release's pages.
+appId: com.skrymer.macropilot
+---
+- runFlow: steps/start.yaml
+- assertVisible:
+    text: 'Today'
+    above: 'Nothing logged yet'
+- openLink: 'macropilot://log'
+- assertVisible:
+    text: 'Log'
+    above: 'Log an estimate instead'
+- openLink: 'macropilot://foods'
+- assertVisible:
+    text: 'Foods'
+    above: 'Build your food catalog'

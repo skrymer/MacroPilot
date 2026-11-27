@@ -1,0 +1,23 @@
+# A food added from Foods, the first or another, by its name and its figures per 100 g, and waited for
+# in the list.
+appId: com.skrymer.macropilot
+---
+# A selector is a regular expression, so the name is waited for with its own characters escaped.
+- evalScript: ${output.listed = NAME.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}
+- openLink: 'macropilot://foods'
+# An empty Foods asks for the first food, and a listed one has Add food over the list.
+- tapOn: 'Add your first food|Add food'
+- tapOn: 'Name'
+- inputText: '${NAME}'
+- tapOn: 'Protein per.*'
+- inputText: '${PROTEIN}'
+- tapOn: 'Carbohydrate per.*'
+- inputText: '${CARBOHYDRATE}'
+- tapOn: 'Fat per.*'
+- inputText: '${FAT}'
+# No hideKeyboard: agent-device types with a headless keyboard, and hiding one not shown is a back,
+# which leaves the form.
+- tapOn: 'Save food'
+- extendedWaitUntil:
+    visible: '${output.listed}, .*'
+    timeout: 10000

@@ -8,7 +8,7 @@ MacroPilot is a personal macro and calorie tracker for **iOS and Android**. Ever
 
 ## Status
 
-**Epic 1 has passed** the user's test on the iPhone (26 November 2026). Next is #51, a style of the app's own, and #94, Maestro flows for epic 1's happy paths ([`0011`](./docs/adr/0011-happy-paths-and-what-jest-cannot-drive-are-maestro-flows.md)), then epic 2 (#6). Four tabs: Today (the day’s totals and entries), Log (a weighed food, or an estimate), Foods (a list, and Add food) and Developer (development builds only). The EAS project is `@skrymer/macropilot`; its iOS development build is of 24 November.
+**Epic 1 has passed** the user's test on the iPhone (26 November 2026). Next is #94, Maestro flows for epic 1's happy paths ([`0011`](./docs/adr/0011-happy-paths-and-what-jest-cannot-drive-are-maestro-flows.md)), then epic 2 (#6). Four tabs: Today (the day’s totals and entries), Log (a weighed food, or an estimate), Foods (a list, and Add food) and Developer (development builds only). The EAS project is `@skrymer/macropilot`; its iOS development build is of 24 November.
 
 ## Communication
 
