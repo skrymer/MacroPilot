@@ -149,6 +149,18 @@ const configuredCommands = (): string[] => {
 };
 
 describe('.claude/settings.json', () => {
+  it('registers test-guard.sh, before probity judges the write', () => {
+    // Given the guard on writes to committed tests
+
+    // When the configured hooks are listed
+    const commands = configuredCommands();
+
+    // Then it is among them, ahead of probity
+    const guard = commands.findIndex((command) => command.includes('test-guard.sh'));
+    expect(guard).toBeGreaterThanOrEqual(0);
+    expect(guard).toBeLessThan(commands.findIndex((command) => command.includes('probity.sh')));
+  });
+
   it.each(['bash-write-guard.sh', 'gate-pipe-guard.sh'])('registers %s', (script) => {
     // Given a guard on Bash
 
@@ -202,6 +214,7 @@ describe('.claude/settings.json', () => {
       const projectDir = directory('project');
       mkdirSync(path.join(projectDir, '.claude/hooks'), { recursive: true });
       for (const script of [
+        'test-guard.sh',
         'probity.sh',
         'bash-write-guard.sh',
         'gate-pipe-guard.sh',

@@ -6,6 +6,12 @@
         "hooks": [
           {
             "type": "command",
+            "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/test-guard.sh\" || exit 2",
+            "timeout": 30,
+            "statusMessage": "Checking committed tests are left as they are"
+          },
+          {
+            "type": "command",
             "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/probity.sh\" || exit 2",
             "timeout": 120,
             "statusMessage": "Probity: checking TDD"
