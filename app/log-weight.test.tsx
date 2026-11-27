@@ -57,6 +57,22 @@ describe('Log weight', () => {
     expect(await weighIns.list()).toEqual([]);
   });
 
+  it('says the weigh-ins could not be read, with the way out and a retry', async () => {
+    // Given weigh-ins that cannot be read
+    const weighIns = new InMemoryWeighInStore();
+    weighIns.unreadable = true;
+
+    // When the form opens
+    await openApp('/log-weight', weighIns);
+
+    // Then it says so, offers to leave, and to try again, which opens the form
+    expect(await screen.findByText('Couldn’t load your weight')).toBeOnTheScreen();
+    expect(screen.queryByRole('button', { name: 'Cancel' })).toBeOnTheScreen();
+    weighIns.unreadable = false;
+    await userEvent.press(screen.getByRole('button', { name: 'Retry' }));
+    expect(await screen.findByLabelText('Weight (kg)')).toBeOnTheScreen();
+  });
+
   it('keeps the weight typed when the save fails, and says so above the button', async () => {
     // Given the form with a weight typed, over a store that cannot be written
     const weighIns = new InMemoryWeighInStore();

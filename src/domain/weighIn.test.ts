@@ -1,4 +1,20 @@
-import { isWeight, newWeighIn } from './weighIn';
+import { isWeight, newWeighIn, weighInOn } from './weighIn';
+
+describe('weighInOn', () => {
+  it('finds the weigh-in of a day, and none for a day without one', () => {
+    // Given weigh-ins on two days
+    const weighIns = [
+      { day: '2026-11-27', kg: 83 },
+      { day: '2026-11-28', kg: 82.4 },
+    ];
+
+    // When the 28th and the 29th are asked for
+    const found = [weighInOn(weighIns, '2026-11-28'), weighInOn(weighIns, '2026-11-29')];
+
+    // Then the 28th's is found, and the 29th has none
+    expect(found).toEqual([{ day: '2026-11-28', kg: 82.4 }, undefined]);
+  });
+});
 
 describe('newWeighIn', () => {
   it('refuses a weigh-in for a day after today', () => {

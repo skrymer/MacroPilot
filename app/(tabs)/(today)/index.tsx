@@ -19,8 +19,9 @@ import { Unreadable } from '@/components/Unreadable';
 import { useDelete } from '@/components/useDelete';
 import { useFailedInView } from '@/components/useFailedInView';
 import { totalsOf, type Totals as DayTotals } from '@/domain/dailyLog';
+import { missingForSetup } from '@/domain/setup';
 import { shownName } from '@/domain/shownName';
-import type { WeighIn } from '@/domain/weighIn';
+import { weighInOn, type WeighIn } from '@/domain/weighIn';
 import { useToday } from '@/lifecycle/useToday';
 import type { LoggedEntry } from '@/storage/EntryStore';
 import { useEntryStore } from '@/storage/EntryStoreContext';
@@ -53,7 +54,7 @@ function Totals({
           <Text className="font-language text-label text-ink-mid">Nothing logged yet</Text>
         ) : null}
       </View>
-      {children}
+      <View className="mt-grid-2">{children}</View>
     </View>
   );
 }
@@ -63,18 +64,17 @@ function Totals({
  * the details on Profile. Nothing once both are there.
  */
 function SetupLine({
-  hasProfile,
-  hasWeighIn,
+  missing,
   onProfile,
   onWeighIn,
 }: {
-  hasProfile: boolean;
-  hasWeighIn: boolean;
+  missing: readonly ('details' | 'weigh-in')[];
   onProfile: () => void;
   onWeighIn: () => void;
 }) {
-  if (hasProfile && hasWeighIn) return null;
-  if (hasProfile) {
+  if (missing.length === 0) return null;
+  const hasWeighIn = !missing.includes('weigh-in');
+  if (!missing.includes('details')) {
     return (
       <EmptyLine
         words="Log your weight to see your calorie budget"
@@ -95,7 +95,7 @@ function SetupLine({
 /** Today's weigh-in, as the day card's last row. */
 function WeightRow({ weighIn, onLog }: { weighIn?: WeighIn; onLog: () => void }) {
   return (
-    <View className="mt-grid-2">
+    <View>
       <View className="border-t border-line" />
       <View className="flex-row flex-wrap items-center justify-between gap-x-grid-2 pt-grid-1">
         {weighIn ? (
@@ -147,9 +147,7 @@ export default function Today() {
   const { found, readAgain } = useReading(list);
   const { weighIns, readAgain: readWeighInsAgain } = useWeighIns();
   const { profile } = useProfile();
-  const weighedToday = Array.isArray(weighIns)
-    ? weighIns.find((weighIn) => weighIn.day === day)
-    : undefined;
+  const weighedToday = Array.isArray(weighIns) ? weighInOn(weighIns, day) : undefined;
   // An entry can be written after the user has come here from its form.
   const [logged] = useLogged();
   const navigation = useNavigation();
@@ -228,8 +226,7 @@ export default function Today() {
           ) : null}
           {Array.isArray(profile) && Array.isArray(weighIns) ? (
             <SetupLine
-              hasProfile={profile.length > 0}
-              hasWeighIn={weighIns.length > 0}
+              missing={missingForSetup(profile[0], weighIns)}
               onProfile={() => router.navigate('/profile')}
               onWeighIn={() => router.navigate('/log-weight')}
             />
@@ -237,9 +234,7 @@ export default function Today() {
           {Array.isArray(found) ? (
             <Totals totals={totals} count={listed.length}>
               {weighIns === 'unreadable' ? (
-                <View className="mt-grid-2">
-                  <Unreadable words="Couldn’t load your weight" onRetry={readWeighInsAgain} />
-                </View>
+                <Unreadable words="Couldn’t load your weight" onRetry={readWeighInsAgain} />
               ) : Array.isArray(weighIns) ? (
                 <WeightRow weighIn={weighedToday} onLog={() => router.navigate('/log-weight')} />
               ) : null}

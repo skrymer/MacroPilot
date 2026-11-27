@@ -10,9 +10,15 @@ export type WeighIn = { day: string; kg: number };
 /** Judged on `today`, as `2026-11-24`. */
 export function newWeighIn(weighIn: WeighIn, today: string): WeighIn {
   if (weighIn.day > today) throw new Error('A weigh-in is for today or a day before it');
-  if (!isWeight(weighIn.kg)) throw new Error('A weight is from 20 to 400 kg');
+  if (!isWeight(weighIn.kg)) {
+    throw new Error(`A weight is from ${MIN_WEIGHT_KG} to ${MAX_WEIGHT_KG} kg`);
+  }
   return weighIn;
 }
+
+/** The weigh-in of `day`, as `2026-11-24`, if there is one. */
+export const weighInOn = (weighIns: readonly WeighIn[], day: string): WeighIn | undefined =>
+  weighIns.find((weighIn) => weighIn.day === day);
 
 /** In kg, the ends included. */
 export const isWeight = (kg: number) => kg >= MIN_WEIGHT_KG && kg <= MAX_WEIGHT_KG;

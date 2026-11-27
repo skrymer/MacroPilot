@@ -1,12 +1,16 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'expo-router';
 import { useForm } from 'react-hook-form';
+import { ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { FormField } from '@/components/FormField';
+import { FormHeader } from '@/components/FormHeader';
 import { FormPage } from '@/components/FormPage';
+import { Unreadable } from '@/components/Unreadable';
 import { useSave } from '@/components/useSave';
 import { weightForm } from '@/components/weightForm';
-import { newWeighIn } from '@/domain/weighIn';
+import { newWeighIn, weighInOn } from '@/domain/weighIn';
 import { useToday } from '@/lifecycle/useToday';
 import { useWeighIns } from '@/storage/useWeighIns';
 import { useWeighInStore } from '@/storage/WeighInStoreContext';
@@ -52,10 +56,21 @@ function WeightForm({ today, kg }: { today: string; kg?: number }) {
 }
 
 export default function LogWeight() {
+  const router = useRouter();
   const today = useToday();
-  const { weighIns } = useWeighIns();
+  const { weighIns, readAgain } = useWeighIns();
+  if (weighIns === 'unreadable') {
+    return (
+      <SafeAreaView edges={['bottom', 'left', 'right']} className="flex-1 bg-ground">
+        <FormHeader title="Log weight" onCancel={() => router.dismissTo('/')} />
+        {/* iOS's bar is glass over the sheet, and what stands under it is hidden unless inset for it. */}
+        <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerClassName="p-page">
+          <Unreadable words="Couldn’t load your weight" onRetry={() => void readAgain()} />
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
   // Nothing before the first read, which is quick (DESIGN.md, *Asking and telling*).
-  if (!Array.isArray(weighIns)) return null;
-  const weighedToday = weighIns.find((weighIn) => weighIn.day === today);
-  return <WeightForm today={today} kg={weighedToday?.kg} />;
+  if (weighIns === 'unread') return null;
+  return <WeightForm today={today} kg={weighInOn(weighIns, today)?.kg} />;
 }
