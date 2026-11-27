@@ -9,7 +9,6 @@ const noWatch = require('./eslint-rules/no-watch');
 const noFontScalingOff = require('./eslint-rules/no-font-scaling-off');
 const pressableRole = require('./eslint-rules/pressable-role');
 const touchTarget = require('./eslint-rules/touch-target');
-const keyboardAvoided = require('./eslint-rules/keyboard-avoided');
 const noCoercedNumber = require('./eslint-rules/no-coerced-number');
 const noDarkVariant = require('./eslint-rules/no-dark-variant');
 const noDashPlaceholder = require('./eslint-rules/no-dash-placeholder');
@@ -134,7 +133,6 @@ const formsPlugin = {
   rules: {
     'first-fault-shown': firstFaultShown,
     'form-page': formPage,
-    'keyboard-avoided': keyboardAvoided,
     'no-coerced-number': noCoercedNumber,
     'no-watch': noWatch,
     'on-touched': onTouched,

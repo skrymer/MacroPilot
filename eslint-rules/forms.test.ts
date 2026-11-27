@@ -2,52 +2,6 @@ import { lint } from './lint';
 
 const SCREEN = 'app/add-food.tsx';
 
-describe('forms/keyboard-avoided', () => {
-  it.each([
-    ['a field', `const c = <ScrollView><FormField name="fat" /></ScrollView>;`],
-    [
-      'a field deeper in it',
-      `const c = <ScrollView><View><FormField name="fat" /></View></ScrollView>;`,
-    ],
-    [
-      'a field, in one with no behavior, which avoids nothing',
-      `const c = <KeyboardAvoidingView><ScrollView><FormField name="fat" /></ScrollView></KeyboardAvoidingView>;`,
-    ],
-    [
-      'a field, beside one that does avoid it',
-      `const c = <View><KeyboardAvoidingView /><ScrollView><FormField name="fat" /></ScrollView></View>;`,
-    ],
-    ['a page’s children, which can be fields', `const c = <ScrollView>{children}</ScrollView>;`],
-  ])('reports a scroll view the keyboard can cover with %s', (_, code) => {
-    // Given a form that scrolls, with nothing to make room for the keyboard
-    const source = code;
-
-    // When it is linted
-    const reported = lint(source, SCREEN);
-
-    // Then the rule reports it
-    expect(reported).toContain('forms/keyboard-avoided');
-  });
-
-  it.each([
-    [
-      'a form inside one that does something',
-      `const c = <KeyboardAvoidingView behavior="padding"><ScrollView><FormField name="fat" /></ScrollView></KeyboardAvoidingView>;`,
-    ],
-    ['a scroll view with no field in it', `const c = <ScrollView><Text>Foods</Text></ScrollView>;`],
-    ['a field that does not scroll', `const c = <View><FormField name="grams" /></View>;`],
-  ])('accepts %s', (_, code) => {
-    // Given nothing a keyboard can cover for good
-    const source = code;
-
-    // When it is linted
-    const reported = lint(source, SCREEN);
-
-    // Then the rule is silent
-    expect(reported).not.toContain('forms/keyboard-avoided');
-  });
-});
-
 describe('forms/no-watch', () => {
   it.each([
     ['a form’s watch called', `const form = useForm(); const name = form.watch('name');`],
