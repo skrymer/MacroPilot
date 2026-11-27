@@ -26,6 +26,8 @@
 17. **The loose ends** (Q19): Android's delete and discard questions in sentence case (*Cancel*, *Delete*), set in its theme, as Material 3 has them; a page still shows nothing before its first read, and earns a placeholder only when a read is measured slow; the large title's height against Health's is measured on the iPhone when Today is rebuilt; `min-w-name` is measured again inside a card, from the longest word of a name at double.
 18. **A field's edge at rest is 3:1, the `edge` token** (Q20, from the review of PR #82): held 3:1 to the card and to the field, so an empty field is seen in bright light. Chosen over the hairline `line` (1.24:1, short of the 3:1 a control's edge needs) and `ink-dim` itself (over 5:1, heavy on every field). In `design-tokens.js`, `DESIGN.md` and the design page.
 
+19. **A form's bar says what the form does, and the grams page names the food whole as its first line** (#87, 27 November 2026, `grams.tsx`): chosen over the food's name in the bar, which a 64-character name cut to *Log Greek yoghurt with hone…* at text 1.0 and *Log Greek y* at 2.0. Recorded in `DESIGN.md`, *Forms*.
+
 Not #51's, recorded on epic 2 (#6, 26 November 2026): the day ring is Today's first element and stands in no card, and the goal ring is not on Today. The prototype's ring card does not bind it.
 
 **How the decisions are held, after the grilling** (the user, 26 November 2026: as easy as possible for a later session to follow). Cheapest to follow first:
@@ -34,4 +36,4 @@ Not #51's, recorded on epic 2 (#6, 26 November 2026): the day ring is Today's fi
 2. **Lint rules for what can be checked**, beside the `design/*` and `forms/*` rules: a form's `useForm` sets `mode: 'onTouched'`; a form screen uses the shared presentation and its X; `fault` and `valid` only on a field; no bare `Pressable` outside `src/components`.
 3. **Skills and docs**: `DESIGN.md` gives each decision and its reason, `app/design.tsx` shows each live, and `platform-conventions` and `rn-dev` point at the components and name the rule that holds each.
 
-**Teardown:** `app/prototype/colours.tsx`, `form.tsx`, `_layout.tsx`, `prototype-palettes.ts`, this section, the link in `app/design.tsx` (and its `Link` import), then `exempt.sh off` when `app/prototype/` is empty.
+**Teardown:** `app/prototype/colours.tsx`, `form.tsx`, `grams.tsx`, `_layout.tsx`, `prototype-palettes.ts`, this section, the link in `app/design.tsx` (and its `Link` import), then `exempt.sh off` when `app/prototype/` is empty.

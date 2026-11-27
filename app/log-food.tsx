@@ -31,13 +31,17 @@ function GramsForm({ food }: { food: Food }) {
     entryOn: ({ grams }, day) => ({ name: food.name, entry: weighedEntry(food, grams, day) }),
   });
   return (
+    // The bar holds one line, so it says what the form does, and the page names the food whole.
     <FormPage
-      title={`Log ${shownName(food.name)}`}
+      title="Log entry"
       onCancel={leave}
       fault={errors.root?.message}
       action="Log entry"
       onAction={log}
     >
+      <Text accessibilityRole="header" className="font-language-bold text-title text-ink">
+        {shownName(food.name)}
+      </Text>
       <FormField
         control={control}
         name="grams"

@@ -32,12 +32,13 @@ appId: com.skrymer.macropilot
     visible: 'Milk, .*'
     timeout: 10000
 
-# The grams, from Log.
+# The grams, from Log: the bar says what the form does, and the page names the food.
 - openLink: 'macropilot://log'
 - tapOn: 'Log Milk.*'
 - assertVisible:
-    text: 'Log Milk'
+    text: 'Log entry'
     rightOf: 'Cancel'
+- assertVisible: 'Milk'
 - tapOn: 'Cancel'
 
 # The estimate, from Log.

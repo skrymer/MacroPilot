@@ -229,8 +229,25 @@ describe('Log', () => {
     await userEvent.press(await screen.findByRole('button', { name: /^Log Coffee/ }));
 
     // Then its form names it, and its grams are blank rather than a figure
-    expect(await screen.findByRole('header', { name: 'Log Coffee' })).toBeOnTheScreen();
+    expect(await screen.findByRole('header', { name: 'Coffee' })).toBeOnTheScreen();
     expect(screen.getByLabelText('Weight (g)')).toHaveDisplayValue('');
+  });
+
+  it('names the food in full on its form, under a bar that says what the form does', async () => {
+    // Given Log open on a food whose name is longer than a bar holds
+    const name = 'greek yoghurt with honey, walnuts and a little cinnamon, 10% fat';
+    await openLog(await storesOf({ ...OATS, name }));
+
+    // When the user presses it
+    await userEvent.press(await screen.findByRole('button', { name: /^Log Greek yoghurt/ }));
+
+    // Then the bar says Log entry, and the page names the food whole
+    expect(await screen.findByRole('header', { name: 'Log entry' })).toBeOnTheScreen();
+    expect(
+      screen.getByRole('header', {
+        name: 'Greek yoghurt with honey, walnuts and a little cinnamon, 10% fat',
+      }),
+    ).toBeOnTheScreen();
   });
 
   it('names a food’s row by what pressing it does, and by its figures', async () => {
@@ -414,7 +431,7 @@ describe('Log', () => {
     await act(() => router.navigate({ pathname: '/log-food', params: { id: 2 } }));
 
     // Then its grams are blank, not the first food's
-    expect(await screen.findByRole('header', { name: 'Log Coffee' })).toBeOnTheScreen();
+    expect(await screen.findByRole('header', { name: 'Coffee' })).toBeOnTheScreen();
     expect(screen.getByLabelText('Weight (g)')).toHaveDisplayValue('');
   });
 
@@ -426,7 +443,7 @@ describe('Log', () => {
     await user.press(screen.getByRole('button', { name: 'Log entry' }));
     await screen.findByText('Logged: Rolled oats');
     await user.press(await screen.findByRole('button', { name: /^Log Coffee/ }));
-    await screen.findByRole('header', { name: 'Log Coffee' });
+    await screen.findByRole('header', { name: 'Coffee' });
     await act(() => router.navigate('/foods'));
     await screen.findByRole('header', { name: 'Foods' });
 
