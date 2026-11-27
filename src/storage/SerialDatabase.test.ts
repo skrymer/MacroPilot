@@ -1,18 +1,11 @@
-import Database from 'better-sqlite3';
-
+import { BetterSqliteStatements } from './BetterSqliteDatabase';
 import { SerialDatabase } from './SerialDatabase';
-import type { SqlStatements, SqlValue } from './SqlDatabase';
 
 /** better-sqlite3 in memory, with a table `t`, behind the statements a connection answers. */
-const connection = (): SqlStatements => {
-  const db = new Database(':memory:');
-  db.exec('CREATE TABLE t (n INTEGER)');
-  return {
-    execAsync: async (source: string) => void db.exec(source),
-    runAsync: async (source: string, params: SqlValue[]) => db.prepare(source).run(...params),
-    getAllAsync: async <Row>(source: string, params: SqlValue[]) =>
-      db.prepare(source).all(...params) as Row[],
-  };
+const connection = () => {
+  const statements = new BetterSqliteStatements();
+  void statements.execAsync('CREATE TABLE t (n INTEGER)');
+  return statements;
 };
 
 const ns = async (db: SerialDatabase) =>
@@ -96,7 +89,7 @@ describe('SerialDatabase', () => {
     const next = db.runAsync('INSERT INTO t VALUES (?)', [1]);
 
     // Then it runs
-    await expect(next).resolves.toBeDefined();
+    await next;
     expect(await ns(db)).toEqual([1]);
   });
 });

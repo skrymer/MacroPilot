@@ -4,7 +4,7 @@ import { SerialDatabase } from './SerialDatabase';
 import type { SqlStatements, SqlValue } from './SqlDatabase';
 
 /** better-sqlite3's connection behind the statements the phone's connection answers. */
-class BetterSqliteStatements implements SqlStatements {
+export class BetterSqliteStatements implements SqlStatements {
   private readonly db = new Database(':memory:');
 
   constructor() {
