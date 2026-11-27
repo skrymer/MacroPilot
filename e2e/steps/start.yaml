@@ -4,6 +4,15 @@ appId: com.skrymer.macropilot
 env:
   METRO_PORT: '8081'
 ---
+# A flow that logs and then reads Today finds a new, empty day if midnight falls between, so none
+# starts in a day's last five minutes; the longest, long-day, runs in about 50 s, and the start step's
+# waits allow 90 more. The day is the machine's: the emulator takes its zone and its time, once a clock
+# or zone moved for a probe is put back (drive-emulator, *Put it back*).
+- repeat:
+    while:
+      true: ${((now) => now.getHours() * 60 + now.getMinutes() >= 23 * 60 + 55)(new Date())}
+    commands:
+      - waitForAnimationToEnd
 - launchApp:
     clearState: true
 - openLink: 'macropilot://expo-development-client/?url=http%3A%2F%2Flocalhost%3A${METRO_PORT}'
