@@ -36,7 +36,9 @@ Both appearances are in `design-tokens.js`, and every text pair is held to WCAG 
 
 The figure in the centre is `ink` while the day is within its budget, `slightly-over` past it and `over` past the tolerance: the arc and the figure say one thing. It is the one figure that takes a hue, because it is the day's standing and not a food's. The goal's is always `ink`.
 
-Where the rings stand on Today is epic 2's to settle (#6).
+**On Today the day ring's card comes first**, above the entries, and today's weigh-in is its last row: the weight, or *No weight logged today* with its way to log one. The question Today is opened for is answered before anything else, and the weigh-in belongs to the same morning's glance. Under the ring stand the day's verdict and protein's standing in words. Before **Setup** there is no ring: epic 1's totals card stands with a line sending the user to Profile. Chosen by the user on 27 November 2026 on the iPhone, over the reference app's order (the weight's own card first) and a weight card under the ring.
+
+**A form shows where the entry would leave the day** only once it would pass the budget: a line above its button, *This puts you about 120 kcal over your 1840 kcal budget.*, with a dot before it, both in the standing it would reach, `slightly-over` within the tolerance and `over` past it. It never stops the entry, since what is logged has been eaten, and it is not announced at each keystroke. Chosen by the user on 27 November 2026 over the words alone.
 
 ## Pages
 
