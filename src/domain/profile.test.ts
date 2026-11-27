@@ -20,6 +20,18 @@ describe('heightFault', () => {
   });
 });
 
+describe('isHeight', () => {
+  it('refuses a height that is not a number', () => {
+    // Given nothing
+
+    // When NaN is given as a height
+    const refused = isHeight(Number.NaN);
+
+    // Then it is not one
+    expect(refused).toBe(false);
+  });
+});
+
 describe('birthDateFault', () => {
   it('names which rule a birth date breaks, each its own', () => {
     // Given today, 27 November 2026

@@ -37,7 +37,8 @@ export function birthDateFault(
 
 /** Which end a height in cm is past, if either. */
 export function heightFault(cm: number): 'not above zero' | 'not below the tallest' | undefined {
-  if (cm <= 0) return 'not above zero';
+  // Not `cm <= 0`, which a figure that is not a number passes.
+  if (!(cm > 0)) return 'not above zero';
   if (cm >= MAX_HEIGHT_CM) return 'not below the tallest';
   return undefined;
 }
