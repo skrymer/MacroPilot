@@ -25,15 +25,26 @@ describe('barHeader', () => {
     });
   });
 
-  it('scales the title in Material’s bar with the text, which the system holds at one size', () => {
+  it('scales the title in Material’s bar with the text', () => {
+    // Given the text at one and a quarter, on Android
+    jest.replaceProperty(Platform, 'OS', 'android');
+
+    // When the bar's look is made
+    const look = barHeader(light, 1.25);
+
+    // Then its title is at the title token's size scaled with it
+    expect(look.headerTitleStyle.fontSize).toBe(scaledBy(1.25, 'title'));
+  });
+
+  it('stops the title in Material’s bar at 1.5, where the longest form title still fits its one line', () => {
     // Given the text at double, on Android
     jest.replaceProperty(Platform, 'OS', 'android');
 
     // When the bar's look is made
     const look = barHeader(light, 2);
 
-    // Then its title is at the title token's size scaled to double
-    expect(look.headerTitleStyle.fontSize).toBe(scaledBy(2, 'title'));
+    // Then its title is at the title token's size scaled to 1.5
+    expect(look.headerTitleStyle.fontSize).toBe(scaledBy(1.5, 'title'));
   });
 
   it('draws the bar’s own buttons in ink', () => {
