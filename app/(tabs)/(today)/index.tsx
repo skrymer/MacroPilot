@@ -25,6 +25,7 @@ import { useToday } from '@/lifecycle/useToday';
 import type { LoggedEntry } from '@/storage/EntryStore';
 import { useEntryStore } from '@/storage/EntryStoreContext';
 import { useReading } from '@/storage/useReading';
+import { useProfile } from '@/storage/useProfile';
 import { useWeighIns } from '@/storage/useWeighIns';
 
 const PROTEIN_SET = { ...FIGURE_SET, weighed: 'font-language text-ink-mid' };
@@ -54,6 +55,40 @@ function Totals({
       </View>
       {children}
     </View>
+  );
+}
+
+/**
+ * Before Setup, what is missing for a calorie budget and the way to it: a weigh-in is logged here, and
+ * the details on Profile. Nothing once both are there.
+ */
+function SetupLine({
+  hasProfile,
+  hasWeighIn,
+  onProfile,
+  onWeighIn,
+}: {
+  hasProfile: boolean;
+  hasWeighIn: boolean;
+  onProfile: () => void;
+  onWeighIn: () => void;
+}) {
+  if (hasProfile && hasWeighIn) return null;
+  if (hasProfile) {
+    return (
+      <EmptyLine
+        words="Log your weight to see your calorie budget"
+        action="Log weight"
+        onAction={onWeighIn}
+      />
+    );
+  }
+  return (
+    <EmptyLine
+      words={`Add your details${hasWeighIn ? '' : ' and log your weight'} to see your calorie budget`}
+      action="Profile"
+      onAction={onProfile}
+    />
   );
 }
 
@@ -110,7 +145,8 @@ export default function Today() {
   const day = useToday();
   const list = useCallback(() => store.listOn(day), [store, day]);
   const { found, readAgain } = useReading(list);
-  const { weighIns } = useWeighIns();
+  const { weighIns, readAgain: readWeighInsAgain } = useWeighIns();
+  const { profile } = useProfile();
   const weighedToday = Array.isArray(weighIns)
     ? weighIns.find((weighIn) => weighIn.day === day)
     : undefined;
@@ -190,9 +226,23 @@ export default function Today() {
           {found === 'unreadable' ? (
             <Unreadable words="Couldn’t load today’s summary" onRetry={readAgain} />
           ) : null}
+          {Array.isArray(profile) && Array.isArray(weighIns) ? (
+            <SetupLine
+              hasProfile={profile.length > 0}
+              hasWeighIn={weighIns.length > 0}
+              onProfile={() => router.navigate('/profile')}
+              onWeighIn={() => router.navigate('/log-weight')}
+            />
+          ) : null}
           {Array.isArray(found) ? (
             <Totals totals={totals} count={listed.length}>
-              <WeightRow weighIn={weighedToday} onLog={() => router.navigate('/log-weight')} />
+              {weighIns === 'unreadable' ? (
+                <View className="mt-grid-2">
+                  <Unreadable words="Couldn’t load your weight" onRetry={readWeighInsAgain} />
+                </View>
+              ) : Array.isArray(weighIns) ? (
+                <WeightRow weighIn={weighedToday} onLog={() => router.navigate('/log-weight')} />
+              ) : null}
             </Totals>
           ) : null}
           {listed.length > 0 ? (

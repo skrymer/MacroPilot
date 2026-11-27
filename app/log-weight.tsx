@@ -8,12 +8,13 @@ import { useSave } from '@/components/useSave';
 import { weightForm } from '@/components/weightForm';
 import { newWeighIn } from '@/domain/weighIn';
 import { useToday } from '@/lifecycle/useToday';
+import { useWeighIns } from '@/storage/useWeighIns';
 import { useWeighInStore } from '@/storage/WeighInStoreContext';
 
-export default function LogWeight() {
+/** The form, given today's weight if there is one, to be replaced. */
+function WeightForm({ today, kg }: { today: string; kg?: number }) {
   const store = useWeighInStore();
   const router = useRouter();
-  const today = useToday();
   const {
     control,
     handleSubmit,
@@ -22,12 +23,12 @@ export default function LogWeight() {
   } = useForm({
     mode: 'onTouched',
     resolver: zodResolver(weightForm),
-    defaultValues: { kg: '' },
+    defaultValues: { kg: kg === undefined ? '' : String(kg) },
   });
   const leave = () => router.dismissTo('/');
   const save = useSave({
     form: { handleSubmit, setError },
-    write: ({ kg }) => store.save(newWeighIn({ day: today, kg }, today)),
+    write: (said) => store.save(newWeighIn({ day: today, kg: said.kg }, today)),
     failed: 'Could not save weight. What you typed is still here.',
     leave,
   });
@@ -48,4 +49,13 @@ export default function LogWeight() {
       />
     </FormPage>
   );
+}
+
+export default function LogWeight() {
+  const today = useToday();
+  const { weighIns } = useWeighIns();
+  // Nothing before the first read, which is quick (DESIGN.md, *Asking and telling*).
+  if (!Array.isArray(weighIns)) return null;
+  const weighedToday = weighIns.find((weighIn) => weighIn.day === today);
+  return <WeightForm today={today} kg={weighedToday?.kg} />;
 }

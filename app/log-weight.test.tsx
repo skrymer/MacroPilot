@@ -37,6 +37,26 @@ const openApp = (initialUrl: string, weighIns: InMemoryWeighInStore, clock = onT
   );
 
 describe('Log weight', () => {
+  it.each([
+    ['820', 'Enter a weight from 20 to 400 kg'],
+    ['19,9', 'Enter a weight from 20 to 400 kg'],
+    ['', 'Enter your weight in kg'],
+  ])('refuses "%s" and keeps nothing', async (typed, why) => {
+    // Given the form with a weight typed
+    const weighIns = new InMemoryWeighInStore();
+    await openApp('/log-weight', weighIns);
+    const user = userEvent.setup();
+    const field = await screen.findByLabelText('Weight (kg)');
+    if (typed) await user.type(field, typed);
+
+    // When the user saves it
+    await user.press(screen.getByRole('button', { name: 'Save weight' }));
+
+    // Then the field says why, and nothing is kept
+    expect(await screen.findByText(why)).toBeOnTheScreen();
+    expect(await weighIns.list()).toEqual([]);
+  });
+
   it('logs today’s weight from Today, and Today shows it', async () => {
     // Given Today with no weigh-in, and the form opened from its row with a weight typed
     const weighIns = new InMemoryWeighInStore();
@@ -51,5 +71,25 @@ describe('Log weight', () => {
     // Then Today shows it, and it is kept for today
     expect(await screen.findByLabelText('Weight today, 82.4 kilograms')).toBeOnTheScreen();
     expect(await weighIns.list()).toEqual([{ day: '2026-11-28', kg: 82.4 }]);
+  });
+
+  it('opens filled with today’s weight from Edit, and saving it again replaces it', async () => {
+    // Given a weigh-in of 82.4 kg today, and the form opened from the row's Edit
+    const weighIns = new InMemoryWeighInStore();
+    await weighIns.save({ day: '2026-11-28', kg: 82.4 });
+    await openApp('/', weighIns);
+    const user = userEvent.setup();
+    await user.press(await screen.findByRole('button', { name: 'Edit today’s weight' }));
+    const field = await screen.findByLabelText('Weight (kg)');
+    expect(field).toHaveDisplayValue('82.4');
+    await user.clear(field);
+    await user.type(field, '81.9');
+
+    // When the user saves it
+    await user.press(screen.getByRole('button', { name: 'Save weight' }));
+
+    // Then Today shows the new one, the only one today
+    expect(await screen.findByLabelText('Weight today, 81.9 kilograms')).toBeOnTheScreen();
+    expect(await weighIns.list()).toEqual([{ day: '2026-11-28', kg: 81.9 }]);
   });
 });
