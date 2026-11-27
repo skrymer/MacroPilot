@@ -1,0 +1,41 @@
+# A fresh install's Profile tab, after Foods, asks for the details; given them in the details form, it
+# shows them as rows, and Change details opens the form filled. The happy path of saving a Profile, the
+# new tab, the system's date picker and the form's presentation, which Jest cannot see (ADR 0011).
+appId: com.skrymer.macropilot
+---
+- runFlow: steps/start.yaml
+# The tab, last of the release's, after Foods.
+- assertVisible:
+    text: 'Profile'
+    rightOf: 'Foods'
+- tapOn:
+    text: 'Profile'
+    rightOf: 'Foods'
+- assertVisible:
+    text: 'Profile'
+    above: 'No details yet'
+- tapOn: 'Add your details'
+# A form, opened as every form is, its title beside the X.
+- assertVisible:
+    text: 'Add your details'
+    rightOf: 'Cancel'
+- tapOn: 'Male'
+# Android's own date dialog, opened from the field on the day thirty years back, and kept.
+- tapOn: 'Birth date, not chosen'
+- tapOn: 'OK'
+- assertVisible: 'Birth date, .*[0-9]{4}'
+- tapOn: 'Height \(cm\)'
+- inputText: '181'
+- tapOn: 'Save profile'
+- extendedWaitUntil:
+    visible: 'Sex, Male'
+    timeout: 10000
+- assertVisible: 'Height, 181 centimetres'
+- assertVisible: 'Calorie tracking, Calories and weight'
+- tapOn: 'Change details'
+- assertVisible:
+    text: 'Change details'
+    rightOf: 'Cancel'
+- assertVisible: 'Birth date, .*[0-9]{4}'
+- tapOn: 'Cancel'
+- assertVisible: 'Sex, Male'
