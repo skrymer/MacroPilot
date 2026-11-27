@@ -29,7 +29,7 @@ export default function AddFood() {
     control,
     handleSubmit,
     setError,
-    formState: { errors, isDirty, isSubmitting },
+    formState: { errors, isDirty, isSubmitting, isSubmitted },
   } = useForm({
     mode: 'onTouched',
     resolver: zodResolver(foodForm),
@@ -54,7 +54,7 @@ export default function AddFood() {
     <FormPage
       title="Add food"
       onCancel={leave}
-      fault={formFault(errors)}
+      fault={formFault({ errors, isSubmitted })}
       action="Save food"
       onAction={save}
       scroll={scroll}

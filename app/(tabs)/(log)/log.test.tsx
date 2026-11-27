@@ -204,6 +204,20 @@ describe('Log', () => {
     expect(screen.queryByText('Enter a label for this entry')).not.toBeOnTheScreen();
   });
 
+  it('says nothing was saved only once a save is refused, not as a field is left', async () => {
+    // Given the estimate open
+    await openLog(await storesOf());
+    const user = userEvent.setup();
+    await user.press(await screen.findByRole('button', { name: 'Log an estimate instead' }));
+
+    // When 0 calories are typed and the field left
+    await user.type(await screen.findByLabelText('Calories'), '0');
+
+    // Then the field says what is wrong, and the button says nothing of a save
+    expect(await screen.findByText('Calories must be at least 1')).toBeOnTheScreen();
+    expect(screen.queryByText('Not saved. A field above needs changing.')).not.toBeOnTheScreen();
+  });
+
   it('refuses an estimate of 0 calories beside its field, and logs nothing', async () => {
     // Given an estimate of a label and 0 calories
     const stores = await storesOf();
