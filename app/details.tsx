@@ -15,6 +15,7 @@ import { Segments } from '@/components/Segments';
 import { useDiscard } from '@/components/useDiscard';
 import { useFirstFault } from '@/components/useFirstFault';
 import { Unreadable } from '@/components/Unreadable';
+import { useRunReview } from '@/components/useRunReview';
 import { useSave } from '@/components/useSave';
 import { yearsBefore } from '@/domain/day';
 import { MAX_AGE_YEARS, newProfile, type Profile } from '@/domain/profile';
@@ -30,6 +31,7 @@ const FIELDS = ['sex', 'born', 'heightCm'] as const;
 /** The form, given the details saved before, to be changed, or none. */
 function DetailsForm({ saved }: { saved?: Profile }) {
   const store = useProfileStore();
+  const runReview = useRunReview();
   const router = useRouter();
   const today = useToday();
   const {
@@ -51,7 +53,10 @@ function DetailsForm({ saved }: { saved?: Profile }) {
   const { scroll, onLayoutOf, show } = useFirstFault(FIELDS);
   const save = useSave({
     form: { handleSubmit, setError },
-    write: (said) => store.save(newProfile(said, today)),
+    write: async (said) => {
+      await store.save(newProfile(said, today));
+      await runReview(today);
+    },
     failed: 'Could not save profile. What you gave is still here.',
     leave: () => {
       letGo();

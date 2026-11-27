@@ -9,6 +9,7 @@ import { FormField } from '@/components/FormField';
 import { FormHeader } from '@/components/FormHeader';
 import { FormPage } from '@/components/FormPage';
 import { Unreadable } from '@/components/Unreadable';
+import { useRunReview } from '@/components/useRunReview';
 import { useSave } from '@/components/useSave';
 import { weightForm } from '@/components/weightForm';
 import { newWeighIn, weighInOn } from '@/domain/weighIn';
@@ -19,6 +20,7 @@ import { useWeighInStore } from '@/storage/WeighInStoreContext';
 /** The form, given today's weight if there is one, to be replaced. */
 function WeightForm({ today, kg }: { today: string; kg?: number }) {
   const store = useWeighInStore();
+  const runReview = useRunReview();
   const router = useRouter();
   const {
     control,
@@ -33,7 +35,10 @@ function WeightForm({ today, kg }: { today: string; kg?: number }) {
   const leave = () => router.dismissTo('/');
   const save = useSave({
     form: { handleSubmit, setError },
-    write: (said) => store.save(newWeighIn({ day: today, kg: said.kg }, today)),
+    write: async (said) => {
+      await store.save(newWeighIn({ day: today, kg: said.kg }, today));
+      await runReview(today, kg !== undefined);
+    },
     failed: 'Could not save weight. What you typed is still here.',
     leave,
   });

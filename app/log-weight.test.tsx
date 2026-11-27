@@ -6,6 +6,7 @@ import type { ReactNode } from 'react';
 import { TestProviders } from '@/components/TestProviders';
 import { ScriptedClock } from '@/lifecycle/ScriptedClock';
 import { InMemoryProfileStore } from '@/storage/InMemoryProfileStore';
+import { InMemoryReviewStore } from '@/storage/InMemoryReviewStore';
 import { InMemoryWeighInStore } from '@/storage/InMemoryWeighInStore';
 
 import Today from './(tabs)/(today)/index';
@@ -24,6 +25,7 @@ const openApp = (
   weighIns: InMemoryWeighInStore,
   clock = onTheDay(),
   profile?: InMemoryProfileStore,
+  reviews?: InMemoryReviewStore,
 ) =>
   renderRouter(
     {
@@ -35,7 +37,7 @@ const openApp = (
     {
       initialUrl,
       wrapper: ({ children }: { children: ReactNode }) => (
-        <TestProviders weighIns={weighIns} clock={clock} profile={profile}>
+        <TestProviders weighIns={weighIns} clock={clock} profile={profile} reviews={reviews}>
           {children}
         </TestProviders>
       ),
@@ -93,6 +95,56 @@ describe('Log weight', () => {
     // Then the form is open, the line under it
     expect(await screen.findByLabelText('Weight (kg)')).toBeOnTheScreen();
     expect(line).toBeTruthy();
+  });
+
+  it('runs the first review when this weigh-in completes Setup, from the weight kept', async () => {
+    // Given details saved, and the form opened from Today with a weight typed
+    const profile = new InMemoryProfileStore();
+    await profile.save({ sex: 'male', born: '1984-03-14', heightCm: 181, countsCalories: true });
+    const reviews = new InMemoryReviewStore();
+    await openApp('/log-weight', new InMemoryWeighInStore(), onTheDay(), profile, reviews);
+    const user = userEvent.setup();
+    await user.type(await screen.findByLabelText('Weight (kg)'), '820');
+    await user.press(screen.getByRole('button', { name: 'Save weight' }));
+    await screen.findByText('Enter a weight from 20 to 400 kg');
+    await user.clear(screen.getByLabelText('Weight (kg)'));
+    await user.type(screen.getByLabelText('Weight (kg)'), '82');
+
+    // When the user saves it
+    await user.press(screen.getByRole('button', { name: 'Save weight' }));
+
+    // Then today's review is set from it
+    await waitFor(async () =>
+      expect((await reviews.list()).map(({ day }) => day)).toEqual(['2026-11-28']),
+    );
+    expect((await reviews.list())[0]?.trendKg).toBe(82);
+  });
+
+  it('runs today’s review again when today’s weigh-in is replaced, a typo of 320 fixed to 82', async () => {
+    // Given today's weigh-in typed as 320 kg in error (820 is refused), and today's review set from it
+    const profile = new InMemoryProfileStore();
+    await profile.save({ sex: 'male', born: '1984-03-14', heightCm: 181, countsCalories: true });
+    const weighIns = new InMemoryWeighInStore();
+    await weighIns.save({ day: '2026-11-28', kg: 320 });
+    const reviews = new InMemoryReviewStore();
+    await reviews.save({
+      day: '2026-11-28',
+      trendKg: 320,
+      maintenanceKcal: 5000,
+      budgetKcal: 5000,
+      proteinFloorG: 640,
+    });
+    await openApp('/log-weight', weighIns, onTheDay(), profile, reviews);
+    const user = userEvent.setup();
+    await user.clear(await screen.findByLabelText('Weight (kg)'));
+    await user.type(screen.getByLabelText('Weight (kg)'), '82');
+
+    // When the user saves it
+    await user.press(screen.getByRole('button', { name: 'Save weight' }));
+
+    // Then today's review is set again, from 82 kg
+    await waitFor(async () => expect((await reviews.list())[0]?.trendKg).toBe(82));
+    expect((await reviews.list()).map(({ day }) => day)).toEqual(['2026-11-28']);
   });
 
   it('shows the weight on Today though the user left before its write landed', async () => {

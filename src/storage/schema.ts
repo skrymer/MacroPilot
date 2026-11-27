@@ -48,6 +48,13 @@ const SCHEMA = `
     day TEXT PRIMARY KEY,
     kg REAL NOT NULL
   );
+  CREATE TABLE IF NOT EXISTS reviews (
+    day TEXT PRIMARY KEY,
+    trend_kg REAL NOT NULL,
+    maintenance_kcal REAL NOT NULL,
+    budget_kcal REAL NOT NULL,
+    protein_floor_g REAL NOT NULL
+  );
 `;
 
 /** Made on every call rather than once, so a call after one that failed can succeed. */
