@@ -6,9 +6,9 @@ appId: com.skrymer.macropilot
 - runFlow: steps/start.yaml
 - evalScript: ${output.year = String(new Date().getFullYear())}
 - evalScript: ${output.day = String(new Date().getDate())}
-- evalScript: ${output.today = output.day + ' ' + ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'][new Date().getMonth()] + ' ' + output.year}
+- evalScript: ${output.today = output.day + ' ' + ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec'][new Date().getMonth()] + ' ' + output.year}
 - openLink: 'macropilot://details'
-- tapOn: 'Birth date, not chosen'
+- tapOn: 'Birth date, Choose a date'
 # The dialog opens thirty years back; its year list goes to this year.
 - tapOn: '[0-9]{4}'
 - repeat:

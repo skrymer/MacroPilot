@@ -81,6 +81,18 @@ describe('Profile', () => {
     expect(await screen.findByLabelText('Sex, Male')).toBeOnTheScreen();
   });
 
+  it('writes the birth date with its month short, as dates are written across the app', async () => {
+    // Given a profile born in September
+    const profile = new InMemoryProfileStore();
+    await profile.save({ sex: 'male', born: '1990-09-03', heightCm: 181, countsCalories: true });
+
+    // When the user opens Profile
+    await openProfile(profile);
+
+    // Then the date reads 3 Sept 1990
+    expect(await screen.findByText('3 Sept 1990')).toBeOnTheScreen();
+  });
+
   it('shows a saved profile as rows under its heading, each read out as one', async () => {
     // Given a profile saved
     const profile = new InMemoryProfileStore();
@@ -92,7 +104,7 @@ describe('Profile', () => {
     // Then each detail is a row, and the way to change them is under them
     expect(await screen.findByRole('header', { name: 'Your details' })).toBeOnTheScreen();
     expect(screen.getByLabelText('Sex, Male')).toBeOnTheScreen();
-    expect(screen.getByLabelText('Birth date, 14 March 1984')).toBeOnTheScreen();
+    expect(screen.getByLabelText('Birth date, 14 Mar 1984')).toBeOnTheScreen();
     expect(screen.getByLabelText('Height, 181 centimetres')).toBeOnTheScreen();
     expect(screen.getByLabelText('Calorie tracking, Calories and weight')).toBeOnTheScreen();
     expect(screen.getByRole('button', { name: 'Change details' })).toBeOnTheScreen();

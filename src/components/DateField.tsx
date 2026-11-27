@@ -22,7 +22,7 @@ const asDay = (date: Date) =>
 /** One for every date: a formatter is slow to make. */
 const DATE_WORDS = new Intl.DateTimeFormat('en-GB', {
   day: 'numeric',
-  month: 'long',
+  month: 'short',
   year: 'numeric',
 });
 
@@ -84,7 +84,7 @@ export function DateField({
     <FieldFrame label={label} fault={fault}>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={`${label}, ${shown ?? 'not chosen'}`}
+        accessibilityLabel={`${label}, ${shown ?? 'Choose a date'}`}
         accessibilityHint={fault}
         onPress={choose}
         android_ripple={ripple}
@@ -93,7 +93,7 @@ export function DateField({
         {shown ? (
           <Text className="font-language text-body text-ink">{shown}</Text>
         ) : (
-          <Text className="font-language-italic text-body text-ink-dim">Not chosen</Text>
+          <Text className="font-language text-body text-ink-mid">Choose a date</Text>
         )}
         {/* A field at fault carries the sign at its end, as a text field does: the hue is never alone. */}
         {fault ? (

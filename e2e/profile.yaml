@@ -21,7 +21,7 @@ appId: com.skrymer.macropilot
     rightOf: 'Cancel'
 - tapOn: 'Male'
 # Android's own date dialog, opened from the field on the day thirty years back, and kept.
-- tapOn: 'Birth date, not chosen'
+- tapOn: 'Birth date, Choose a date'
 - tapOn: 'OK'
 - assertVisible: 'Birth date, .*[0-9]{4}'
 - tapOn: 'Height \(cm\)'
