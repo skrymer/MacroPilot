@@ -60,6 +60,8 @@ The consequence: [`0001`](../../../docs/adr/0001-a-unit-owes-its-own-test-when-i
 
 Add each one that costs a confusing run, symptom first.
 
+**A run started after one was stopped finds a `stryker` process already there, and the two share `.stryker-tmp`**. `pkill -f 'stryker run'` kills npm and its shell but not the `stryker` process they started, which is left to systemd with its workers and runs on (#131, twice). Stop a run by stopping its background task, or by its process tree (`ps -eo pid,ppid,args | grep '[s]tryker'`, then each pid), and check none is left before the next.
+
 **The run is killed partway, or the user's whole desktop is, for memory**. Each runner loads the whole jest-expo app project, about 2 GiB, and 4 of them beside an emulator, Metro and a Jest run had the system kill the desktop session with everything in it. A mutation run has the machine to itself: no emulator, no Metro and no other Jest while it goes, `free -g` first, and `--concurrency 2` where less than 16 GiB is available. `stryker.config.mjs` caps it at 8; never pass a higher one.
 
 **Test files in the score table, with hundreds of survivors** (`index.test.tsx 59.73`), and a run three times longer than the source alone needs. The scope filter excluded nothing: `grep -v '\.test\.tsx?$'` is a basic regex, where `?` is a literal character, so it matches no filename. It must be `grep -Ev`. Mutating a test file tests nothing; ignore those rows if an old run shows them.
