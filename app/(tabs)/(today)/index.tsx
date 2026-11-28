@@ -130,7 +130,14 @@ function RingCard({
         <Text className={`mt-grid-1 text-center font-language-bold text-body ${verdict.ink}`}>
           {verdict.words}
         </Text>
-        <Text className="text-center font-language text-label text-ink-mid">{protein.shown}</Text>
+        {/* What nobody stated is words in italic ink-dim, as any unknown (DESIGN.md, *Figures*). */}
+        <Text
+          className={`text-center text-label ${
+            floor.standing === 'not stated' ? FIGURE_SET.notStated : 'font-language text-ink-mid'
+          }`}
+        >
+          {protein.shown}
+        </Text>
       </View>
       <View className="mt-grid-2">{children}</View>
     </View>
