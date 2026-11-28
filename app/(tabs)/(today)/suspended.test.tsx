@@ -74,4 +74,30 @@ describe('Today, while the Goal’s deficit is suspended', () => {
     ).toBeOnTheScreen();
     expect(screen.getByRole('button', { name: 'Ease your goal' })).toBeOnTheScreen();
   });
+
+  it('shows the card only once the targets are read, the goal read first', async () => {
+    // Given the Goal readable at once, and today's review slow to be read
+    const stores = await aDay(1.4);
+    const release = stores.reviews.holdReads();
+    await openToday(stores);
+
+    // When the review comes in
+    await screen.findByText('Log a weighed food, or an estimate.');
+    release();
+
+    // Then the card is shown, and nothing broke before it
+    expect(await screen.findByText('No deficit is being applied')).toBeOnTheScreen();
+  });
+
+  it('opens Profile from Ease your goal', async () => {
+    // Given the card on Today, the Goal's deficit suspended
+    await openToday(await aDay(1.4));
+    const user = userEvent.setup();
+
+    // When the user asks to ease the goal
+    await user.press(await screen.findByRole('button', { name: 'Ease your goal' }));
+
+    // Then Profile is showing
+    expect(await screen.findByText('Profile, as the tab shows it')).toBeOnTheScreen();
+  });
 });
