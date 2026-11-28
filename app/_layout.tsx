@@ -18,12 +18,14 @@ import { ClockProvider } from '@/lifecycle/ClockContext';
 import { SystemClock } from '@/lifecycle/SystemClock';
 import { EntryStoreProvider } from '@/storage/EntryStoreContext';
 import { FoodStoreProvider } from '@/storage/FoodStoreContext';
+import { GoalStoreProvider } from '@/storage/GoalStoreContext';
 import { LazyDatabase } from '@/storage/LazyDatabase';
 import { ProfileStoreProvider } from '@/storage/ProfileStoreContext';
 import { ReviewStoreProvider } from '@/storage/ReviewStoreContext';
 import { SerialDatabase } from '@/storage/SerialDatabase';
 import { SqliteEntryStore } from '@/storage/SqliteEntryStore';
 import { SqliteFoodStore } from '@/storage/SqliteFoodStore';
+import { SqliteGoalStore } from '@/storage/SqliteGoalStore';
 import { SqliteProfileStore } from '@/storage/SqliteProfileStore';
 import { SqliteReviewStore } from '@/storage/SqliteReviewStore';
 import { SqliteWeighInStore } from '@/storage/SqliteWeighInStore';
@@ -42,6 +44,7 @@ const entryStore = new SqliteEntryStore(database);
 const profileStore = new SqliteProfileStore(database);
 const weighInStore = new SqliteWeighInStore(database);
 const reviewStore = new SqliteReviewStore(database);
+const goalStore = new SqliteGoalStore(database);
 const ask = new SystemAsk();
 
 /**
@@ -75,40 +78,43 @@ export default function RootLayout() {
           <ProfileStoreProvider store={profileStore}>
             <WeighInStoreProvider store={weighInStore}>
               <ReviewStoreProvider store={reviewStore}>
-                <AskProvider ask={ask}>
-                  <LoggedProvider>
-                    {/* Gestures are seen only under this root, the swipe on a row and the list's scroll as one. */}
-                    <GestureHandlerRootView style={{ flex: 1 }}>
-                      <View className="flex-1 bg-ground">
-                        <StatusBar style="auto" />
-                        <Stack
-                          screenOptions={{
-                            headerShown: false,
-                            contentStyle: { backgroundColor: 'transparent' },
-                          }}
-                          screenLayout={({ route, children }) =>
-                            !__DEV__ && TODAY_IN_RELEASE.test(route.name) ? (
-                              <BackToToday />
-                            ) : (
-                              children
-                            )
-                          }
-                        >
-                          {/* DESIGN.md, Forms: every form is iOS's page sheet and Android's page rising
+                <GoalStoreProvider store={goalStore}>
+                  <AskProvider ask={ask}>
+                    <LoggedProvider>
+                      {/* Gestures are seen only under this root, the swipe on a row and the list's scroll as one. */}
+                      <GestureHandlerRootView style={{ flex: 1 }}>
+                        <View className="flex-1 bg-ground">
+                          <StatusBar style="auto" />
+                          <Stack
+                            screenOptions={{
+                              headerShown: false,
+                              contentStyle: { backgroundColor: 'transparent' },
+                            }}
+                            screenLayout={({ route, children }) =>
+                              !__DEV__ && TODAY_IN_RELEASE.test(route.name) ? (
+                                <BackToToday />
+                              ) : (
+                                children
+                              )
+                            }
+                          >
+                            {/* DESIGN.md, Forms: every form is iOS's page sheet and Android's page rising
                             over the last (the user's word, 26 November 2026). */}
-                          <Stack.Screen name="add-food" options={form} />
-                          <Stack.Screen name="log-food" options={form} />
-                          <Stack.Screen name="log-estimate" options={form} />
-                          <Stack.Screen name="details" options={form} />
-                          <Stack.Screen name="log-weight" options={form} />
-                          {/* DESIGN.md, Pages: the design page stands under the system's header, as a
+                            <Stack.Screen name="add-food" options={form} />
+                            <Stack.Screen name="log-food" options={form} />
+                            <Stack.Screen name="log-estimate" options={form} />
+                            <Stack.Screen name="details" options={form} />
+                            <Stack.Screen name="log-weight" options={form} />
+                            <Stack.Screen name="goal" options={form} />
+                            {/* DESIGN.md, Pages: the design page stands under the system's header, as a
                             tab's page does. */}
-                          <Stack.Screen name="design" options={{ ...page, title: 'Trim' }} />
-                        </Stack>
-                      </View>
-                    </GestureHandlerRootView>
-                  </LoggedProvider>
-                </AskProvider>
+                            <Stack.Screen name="design" options={{ ...page, title: 'Trim' }} />
+                          </Stack>
+                        </View>
+                      </GestureHandlerRootView>
+                    </LoggedProvider>
+                  </AskProvider>
+                </GoalStoreProvider>
               </ReviewStoreProvider>
             </WeighInStoreProvider>
           </ProfileStoreProvider>
