@@ -162,6 +162,39 @@ describe('The goal form', () => {
     expect(screen.queryByLabelText('Target weight (kg)')).not.toBeOnTheScreen();
   });
 
+  it('asks for a target and a rate when they are left blank, and sets nothing', async () => {
+    // Given the form with nothing typed
+    const stores = await setUp();
+    await openApp('/goal', stores);
+    const user = userEvent.setup();
+    await screen.findByLabelText('Target weight (kg)');
+
+    // When the user sets it
+    await user.press(screen.getByRole('button', { name: 'Set goal' }));
+
+    // Then each field says what it needs, and no Goal is kept
+    expect(await screen.findByText('Enter a target weight')).toBeOnTheScreen();
+    expect(screen.getByText('Enter a weekly rate')).toBeOnTheScreen();
+    expect(await stores.goals.read()).toBeUndefined();
+  });
+
+  it('says why a target is refused as soon as the field is left', async () => {
+    // Given the form, with a target above the trend typed
+    await openApp('/goal', await setUp());
+    const user = userEvent.setup();
+    await user.type(await screen.findByLabelText('Target weight (kg)'), '90');
+
+    // When the user moves on to the rate
+    await user.press(screen.getByLabelText('Rate (kg a week)'));
+
+    // Then the target says why, before anything is set
+    expect(
+      await screen.findByText(
+        'A weight-loss goal needs a target below your current trend weight (82.4 kg)',
+      ),
+    ).toBeOnTheScreen();
+  });
+
   it('re-runs today’s review, so today’s budget drops by the goal’s deficit at once', async () => {
     // Given Setup complete, and the form with a goal of 75 kg at 0.5 kg a week (550 kcal a day)
     const stores = await setUp();
