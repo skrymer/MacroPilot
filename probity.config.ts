@@ -48,6 +48,13 @@ import { defineConfig, enforceTdd } from '@nizos/probity';
  * Anything that filters the agent's command output — piping `npm test` through
  * `tail`, or `--silent` on a run whose red is the evidence — silently degrades
  * every verdict that follows.
+ *
+ * Refactors go through the refactor window (`.claude/hooks/refactor.mjs`), not the validator. The
+ * validator sees 20 events and one file, so it refuses refactors it cannot see are ones: an
+ * extraction into a new file, an existing component swapped in. The window opens on the covering
+ * tests run green with no test changed, lets production writes in that checkout through probity.sh
+ * unjudged for 30 minutes, tests excepted, and closes on the same tests, `tsc` and ESLint, rolling
+ * the source back if any fails. REFACTOR_RULE below stays for a refactor made without the window.
  */
 /**
  * The default rule that gates production code on an observed failing test is

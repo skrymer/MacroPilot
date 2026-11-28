@@ -20,7 +20,9 @@
 #   `git pull`/`switch` move HEAD with the files); a lone `prettier --write` or `eslint --fix`,
 #   which reformat but add no behaviour, and only when nothing is chained onto them; and, while a
 #   merge, rebase, cherry-pick or revert is stopped on a conflict, an unmerged file or one left as
-#   the merge staged it, which a rollback would silently resolve to one side.
+#   the merge staged it, which a rollback would silently resolve to one side; and what a red
+#   `refactor.mjs close` restored to the window's start, which it records in the git dir as
+#   `refactor-window-restored` and the next `post` in that checkout consumes.
 # - Deleting source under src/ or app/ is let through when the command does nothing else that is rolled
 #   back, since Edit and Write cannot delete: write the new file first, then delete the old. A test, a
 #   lint rule or the lint config is put back, and Claude is told to ask the user.
@@ -108,6 +110,14 @@ rollback() {
   if [ -n "$merging" ]; then
     while read -r p; do unmerged[$p]=1; done < <(git -C "$root" -c core.quotePath=false diff --name-only --diff-filter=U)
   fi
+  # What a red `refactor.mjs close` put back is its rollback, not a write: it is let through once.
+  local record
+  local -A restored=()
+  record="$(git -C "$root" rev-parse --path-format=absolute --git-path refactor-window-restored)"
+  if [ -f "$record" ]; then
+    while IFS=$'\t' read -r p blob; do [ -n "$p" ] && restored[$p]="$blob"; done <"$record"
+    rm -f "$record"
+  fi
   while IFS=$'\t' read -r p blob; do before[$p]="$blob"; done < <(tail -n +2 "$file")
   # A config the command removed or emptied leaves nothing to compare against: judge nothing.
   after_list="$(hashes "$root")" || return
@@ -119,6 +129,7 @@ rollback() {
     [ "${before[$p]:-}" = "${after[$p]:-}" ] && continue
     head="$(git -C "$root" rev-parse -q --verify "HEAD:$p" 2>/dev/null)"
     [ "${after[$p]:-}" = "$head" ] && continue
+    [ -n "${restored[$p]+set}" ] && [ "${restored[$p]}" = "${after[$p]:-}" ] && continue
     if [ -n "$merging" ]; then
       [ -n "${unmerged[$p]:-}" ] && continue
       [ "${after[$p]:-}" = "$(git -C "$root" rev-parse -q --verify ":$p" 2>/dev/null)" ] && continue
@@ -149,10 +160,17 @@ rollback() {
 }
 
 mode="${1:-}"
-if [ "$mode" = globs ]; then
-  globs "$2"
-  exit 0
-fi
+case "$mode" in
+  globs)
+    globs "$2"
+    exit 0
+    ;;
+  hashes)
+    # refactor.mjs snapshots the guarded files by this, so the window and the guard share one set.
+    hashes "$2" "${@:3}"
+    exit
+    ;;
+esac
 if ! command -v jq >/dev/null; then
   echo "No jq, so a Bash write to production code cannot be caught: install jq." >&2
   exit 2
