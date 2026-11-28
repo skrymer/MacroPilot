@@ -1,4 +1,4 @@
-import { againstBudget, dayVerdict } from './verdict';
+import { againstBudget, againstFloor, dayVerdict } from './verdict';
 
 const TARGETS = { budgetKcal: 2000, proteinFloorG: 150 };
 const day = (calories: number, protein: number | undefined) => ({
@@ -82,5 +82,67 @@ describe('againstBudget', () => {
 
     // Then it is 200 kcal over, and the whole budget is eaten
     expect(standing).toEqual({ kcal: 200, over: true, share: 1 });
+  });
+});
+
+describe('againstFloor', () => {
+  it('says how much protein is still to go, and the share of the floor reached', () => {
+    // Given a floor of 132 g
+
+    // When a day whose every entry states its protein, 63 g in all, is set against it
+    const standing = againstFloor({ protein: 63, proteinStated: 'all' }, 132);
+
+    // Then 69 g are to go, and 63/132 of the floor is reached
+    expect(standing).toEqual({ standing: 'to go', grams: 69, share: 63 / 132 });
+  });
+
+  it('meets the floor at exactly the floor, the whole of it reached', () => {
+    // Given a floor of 132 g
+
+    // When a day of exactly 132 g, every entry stating it, is set against it
+    const standing = againstFloor({ protein: 132, proteinStated: 'all' }, 132);
+
+    // Then the floor is met
+    expect(standing).toEqual({ standing: 'met', share: 1 });
+  });
+
+  it('says what is known of protein some entries left out, and never what is to go', () => {
+    // Given a floor of 132 g
+
+    // When a day where only some entries state protein, 40 g of them, is set against it
+    const standing = againstFloor({ protein: 40, proteinStated: 'some' }, 132);
+
+    // Then at least 40 g are known, the share drawn to them
+    expect(standing).toEqual({ standing: 'at least', grams: 40, share: 40 / 132 });
+  });
+
+  it('says protein nobody stated is not stated, never 0 g and never what is to go', () => {
+    // Given a floor of 132 g
+
+    // When a day whose entries state no protein is set against it
+    const standing = againstFloor({ protein: undefined, proteinStated: 'none' }, 132);
+
+    // Then it is not stated, and nothing is drawn
+    expect(standing).toEqual({ standing: 'not stated', share: 0 });
+  });
+
+  it('meets the floor with at least as much as it, though some entries left protein out', () => {
+    // Given a floor of 132 g
+
+    // When a day where only some entries state protein, 140 g of them, is set against it
+    const standing = againstFloor({ protein: 140, proteinStated: 'some' }, 132);
+
+    // Then the floor is met, at least that being enough
+    expect(standing).toEqual({ standing: 'met', share: 1 });
+  });
+
+  it('says an empty day has the whole floor to go, its 0 g known', () => {
+    // Given a floor of 132 g
+
+    // When a day with nothing logged, 0 g known, is set against it
+    const standing = againstFloor({ protein: 0, proteinStated: 'all' }, 132);
+
+    // Then all 132 g are to go, and nothing is drawn
+    expect(standing).toEqual({ standing: 'to go', grams: 132, share: 0 });
   });
 });

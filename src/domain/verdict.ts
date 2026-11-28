@@ -18,6 +18,22 @@ export function againstBudget(calories: number, budgetKcal: number) {
   };
 }
 
+/**
+ * A day's Known protein against its Protein Floor, in g: how much is still to go, and the share of
+ * the floor reached, at most all of it.
+ */
+export function againstFloor(totals: Pick<Totals, 'protein' | 'proteinStated'>, floorG: number) {
+  // Protein nobody stated is not known to be anything; it is never 0 g.
+  const protein = totals.protein;
+  if (protein === undefined) return { standing: 'not stated', share: 0 };
+  if (protein >= floorG) return { standing: 'met', share: 1 };
+  // What some entries left out is not known, so how much is still to go is not either.
+  if (totals.proteinStated === 'some') {
+    return { standing: 'at least', grams: protein, share: protein / floorG };
+  }
+  return { standing: 'to go', grams: floorG - protein, share: protein / floorG };
+}
+
 /** Judges a day's totals against the targets of the review it is held to. */
 export function dayVerdict(
   totals: Totals,
