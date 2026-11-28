@@ -879,3 +879,150 @@ describe('gate-pipe-guard.sh', () => {
     expect(status).toBe(0);
   });
 });
+
+const REFACTOR = path.join(__dirname, 'refactor.mjs');
+
+/** A guarded checkout whose Jest, tsc and ESLint pass, and whose probity refuses every write, saying it ran. */
+const windowCheckout = () => {
+  const root = guardedCheckout();
+  for (const tool of ['jest', 'tsc', 'eslint']) standIn(root, tool, 'exit 0');
+  standIn(root, 'probity', 'echo "probity ran in $PWD" >&2\nexit 2');
+  return root;
+};
+
+/** Runs `refactor.mjs` with `args` in `root`, the clock reading `now` when given. */
+const refactorWindow = (root: string, args: string[], now?: number) =>
+  spawnSync('node', [REFACTOR, ...args], {
+    cwd: root,
+    env: { ...ISOLATED, ...(now === undefined ? {} : { REFACTOR_NOW: String(now) }) },
+    encoding: 'utf8',
+  });
+
+/** Runs probity.sh on an Edit of `file` in `root`, from a session in `projectDir`. */
+const editIn = (root: string, file: string, env: Record<string, string> = {}, projectDir = root) =>
+  runHook(
+    PROBITY,
+    [],
+    JSON.stringify({ tool_name: 'Edit', tool_input: { file_path: path.join(root, file) } }),
+    projectDir,
+    env,
+  );
+
+describe('probity.sh in a refactor window', () => {
+  it('lets a production write through unjudged while the window is open', () => {
+    // Given an open window in a checkout whose probity refuses everything
+    const root = windowCheckout();
+    refactorWindow(root, ['open', 'src/a.test.ts']);
+
+    // When src/a.ts is edited
+    const { status, stderr } = editIn(root, 'src/a.ts');
+
+    // Then the write goes through without probity, and says the window let it
+    expect(status).toBe(0);
+    expect(stderr).not.toContain('probity ran');
+    expect(stderr).toContain('refactor window');
+  });
+
+  it('judges again once the window is closed', () => {
+    // Given a window opened and closed
+    const root = windowCheckout();
+    refactorWindow(root, ['open', 'src/a.test.ts']);
+    refactorWindow(root, ['close']);
+
+    // When src/a.ts is edited
+    const { status, stderr } = editIn(root, 'src/a.ts');
+
+    // Then probity judges it
+    expect(stderr).toContain('probity ran');
+    expect(status).toBe(2);
+  });
+
+  it.each([
+    [30 * 60 - 1, false],
+    [30 * 60, true],
+  ])('judges, %i seconds after the window opened: %s', (elapsed, judged) => {
+    // Given a window opened at a known time
+    const root = windowCheckout();
+    refactorWindow(root, ['open', 'src/a.test.ts'], 1_000_000);
+
+    // When src/a.ts is edited that many seconds later
+    const { stderr } = editIn(root, 'src/a.ts', { REFACTOR_NOW: String(1_000_000 + elapsed) });
+
+    // Then probity judges it only once 30 minutes have passed
+    expect(stderr.includes('probity ran')).toBe(judged);
+  });
+
+  it.each([['src/a.test.ts'], ['src/new/b.test.tsx']])(
+    'judges a write to the test %s even while the window is open',
+    (file) => {
+      // Given an open window
+      const root = windowCheckout();
+      refactorWindow(root, ['open', 'src/a.test.ts']);
+
+      // When a test is written
+      const { status, stderr } = editIn(root, file);
+
+      // Then probity judges it
+      expect(stderr).toContain('probity ran');
+      expect(status).toBe(2);
+    },
+  );
+
+  it('opens no window in another checkout than the one it was opened in', () => {
+    // Given a window open in one checkout, and a session in it
+    const opened = windowCheckout();
+    const other = windowCheckout();
+    refactorWindow(opened, ['open', 'src/a.test.ts']);
+
+    // When a file in the other checkout is edited from that session
+    const { status, stderr } = editIn(other, 'src/a.ts', {}, opened);
+
+    // Then the other checkout's probity judges it
+    expect(stderr).toContain(`probity ran in ${other}`);
+    expect(status).toBe(2);
+  });
+});
+
+describe('bash-write-guard.sh and the refactor window', () => {
+  /** What src/a.ts holds when the window opens: an Edit since HEAD, so a restore is not a revert. */
+  const AT_OPEN = 'export const a = 0 + 1;\n';
+
+  /**
+   * A checkout whose window closed red through the guard: src/a.ts edited before it opened and again
+   * in it, src/c.ts created in it.
+   */
+  const closedRed = () => {
+    const root = windowCheckout();
+    writeFileSync(path.join(root, 'src/a.ts'), AT_OPEN);
+    refactorWindow(root, ['open', 'src/a.test.ts']);
+    writeFileSync(path.join(root, 'src/a.ts'), 'export const a = 2 - 1;\n');
+    writeFileSync(path.join(root, 'src/c.ts'), ORIGINAL);
+    standIn(root, 'jest', 'exit 1');
+    return { root, closed: guarded(`node ${REFACTOR} close`, root) };
+  };
+
+  it('lets a red close roll the source back to the window’s start, though that is not HEAD', () => {
+    // Given an open window over an uncommitted edit, a file changed and one created in it, and tests that now fail
+
+    // When the window is closed through Bash, under the guard
+    const { root, closed } = closedRed();
+
+    // Then the rollback stands: the guard put nothing back
+    expect(closed.stderr).not.toContain('Rolled back');
+    expect(closed.status).toBe(0);
+    expect(srcA(root)).toBe(AT_OPEN);
+    expect(existsSync(path.join(root, 'src/c.ts'))).toBe(false);
+  });
+
+  it('still rolls back a Bash write after a window’s rollback', () => {
+    // Given a window that closed red through the guard
+    const { root } = closedRed();
+
+    // When a later Bash command writes src/a.ts
+    const { status } = guarded('echo "export const a = 2;" > src/a.ts', root);
+
+    // Then the guard rolls it back
+    expect(status).toBe(2);
+    expect(srcA(root)).toBe(AT_OPEN);
+  });
+});
