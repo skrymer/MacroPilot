@@ -1,4 +1,4 @@
-import { screen, userEvent, waitFor } from '@testing-library/react-native';
+import { act, screen, userEvent, waitFor } from '@testing-library/react-native';
 import { Stack } from 'expo-router';
 import { renderRouter } from 'expo-router/testing-library';
 import type { ReactNode } from 'react';
@@ -69,5 +69,33 @@ describe('The grams form’s over line', () => {
         screen.queryByText(/^This puts you about 33\skcal over your 1840\skcal budget\.$/),
       ).toBeOnTheScreen(),
     );
+  });
+
+  it('judges against the new day once midnight passes with the form open', async () => {
+    // Given 1520 kcal logged on the 28th against 1840, the form open at 23:59:50 with 120 g typed
+    const stores = await aDay();
+    const clock = new ScriptedClock();
+    clock.advance(Date.UTC(2026, 10, 28, 23, 59, 50));
+    const [oats] = await stores.foods.list();
+    await renderRouter(
+      { _layout: () => <Stack />, 'log-food': LogFood },
+      {
+        initialUrl: `/log-food?id=${oats?.id}`,
+        wrapper: ({ children }: { children: ReactNode }) => (
+          <TestProviders {...stores} clock={clock}>
+            {children}
+          </TestProviders>
+        ),
+      },
+    );
+    const user = userEvent.setup();
+    await user.type(await screen.findByLabelText('Weight (g)'), '120');
+    await screen.findByText(/^This puts you about 33\skcal over/);
+
+    // When midnight passes, and the screen looks at the clock again
+    await act(() => clock.advance(20_000));
+
+    // Then the 29th has nothing logged, and 352.8 kcal is under its budget: no line
+    await waitFor(() => expect(screen.queryByText(/^This puts you about/)).not.toBeOnTheScreen());
   });
 });
