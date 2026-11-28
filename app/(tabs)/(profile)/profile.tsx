@@ -9,7 +9,7 @@ import { Notice } from '@/components/Notice';
 import { SEXES, TRACKING, wordsOf } from '@/components/profileWords';
 import { Text } from '@/components/Text';
 import { Unreadable } from '@/components/Unreadable';
-import { dailyDeficit } from '@/domain/goal';
+import { dailyDeficit, leavesFood } from '@/domain/goal';
 import type { Profile as Details } from '@/domain/profile';
 import { reviewFor } from '@/domain/review';
 import { useToday } from '@/lifecycle/useToday';
@@ -68,7 +68,9 @@ function GoalCard() {
                 {`${goal.startKg.toFixed(1)} → ${kg(goal.targetKg)}`}
               </Text>
               <Text className="font-language text-label text-ink-mid">
-                {`${kgAWeek(goal.rateKgPerWeek)}, ${kcal(dailyDeficit(goal.rateKgPerWeek))} a day under maintenance`}
+                {leavesFood(goal.rateKgPerWeek, heldTo.maintenanceKcal)
+                  ? `${kgAWeek(goal.rateKgPerWeek)}, ${kcal(dailyDeficit(goal.rateKgPerWeek))} a day under maintenance`
+                  : `${kgAWeek(goal.rateKgPerWeek)} asks ${kcal(dailyDeficit(goal.rateKgPerWeek))} a day, more than your maintenance of ${kcal(heldTo.maintenanceKcal)}: no deficit is applied`}
               </Text>
             </View>
             <Button label="Change goal" onPress={() => router.navigate('/goal')} secondary />

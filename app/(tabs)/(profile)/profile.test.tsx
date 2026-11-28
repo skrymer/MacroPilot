@@ -148,6 +148,28 @@ describe('Profile’s goal card', () => {
     ).toBeOnTheScreen();
   });
 
+  it('says no deficit is applied while maintenance cannot carry the goal’s rate', async () => {
+    // Given today's review of a maintenance of 1535 kcal, and a goal of 1.4 kg a week (1540 a day)
+    const profile = new InMemoryProfileStore();
+    await profile.save({ sex: 'female', born: '1996-11-28', heightCm: 150, countsCalories: true });
+    const weighIns = new InMemoryWeighInStore();
+    await weighIns.save({ day: '2026-11-28', kg: 47 });
+    const reviews = new InMemoryReviewStore();
+    await reviews.save({ ...REVIEW, trendKg: 47, maintenanceKcal: 1535, budgetKcal: 1535 });
+    const goals = new InMemoryGoalStore();
+    await goals.save({ setOn: '2026-11-20', startKg: 50, targetKg: 45, rateKgPerWeek: 1.4 });
+
+    // When the user opens Profile
+    await openProfile(profile, weighIns, reviews, goals);
+
+    // Then the card says what the rate asks against maintenance, and that no deficit is applied
+    expect(
+      await screen.findByText(
+        /^1\.4\skg a week asks 1540\skcal a day, more than your maintenance of 1535\skcal: no deficit is applied$/,
+      ),
+    ).toBeOnTheScreen();
+  });
+
   it('reads the goal again on Retry, and shows the card once it can be read', async () => {
     // Given Profile opened over a goal store that could not be read, and since can be
     const profile = new InMemoryProfileStore();
