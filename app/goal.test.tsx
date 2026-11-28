@@ -148,6 +148,20 @@ describe('The goal form', () => {
     expect(screen.queryByLabelText('Target weight (kg)')).not.toBeOnTheScreen();
   });
 
+  it('says it could not load the goal, with a way to try again, when the read fails', async () => {
+    // Given Setup complete over a goal store that cannot be read
+    const stores = await setUp();
+    stores.goals.unreadable = true;
+
+    // When the goal form is opened
+    await openApp('/goal', stores);
+
+    // Then it says so and offers to retry, and no field is shown
+    await waitFor(() => expect(screen.queryByText('Couldn’t load your goal')).toBeOnTheScreen());
+    expect(screen.getByRole('button', { name: 'Retry' })).toBeOnTheScreen();
+    expect(screen.queryByLabelText('Target weight (kg)')).not.toBeOnTheScreen();
+  });
+
   it('re-runs today’s review, so today’s budget drops by the goal’s deficit at once', async () => {
     // Given Setup complete, and the form with a goal of 75 kg at 0.5 kg a week (550 kcal a day)
     const stores = await setUp();

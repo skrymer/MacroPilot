@@ -10,6 +10,7 @@ import { FormHeader } from '@/components/FormHeader';
 import { FormPage } from '@/components/FormPage';
 import { goalForm } from '@/components/goalForm';
 import { Text } from '@/components/Text';
+import { Unreadable } from '@/components/Unreadable';
 import { useFirstFault } from '@/components/useFirstFault';
 import { useRunReview } from '@/components/useRunReview';
 import { useSave } from '@/components/useSave';
@@ -107,7 +108,15 @@ export default function GoalPage() {
   const today = useToday();
   const { weighIns } = useWeighIns();
   const { reviews } = useReviews();
-  const { goal } = useGoal();
+  const { goal, readAgain } = useGoal();
+  if (goal === 'unreadable') {
+    return (
+      <View className="flex-1 bg-ground p-page">
+        <FormHeader title="Set a goal" onCancel={() => router.dismissTo('/profile')} />
+        <Unreadable words="Couldn’t load your goal" onRetry={() => void readAgain()} />
+      </View>
+    );
+  }
   if (!Array.isArray(weighIns) || !Array.isArray(reviews) || !Array.isArray(goal)) return null;
   const trendKg = trendWeight(weighIns);
   // The maintenance today is held to: a Goal is refused when its deficit would reach it.
