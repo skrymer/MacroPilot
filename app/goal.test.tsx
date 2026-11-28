@@ -176,6 +176,20 @@ describe('The goal form', () => {
     expect(screen.queryByLabelText('Target weight (kg)')).not.toBeOnTheScreen();
   });
 
+  it('says it could not load, with a way to try again, when the reviews cannot be read', async () => {
+    // Given Setup complete over a review store that cannot be read
+    const stores = await setUp();
+    stores.reviews.unreadable = true;
+
+    // When the goal form is opened
+    await openApp('/goal', stores);
+
+    // Then it says so and offers to retry, and no field is shown
+    await waitFor(() => expect(screen.queryByText('Couldn’t load your goal')).toBeOnTheScreen());
+    expect(screen.getByRole('button', { name: 'Retry' })).toBeOnTheScreen();
+    expect(screen.queryByLabelText('Target weight (kg)')).not.toBeOnTheScreen();
+  });
+
   it('asks for a target and a rate when they are left blank, and sets nothing', async () => {
     // Given the form with nothing typed
     const stores = await setUp();

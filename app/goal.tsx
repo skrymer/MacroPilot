@@ -107,12 +107,13 @@ export default function GoalPage() {
   const router = useRouter();
   const today = useToday();
   const { weighIns, readAgain: readWeighInsAgain } = useWeighIns();
-  const { reviews } = useReviews();
+  const { reviews, readAgain: readReviewsAgain } = useReviews();
   const { goal, readAgain } = useGoal();
-  if (goal === 'unreadable' || weighIns === 'unreadable') {
+  if (goal === 'unreadable' || weighIns === 'unreadable' || reviews === 'unreadable') {
     const retry = () => {
       void readAgain();
       void readWeighInsAgain();
+      void readReviewsAgain();
     };
     return (
       <View className="flex-1 bg-ground p-page">
