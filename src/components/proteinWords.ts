@@ -1,4 +1,4 @@
-import type { AgainstFloor } from '@/domain/verdict';
+import { keptGrams, type AgainstFloor } from '@/domain/verdict';
 
 import { grams, spokenGrams } from './figures';
 
@@ -12,7 +12,7 @@ export function proteinWords(against: AgainstFloor, floorG: number) {
     case 'at least': {
       // What is known down and the floor up: a floor not yet met never reads as reached.
       const known = Math.floor(against.grams);
-      const floor = Math.ceil(floorG);
+      const floor = Math.ceil(keptGrams(floorG));
       return {
         shown: `at least ${grams(known)}, floor ${grams(floor)}`,
         spoken: `at least ${spokenGrams(known)} of protein, floor ${spokenGrams(floor)}`,

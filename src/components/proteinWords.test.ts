@@ -73,4 +73,18 @@ describe('proteinWords', () => {
     // Then the floor is said rounded up, above what is known
     expect(words.shown).toMatch(/^at least 164\sg, floor 165\sg$/);
   });
+
+  it('says a floor its arithmetic left a hair above a whole gram as that gram', () => {
+    // Given a day where at least 100 g are known, under a floor of 124 g kept as 124.00000000000001
+
+    // When its protein is put in words
+    const words = proteinWords(
+      { standing: 'at least', grams: 100, share: 100 / 124 },
+      124.00000000000001,
+    );
+
+    // Then the floor is 124 g, each figure joined to its unit by a no-break space
+    const nbsp = String.fromCharCode(0xa0);
+    expect(words.shown).toBe(`at least 100${nbsp}g, floor 124${nbsp}g`);
+  });
 });

@@ -145,4 +145,14 @@ describe('againstFloor', () => {
     // Then all 132 g are to go, and nothing is drawn
     expect(standing).toEqual({ standing: 'to go', grams: 132, share: 0 });
   });
+
+  it('judges protein in grams free of the arithmetic’s noise, as they were logged', () => {
+    // Given a floor of 124 g that a trend's arithmetic left as 124.00000000000001
+
+    // When a day of 100 g, every entry stating it, is set against it
+    const standing = againstFloor({ protein: 100, proteinStated: 'all' }, 124.00000000000001);
+
+    // Then exactly 24 g are to go
+    expect(standing).toEqual({ standing: 'to go', grams: 24, share: 100 / 124 });
+  });
 });
