@@ -416,20 +416,12 @@ export default function Design() {
       </Text>
       <AppearanceSwitch />
       {__DEV__ ? (
-        <>
-          <Link
-            href="/prototype/profile"
-            className="font-language-bold text-body text-ink underline"
-          >
-            Profile prototype
-          </Link>
-          <Link
-            href="/prototype/over-line"
-            className="font-language-bold text-body text-ink underline"
-          >
-            Over line prototype
-          </Link>
-        </>
+        <Link
+          href="/prototype/over-line"
+          className="font-language-bold text-body text-ink underline"
+        >
+          Over line prototype
+        </Link>
       ) : null}
 
       <Section
