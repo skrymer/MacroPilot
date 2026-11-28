@@ -100,6 +100,48 @@ describe('Profile’s goal card', () => {
     ).toBeOnTheScreen();
     expect(screen.getByRole('button', { name: 'Set a goal' })).toBeOnTheScreen();
   });
+
+  it('shows the goal set: start to target, and its rate and deficit', async () => {
+    // Given Setup complete, and a goal of 75 kg at 0.5 kg a week set from 82 kg
+    const profile = new InMemoryProfileStore();
+    await profile.save({ sex: 'male', born: '1996-11-28', heightCm: 181, countsCalories: true });
+    const weighIns = new InMemoryWeighInStore();
+    await weighIns.save({ day: '2026-11-28', kg: 82 });
+    const reviews = new InMemoryReviewStore();
+    await reviews.save(REVIEW);
+    const goals = new InMemoryGoalStore();
+    await goals.save({ setOn: '2026-11-28', startKg: 82, targetKg: 75, rateKgPerWeek: 0.5 });
+
+    // When the user opens Profile
+    await openProfile(profile, weighIns, reviews, goals);
+
+    // Then the card shows it, with a way to change it
+    expect(await screen.findByText(/^82\.0 → 75\.0\skg$/)).toBeOnTheScreen();
+    expect(
+      screen.getByText(/^0\.5\skg a week, 550\skcal a day under maintenance$/),
+    ).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Change goal' })).toBeOnTheScreen();
+  });
+
+  it('says the goal could not be read, with a way to try again, and still shows the details', async () => {
+    // Given Setup complete over a goal store that cannot be read
+    const profile = new InMemoryProfileStore();
+    await profile.save({ sex: 'male', born: '1996-11-28', heightCm: 181, countsCalories: true });
+    const weighIns = new InMemoryWeighInStore();
+    await weighIns.save({ day: '2026-11-28', kg: 82 });
+    const reviews = new InMemoryReviewStore();
+    await reviews.save(REVIEW);
+    const goals = new InMemoryGoalStore();
+    goals.unreadable = true;
+
+    // When the user opens Profile
+    await openProfile(profile, weighIns, reviews, goals);
+
+    // Then the goal card says so and offers to retry, above the details
+    await screen.findByLabelText('Sex, Male');
+    expect(screen.queryByText('Couldn’t load your goal')).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Retry' })).toBeOnTheScreen();
+  });
 });
 
 describe('Profile', () => {

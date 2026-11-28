@@ -39,7 +39,17 @@ function GoalCard() {
   const router = useRouter();
   const today = useToday();
   const { reviews } = useReviews();
-  const { goal: found } = useGoal();
+  const { goal: found, readAgain } = useGoal();
+  if (found === 'unreadable') {
+    return (
+      <>
+        <Text accessibilityRole="header" className="font-language-bold text-body text-ink">
+          Goal
+        </Text>
+        <Unreadable words="Couldn’t load your goal" onRetry={() => void readAgain()} />
+      </>
+    );
+  }
   if (!Array.isArray(reviews) || !Array.isArray(found)) return null;
   // The review today is held to, which there is only once Setup is complete.
   const heldTo = reviewFor(reviews, today);
