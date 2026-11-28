@@ -9,5 +9,5 @@
 - **Profile's goal card** while suspended: A says *1.4 kg a week asks 1540 kcal a day, more than your maintenance of 1535 kcal: no deficit is applied*; B and C put the pause sign before *1.4 kg a week · no deficit applied: your maintenance of 1535 kcal can't carry 1540 kcal a day*.
 **The floating bar:** the variant; the page (*Today*, *Profile*); *Hide bar* for a clean photo. The day: a woman of 150 cm and 47 kg, maintenance 1535 kcal, a Goal of 1.4 kg a week (1540 kcal a day), 820 kcal and 61 g of protein logged.
 **Settled while grilling:** the rule and its words, from the reference app (`SuspendedDeficitBanner.vue`); the pause sign rather than a warning, in `ink-mid`, so it is neither a fault nor a standing.
-**Verdict:**
+**Verdict (28 Nov 2026):** **A** — a card of its own above the ring on Today, and Profile's card spelling the rate's demand against maintenance. Chosen by the user.
 **Teardown:** `app/prototype/suspended.tsx`, `app/prototype/_layout.tsx`, this file, the link in `app/design.tsx`; then `app/prototype/` is empty, so `exempt.sh off`.
