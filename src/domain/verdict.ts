@@ -38,6 +38,7 @@ export function againstFloor(
   const share = protein / floor;
   // What some entries left out is not known, so how much is still to go is not either.
   if (totals.proteinStated === 'some') return { standing: 'at least', grams: protein, share };
+  // Kept again: subtracting two kept figures leaves noise of its own (124.3 − 100.1 = 24.19999…).
   return { standing: 'to go', grams: keptGrams(floor - protein), share };
 }
 
