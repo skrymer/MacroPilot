@@ -22,7 +22,7 @@ import { useDelete } from '@/components/useDelete';
 import { SuspendedCard } from '@/components/SuspendedCard';
 import { useFailedInView } from '@/components/useFailedInView';
 import { totalsOf, type Totals as DayTotals } from '@/domain/dailyLog';
-import { leavesFood } from '@/domain/goal';
+import { isSuspended } from '@/domain/goal';
 import { reviewFor, type Review } from '@/domain/review';
 import { missingForSetup } from '@/domain/setup';
 import { shownName } from '@/domain/shownName';
@@ -241,10 +241,7 @@ export default function Today() {
   const { goal } = useGoal();
   // A running Goal whose deficit the maintenance today is held to cannot carry: none is taken.
   const running = Array.isArray(goal) ? goal[0] : undefined;
-  const suspended =
-    heldTo !== undefined &&
-    running !== undefined &&
-    !leavesFood(running.rateKgPerWeek, heldTo.maintenanceKcal);
+  const suspended = heldTo !== undefined && isSuspended(running, heldTo.maintenanceKcal);
   const weighedToday = Array.isArray(weighIns) ? weighInOn(weighIns, day) : undefined;
   // An entry can be written after the user has come here from its form.
   const [logged] = useLogged();
