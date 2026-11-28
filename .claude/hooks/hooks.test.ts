@@ -136,6 +136,24 @@ describe('lint-edited-file.sh', () => {
     expect(stderr).toContain('prettier ran with --check');
     expect(stderr).not.toContain('eslint ran');
   });
+
+  it('says to write a stub first when a test imports a module that does not exist yet', () => {
+    // Given a checkout whose ESLint reports a test's import as unresolved
+    const root = checkout([]);
+    standIn(
+      root,
+      'eslint',
+      `echo "1:30  error  Unable to resolve path to module './b'  import/no-unresolved"\nexit 1`,
+    );
+    writeFileSync(path.join(root, 'src/b.test.ts'), "import { b } from './b';\n");
+
+    // When the hook runs on that test
+    const { status, stderr } = hook(LINT, path.join(root, 'src/b.test.ts'), root);
+
+    // Then it says the next write is a stub the assertion rejects
+    expect(status).toBe(2);
+    expect(stderr).toContain('stub');
+  });
 });
 
 /** Every hook command `.claude/settings.json` configures, as Claude Code runs it. */

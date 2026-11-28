@@ -21,6 +21,12 @@ case "$file" in
     fi
     if ! report="$(node_modules/.bin/eslint --no-warn-ignored "$file" 2>&1)"; then
       echo "$report" >&2
+      # A test's import that does not resolve is not a red: probity takes the behaviour only after an
+      # assertion has failed, so the module comes first as a stub its assertion rejects.
+      if [[ "$file" =~ \.test\.tsx?$ ]] && grep -q 'import/no-unresolved' <<<"$report"; then
+        echo "Write the module first as a stub returning a value the assertion rejects, run the test to" >&2
+        echo "see it fail on that assertion, then write the behaviour (rn-dev, Test strategy)." >&2
+      fi
       exit 2
     fi
     ;;
