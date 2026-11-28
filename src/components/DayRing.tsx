@@ -56,7 +56,7 @@ export function DayRing({
             strokeWidth={8}
             stroke={tint.within}
             fill="none"
-            strokeLinecap="round"
+            strokeLinecap={PROTEIN_AROUND * (1 - proteinShare) < 2 * 8 ? 'butt' : 'round'}
             strokeDasharray={`${PROTEIN_AROUND * proteinShare} ${PROTEIN_AROUND}`}
             rotation={-90}
             origin={`${RING / 2}, ${RING / 2}`}
@@ -71,7 +71,8 @@ export function DayRing({
             strokeWidth={14}
             stroke={tint[standing]}
             fill="none"
-            strokeLinecap="round"
+            // Round ends that would meet across a small gap read as a fault, so they are flat there.
+            strokeLinecap={AROUND * (1 - share) < 2 * 14 ? 'butt' : 'round'}
             strokeDasharray={`${AROUND * share} ${AROUND}`}
             rotation={-90}
             origin={`${RING / 2}, ${RING / 2}`}
