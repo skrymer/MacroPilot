@@ -105,7 +105,8 @@ function RingCard({
   const about = totals.estimated;
   const kind = about ? 'estimated' : 'weighed';
   // Protein's standing in words, never in hue alone (DESIGN.md, *Signature: the rings*).
-  const protein = proteinWords(againstFloor(totals, review.proteinFloorG), review.proteinFloorG);
+  const floor = againstFloor(totals, review.proteinFloorG);
+  const protein = proteinWords(floor, review.proteinFloorG);
   return (
     <View className="rounded-card bg-surface p-grid-2">
       <View
@@ -113,7 +114,7 @@ function RingCard({
         accessibilityLabel={`${verdict.words}, ${about ? 'about ' : ''}${centre} ${unit}, ${protein.spoken}`}
         className="items-center"
       >
-        <DayRing share={share} standing={standing}>
+        <DayRing share={share} proteinShare={floor.share} standing={standing}>
           {about ? <Text className="font-language text-label text-ink-mid">about</Text> : null}
           <Text
             className={`text-figure ${
