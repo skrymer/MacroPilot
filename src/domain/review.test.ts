@@ -54,6 +54,18 @@ describe('reviewDue', () => {
     // Then none is, rather than a budget below nothing
     expect(due).toBeUndefined();
   });
+
+  it('runs none from details that seed a maintenance of exactly 0', () => {
+    // Given a man of 46 and 4 cm, weighed at 20 kg: a seed of 1.4 × (200 + 25 − 230 + 5)
+    const profile = { sex: 'male', born: '1980-11-28', heightCm: 4, countsCalories: true } as const;
+    const weighIns = [{ day: '2026-11-28', kg: 20 }];
+
+    // When it is asked whether the first review is due
+    const due = reviewDue({ profile, weighIns, reviews: [], today: '2026-11-28' });
+
+    // Then none is
+    expect(due).toBeUndefined();
+  });
 });
 
 const REVIEW = { trendKg: 82, maintenanceKcal: 2400, budgetKcal: 2400, proteinFloorG: 164 };
