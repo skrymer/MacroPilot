@@ -314,6 +314,40 @@ describe('The goal form', () => {
     });
   });
 
+  it('sets the goal on the day it is pressed, when midnight has passed since the form opened', async () => {
+    // Given the form filled at 23:59:30 on 28 November, on a clock the test holds
+    const stores = await setUp();
+    const clock = new ScriptedClock();
+    clock.advance(Date.UTC(2026, 10, 28, 23, 59, 30));
+    await renderRouter(
+      { _layout: () => <Stack />, '(tabs)/(profile)/profile': Profile, goal: Goal },
+      {
+        initialUrl: '/goal',
+        wrapper: ({ children }: { children: ReactNode }) => (
+          <TestProviders {...stores} clock={clock}>
+            {children}
+          </TestProviders>
+        ),
+      },
+    );
+    const user = userEvent.setup();
+    await user.type(await screen.findByLabelText('Target weight (kg)'), '75');
+    await user.type(screen.getByLabelText('Rate (kg a week)'), '0,5');
+
+    // When it is set a second after midnight, before the screen has looked at the clock again
+    clock.sleep(31_000);
+    await user.press(screen.getByRole('button', { name: 'Set goal' }));
+
+    // Then the Goal is set on 29 November, and that day's review is run; the 28th keeps its own
+    await waitFor(async () => expect((await stores.goals.read())?.setOn).toBe('2026-11-29'));
+    await waitFor(async () =>
+      expect((await stores.reviews.list()).map(({ day }) => day)).toEqual([
+        '2026-11-28',
+        '2026-11-29',
+      ]),
+    );
+  });
+
   it('re-runs today’s review, so today’s budget drops by the goal’s deficit at once', async () => {
     // Given Setup complete, and the form with a goal of 75 kg at 0.5 kg a week (550 kcal a day)
     const stores = await setUp();

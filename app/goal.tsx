@@ -18,6 +18,8 @@ import { useSave } from '@/components/useSave';
 import { type Goal, newGoal } from '@/domain/goal';
 import { newReview, reviewFor } from '@/domain/review';
 import { trendWeight } from '@/domain/trend';
+import { useClock } from '@/lifecycle/ClockContext';
+import { dayAt } from '@/lifecycle/dayAt';
 import { useToday } from '@/lifecycle/useToday';
 import { useGoalStore } from '@/storage/GoalStoreContext';
 import { useGoal } from '@/storage/useGoal';
@@ -41,7 +43,7 @@ function GoalForm({
   const router = useRouter();
   const goals = useGoalStore();
   const runReview = useRunReview();
-  const today = useToday();
+  const clock = useClock();
   const {
     control,
     handleSubmit,
@@ -60,6 +62,9 @@ function GoalForm({
   const save = useSave({
     form: { handleSubmit, setError },
     write: async (said) => {
+      // The day the Goal is set is the day it is pressed, which midnight may have passed since the
+      // screen last looked at the clock.
+      const today = dayAt(clock, clock.now());
       await goals.save(newGoal(said, { trendKg, maintenanceKcal }, today));
       await runReview(today, false, true);
     },
