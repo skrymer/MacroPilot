@@ -42,6 +42,14 @@ export const MAX_RATE_KG_A_WEEK = 1.5;
 export const isRate = (rateKgPerWeek: number) =>
   rateKgPerWeek >= MIN_RATE_KG_A_WEEK && rateKgPerWeek <= MAX_RATE_KG_A_WEEK;
 
+/** Which end of the rates a rate, in kg a week, is past: slower than the least, or faster than the most. */
+export const ratePast = (rateKgPerWeek: number): 'least' | 'most' | undefined =>
+  rateKgPerWeek < MIN_RATE_KG_A_WEEK
+    ? 'least'
+    : rateKgPerWeek > MAX_RATE_KG_A_WEEK
+      ? 'most'
+      : undefined;
+
 /** In kg: a weight to lose down to, from the Trend Weight. */
 export const isTarget = (targetKg: number, trendKg: number) => targetKg > 0 && targetKg < trendKg;
 

@@ -1,4 +1,4 @@
-import { dailyDeficit, isRate, isTarget, leavesFood, newGoal } from './goal';
+import { dailyDeficit, isRate, isTarget, leavesFood, newGoal, ratePast } from './goal';
 
 describe('newGoal', () => {
   it('starts from the trend weight on the day it is set', () => {
@@ -94,6 +94,18 @@ describe('isRate', () => {
 
     // Then only the ends and what lies between are rates
     expect(judged).toEqual([false, true, true, false]);
+  });
+});
+
+describe('ratePast', () => {
+  it('says which end a rate is past, and nothing of a rate at an end or between', () => {
+    // Given rates either side of each end
+
+    // When each is judged
+    const judged = [0.04, 0.05, 1.5, 1.51].map(ratePast);
+
+    // Then the slow one is past the least, the fast one past the most
+    expect(judged).toEqual(['least', undefined, undefined, 'most']);
   });
 });
 
