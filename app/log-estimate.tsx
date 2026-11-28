@@ -1,13 +1,15 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { View } from 'react-native';
 
 import { estimateForm } from '@/components/estimateForm';
 import { formFault } from '@/components/formFault';
 import { FormField } from '@/components/FormField';
 import { FormPage } from '@/components/FormPage';
+import { OverLine } from '@/components/OverLine';
 import { useFirstFault } from '@/components/useFirstFault';
 import { useLogEntry } from '@/components/useLogEntry';
+import { useOverLine } from '@/components/useOverLine';
 import { estimatedEntry } from '@/domain/entry';
 
 export default function LogEstimate() {
@@ -27,11 +29,14 @@ export default function LogEstimate() {
     entryOn: (estimate, day) => ({ name: estimate.label, entry: estimatedEntry(estimate, day) }),
     onRefused: show,
   });
+  const typed = estimateForm.shape.calories.safeParse(useWatch({ control, name: 'calories' }));
+  const line = useOverLine(() => (typed.success ? typed.data : undefined));
   return (
     <FormPage
       title="Log an estimate"
       onCancel={leave}
       fault={formFault({ errors, isSubmitted })}
+      line={line ? <OverLine {...line} /> : undefined}
       action="Log estimated entry"
       onAction={log}
       scroll={scroll}
