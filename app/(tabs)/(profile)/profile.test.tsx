@@ -3,6 +3,7 @@ import { renderRouter } from 'expo-router/testing-library';
 import type { ReactNode } from 'react';
 
 import { TestProviders } from '@/components/TestProviders';
+import { ScriptedClock } from '@/lifecycle/ScriptedClock';
 import { InMemoryGoalStore } from '@/storage/InMemoryGoalStore';
 import { InMemoryProfileStore } from '@/storage/InMemoryProfileStore';
 import { InMemoryReviewStore } from '@/storage/InMemoryReviewStore';
@@ -11,6 +12,22 @@ import { InMemoryWeighInStore } from '@/storage/InMemoryWeighInStore';
 import TabsLayout from '../_layout';
 import ProfileStack from './_layout';
 import Profile from './profile';
+
+/** Noon on 28 November 2026, on a phone in UTC. */
+const onTheDay = () => {
+  const clock = new ScriptedClock();
+  clock.advance(Date.UTC(2026, 10, 28, 12));
+  return clock;
+};
+
+/** A review of the 28th: 82 kg, 2529 kcal of maintenance and budget, a floor of 164 g. */
+const REVIEW = {
+  day: '2026-11-28',
+  trendKg: 82,
+  maintenanceKcal: 2528.75,
+  budgetKcal: 2528.75,
+  proteinFloorG: 164,
+};
 
 /** Opens the app on Profile, over `profile`, and the weigh-ins, reviews and Goal given. */
 const openProfile = (
@@ -32,7 +49,13 @@ const openProfile = (
     {
       initialUrl: '/profile',
       wrapper: ({ children }: { children: ReactNode }) => (
-        <TestProviders profile={profile} weighIns={weighIns} reviews={reviews} goals={goals}>
+        <TestProviders
+          profile={profile}
+          weighIns={weighIns}
+          reviews={reviews}
+          goals={goals}
+          clock={onTheDay()}
+        >
           {children}
         </TestProviders>
       ),
@@ -54,6 +77,28 @@ describe('Profile’s goal card', () => {
       screen.queryByText('Save your details and log your weight on Today to set a goal.'),
     ).toBeOnTheScreen();
     expect(screen.queryByRole('button', { name: 'Set a goal' })).not.toBeOnTheScreen();
+  });
+
+  it('says the budget is maintenance with no goal, and offers to set one', async () => {
+    // Given details, today's weight and today's review of 2529 kcal, and no Goal
+    const profile = new InMemoryProfileStore();
+    await profile.save({ sex: 'male', born: '1996-11-28', heightCm: 181, countsCalories: true });
+    const weighIns = new InMemoryWeighInStore();
+    await weighIns.save({ day: '2026-11-28', kg: 82 });
+    const reviews = new InMemoryReviewStore();
+    await reviews.save(REVIEW);
+
+    // When the user opens Profile
+    await openProfile(profile, weighIns, reviews);
+
+    // Then the card says the budget is maintenance, and offers a goal
+    await screen.findByLabelText('Sex, Male');
+    expect(
+      screen.queryByText(
+        /^You’re maintaining: your budget is your maintenance, 2529\skcal a day\.$/,
+      ),
+    ).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Set a goal' })).toBeOnTheScreen();
   });
 });
 

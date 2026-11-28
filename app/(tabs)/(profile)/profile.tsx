@@ -3,14 +3,17 @@ import { ScrollView, View } from 'react-native';
 
 import { Button } from '@/components/Button';
 import { dateWords } from '@/components/DateField';
-import { cm, spokenCm } from '@/components/figures';
+import { cm, kcal, spokenCm } from '@/components/figures';
 import { Hairline } from '@/components/Hairline';
 import { Notice } from '@/components/Notice';
 import { SEXES, TRACKING, wordsOf } from '@/components/profileWords';
 import { Text } from '@/components/Text';
 import { Unreadable } from '@/components/Unreadable';
 import type { Profile as Details } from '@/domain/profile';
+import { reviewFor } from '@/domain/review';
+import { useToday } from '@/lifecycle/useToday';
 import { useProfile } from '@/storage/useProfile';
+import { useReviews } from '@/storage/useReviews';
 import { useWeighIns } from '@/storage/useWeighIns';
 
 /** A label and what it holds, read out as one row of a card. */
@@ -27,19 +30,33 @@ function Detail({ label, value, spoken }: { label: string; value: string; spoken
   );
 }
 
-/** The Goal, above the details: what Setup needs before there can be one. */
+/** The Goal, above the details: what Setup needs before there can be one, or the way to set one. */
 function GoalCard() {
+  const router = useRouter();
+  const today = useToday();
   const { weighIns } = useWeighIns();
-  if (!Array.isArray(weighIns)) return null;
+  const { reviews } = useReviews();
+  if (!Array.isArray(weighIns) || !Array.isArray(reviews)) return null;
+  // The review today is held to, which there is only once Setup is complete.
+  const heldTo = reviewFor(reviews, today);
   return (
     <>
       <Text accessibilityRole="header" className="font-language-bold text-body text-ink">
         Goal
       </Text>
-      <View className="rounded-card bg-surface p-grid-2">
-        <Text className="font-language text-body text-ink-mid">
-          Save your details and log your weight on Today to set a goal.
-        </Text>
+      <View className="gap-grid-2 rounded-card bg-surface p-grid-2">
+        {heldTo === undefined ? (
+          <Text className="font-language text-body text-ink-mid">
+            Save your details and log your weight on Today to set a goal.
+          </Text>
+        ) : (
+          <>
+            <Text className="font-language text-body text-ink-mid">
+              {`You’re maintaining: your budget is your maintenance, ${kcal(heldTo.maintenanceKcal)} a day.`}
+            </Text>
+            <Button label="Set a goal" onPress={() => router.navigate('/goal')} secondary />
+          </>
+        )}
       </View>
     </>
   );
