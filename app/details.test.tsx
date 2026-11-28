@@ -7,6 +7,8 @@ import { ScriptedAsk } from '@/components/ScriptedAsk';
 import { TestProviders } from '@/components/TestProviders';
 import { ScriptedClock } from '@/lifecycle/ScriptedClock';
 import { InMemoryProfileStore } from '@/storage/InMemoryProfileStore';
+import { InMemoryReviewStore } from '@/storage/InMemoryReviewStore';
+import { InMemoryWeighInStore } from '@/storage/InMemoryWeighInStore';
 
 import Profile from './(tabs)/(profile)/profile';
 import Details from './details';
@@ -19,13 +21,25 @@ const onTheDay = () => {
 };
 
 /** Opens the app at `initialUrl`, over `profile`. */
-const openApp = (initialUrl: string, profile: InMemoryProfileStore, ask?: ScriptedAsk) =>
+const openApp = (
+  initialUrl: string,
+  profile: InMemoryProfileStore,
+  ask?: ScriptedAsk,
+  weighIns?: InMemoryWeighInStore,
+  reviews?: InMemoryReviewStore,
+) =>
   renderRouter(
     { _layout: () => <Stack />, '(tabs)/(profile)/profile': Profile, details: Details },
     {
       initialUrl,
       wrapper: ({ children }: { children: ReactNode }) => (
-        <TestProviders profile={profile} clock={onTheDay()} ask={ask}>
+        <TestProviders
+          profile={profile}
+          clock={onTheDay()}
+          ask={ask}
+          weighIns={weighIns}
+          reviews={reviews}
+        >
           {children}
         </TestProviders>
       ),
@@ -163,6 +177,56 @@ describe('Your details', () => {
 
     // Then the field says why
     expect(await screen.findByText('Birth date must be in the past')).toBeOnTheScreen();
+  });
+
+  it('runs the first review when the details complete Setup', async () => {
+    // Given a weigh-in, and the form filled
+    const weighIns = new InMemoryWeighInStore();
+    await weighIns.save({ day: '2026-11-27', kg: 82 });
+    const reviews = new InMemoryReviewStore();
+    await openApp('/details', new InMemoryProfileStore(), undefined, weighIns, reviews);
+    const user = userEvent.setup();
+    await user.press(await screen.findByRole('radio', { name: 'Male' }));
+    await pickDate(user, '1984-03-14');
+    await user.type(screen.getByLabelText('Height (cm)'), '181');
+
+    // When the user saves it
+    await user.press(screen.getByRole('button', { name: 'Save profile' }));
+
+    // Then today's first review is set
+    await waitFor(async () =>
+      expect((await reviews.list()).map(({ day }) => day)).toEqual(['2026-11-27']),
+    );
+  });
+
+  it('runs no review when a height is changed, the week’s review still standing', async () => {
+    // Given details, yesterday's weigh-in and its review, and the details opened to be changed
+    const profile = new InMemoryProfileStore();
+    await profile.save({ sex: 'male', born: '1984-03-14', heightCm: 181, countsCalories: true });
+    const weighIns = new InMemoryWeighInStore();
+    await weighIns.save({ day: '2026-11-26', kg: 82 });
+    const reviews = new InMemoryReviewStore();
+    await reviews.save({
+      day: '2026-11-26',
+      trendKg: 82,
+      maintenanceKcal: 2500,
+      budgetKcal: 2500,
+      proteinFloorG: 164,
+    });
+    await openApp('/profile', profile, undefined, weighIns, reviews);
+    const user = userEvent.setup();
+    await user.press(await screen.findByRole('button', { name: 'Change details' }));
+    await user.clear(await screen.findByDisplayValue('181'));
+    await user.type(screen.getByLabelText('Height (cm)'), '190');
+
+    // When the user saves it and the form has gone
+    await user.press(screen.getByRole('button', { name: 'Save profile' }));
+    await waitFor(() =>
+      expect(screen.queryByRole('button', { name: 'Save profile' })).not.toBeOnTheScreen(),
+    );
+
+    // Then yesterday's review is the only one
+    expect((await reviews.list()).map(({ day }) => day)).toEqual(['2026-11-26']);
   });
 
   it('keeps calorie tracking off when the user chooses weight only', async () => {

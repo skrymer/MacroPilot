@@ -29,7 +29,7 @@ jest.mock('../global.css', () => ({}));
 // The storage boundary (ADR 0001). expo-sqlite is native, and only an adapter's own test touches SQL
 // (ADR 0008), so the fake of the port stands where the layout makes the real one.
 jest.mock('expo-sqlite', () => ({
-  openDatabaseSync: () => {
+  openDatabaseAsync: () => {
     throw new Error('The app opened its database before anything was read from it');
   },
 }));
@@ -45,6 +45,9 @@ jest.mock('@/storage/SqliteEntryStore', () => ({
 }));
 jest.mock('@/storage/SqliteFoodStore', () => ({
   SqliteFoodStore: jest.requireActual('@/storage/InMemoryFoodStore').InMemoryFoodStore,
+}));
+jest.mock('@/storage/SqliteReviewStore', () => ({
+  SqliteReviewStore: jest.requireActual('@/storage/InMemoryReviewStore').InMemoryReviewStore,
 }));
 jest.mock('@/storage/SqliteWeighInStore', () => ({
   SqliteWeighInStore: jest.requireActual('@/storage/InMemoryWeighInStore').InMemoryWeighInStore,

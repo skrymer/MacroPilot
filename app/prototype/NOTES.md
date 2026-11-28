@@ -1,14 +1,3 @@
-# PROTOTYPE — Today with its targets (throwaway)
-
-**Question:** where the day ring and today's weigh-in stand on Today, and how Today looks before **Setup**. Not in question: the ring itself (DESIGN.md, *Signature: the rings*), the verdict's words and the protein words (epic 2's grilling, Q6), the entries list (epic 1).
-**Run:** design page › **Today targets prototype**, or `macropilot://prototype/today-targets?variant=A` (`A` | `B` | `C`).
-**Variants:** **A — weight first**, the reference's order: the *Today's weight* card, then the ring card, then the entries. **B — ring first**, then the weight card, then the entries. **C — weight in the ring card**, today's weigh-in as the ring card's last row.
-**The floating bar:** the variant; the day (*Before Setup*, *No entries*, *In progress*, *On target*, *Slightly over*, *Over*, *At least* protein below the floor, *Protein not stated*, *Estimates only*); *Hide bar* for a clean photo.
-**Settled while grilling:** budget 1840 kcal and floor 132 g; the verdict (CONTEXT.md, *Day's verdict*) and its tolerance; protein *at least* below the floor says what is known (*at least 40 g, floor 132 g*), protein not stated draws the track only and says so; before Setup there is no ring, epic 1's totals card stands with a setup line to Profile; the weight card shows only today's weigh-in.
-**Decided here without the grilling:** an estimates-only day says *about* over the centre figure, set lighter; the weight card's way to change today's weigh-in is a text *Edit* at its end, as `EmptyLine`'s action.
-**Verdict (27 Nov 2026):** **C** — the ring card first, today's weigh-in as its last row, then the entries. Chosen by the user on the iPhone.
-**Teardown:** `app/prototype/today-targets.tsx`, its link in `app/design.tsx`, this section.
-
 # PROTOTYPE — the Profile tab (throwaway)
 
 **Question:** how the Profile tab reads in each of its states, and whether a goal is set from a form on the page or behind a button. Not in question: the fields and their rules (CONTEXT.md, *Profile*, *Goal*, *Weigh-in*), that Profile is a tab (DESIGN.md, *Navigation*), how a form opens (DESIGN.md, *Forms*).

@@ -9,7 +9,6 @@ export default function PrototypeLayout() {
   const form = useFormPresentation();
   return (
     <Stack screenOptions={{ contentStyle: { backgroundColor: 'transparent' } }}>
-      <Stack.Screen name="today-targets" options={{ ...page, title: 'Today' }} />
       <Stack.Screen name="profile" options={{ ...page, title: 'Profile' }} />
       <Stack.Screen name="over-line" options={form} />
     </Stack>

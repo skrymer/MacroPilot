@@ -1,5 +1,11 @@
 const MS_PER_MINUTE = 60_000;
 
+const MS_PER_DAY = 86_400_000;
+
+/** Whole days from one date to another, both as `2026-11-24`. */
+export const daysBetween = (from: string, to: string) =>
+  Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / MS_PER_DAY);
+
 /**
  * The same date `years` earlier, both as `2026-11-24`. A 29 February lands on the 28th in a year
  * without one.

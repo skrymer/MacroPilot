@@ -9,6 +9,7 @@ import { estimatedEntry, weighedEntry } from '@/domain/entry';
 import { ScriptedClock } from '@/lifecycle/ScriptedClock';
 import { InMemoryEntryStore } from '@/storage/InMemoryEntryStore';
 import { InMemoryProfileStore } from '@/storage/InMemoryProfileStore';
+import { InMemoryReviewStore } from '@/storage/InMemoryReviewStore';
 import { InMemoryWeighInStore } from '@/storage/InMemoryWeighInStore';
 
 import Today from './index';
@@ -39,6 +40,7 @@ const openToday = (
   ask?: ScriptedAsk,
   weighIns?: InMemoryWeighInStore,
   profile?: InMemoryProfileStore,
+  reviews?: InMemoryReviewStore,
 ) =>
   renderRouter(
     {
@@ -55,6 +57,7 @@ const openToday = (
           ask={ask}
           weighIns={weighIns}
           profile={profile}
+          reviews={reviews}
         >
           {children}
         </TestProviders>
@@ -111,6 +114,211 @@ describe('Today’s setup line', () => {
 
     // Then Profile is showing
     expect(await screen.findByText('Profile, as the tab shows it')).toBeOnTheScreen();
+  });
+});
+
+describe('Today’s ring', () => {
+  it('says kcal over on a day less than a calorie past its budget, as its verdict does', async () => {
+    // Given a review of 1175.7 kcal on the 24th, and 400 g of oats (1176 kcal) logged that day
+    const reviews = new InMemoryReviewStore();
+    await reviews.save({
+      day: '2026-11-24',
+      trendKg: 75,
+      maintenanceKcal: 1175.7,
+      budgetKcal: 1175.7,
+      proteinFloorG: 150,
+    });
+    const entries = new InMemoryEntryStore([OATS]);
+    await entries.add(weighedEntry(OATS, 400, '2026-11-24'));
+
+    // When the user opens Today
+    await openToday(entries, atNoon(), undefined, undefined, undefined, reviews);
+
+    // Then the figure says over, as the verdict does
+    expect(await screen.findByLabelText(/^Slightly over, 0 kcal over/)).toBeOnTheScreen();
+  });
+
+  it('says the targets could not be read, rather than show the day as if none were set', async () => {
+    // Given reviews that cannot be read
+    const reviews = new InMemoryReviewStore();
+    reviews.unreadable = true;
+
+    // When the user opens Today
+    await openToday(new InMemoryEntryStore(), atNoon(), undefined, undefined, undefined, reviews);
+
+    // Then Today says so, with the way to try again
+    await screen.findByText('Nothing logged yet');
+    expect(screen.queryByText('Couldn’t load your targets')).toBeOnTheScreen();
+  });
+
+  it('shows no day card while the targets are still being read, never the card before Setup', async () => {
+    // Given a review on the 24th, and the reviews slow to be read
+    const reviews = new InMemoryReviewStore();
+    await reviews.save({
+      day: '2026-11-24',
+      trendKg: 75,
+      maintenanceKcal: 2000,
+      budgetKcal: 2000,
+      proteinFloorG: 150,
+    });
+    reviews.holdReads();
+
+    // When the user opens Today, and the day's entries have been read
+    await openToday(new InMemoryEntryStore(), atNoon(), undefined, undefined, undefined, reviews);
+    await screen.findByText('Log a weighed food, or an estimate.');
+
+    // Then the totals card of a day without targets is not shown in the ring's place
+    expect(screen.queryByLabelText(/today, nothing logged yet$/)).not.toBeOnTheScreen();
+  });
+
+  it('shows the ring once targets slow to be read have been read', async () => {
+    // Given a review on the 24th, the reviews slow to be read, and Today open with its entries read
+    const reviews = new InMemoryReviewStore();
+    await reviews.save({
+      day: '2026-11-24',
+      trendKg: 75,
+      maintenanceKcal: 2000,
+      budgetKcal: 2000,
+      proteinFloorG: 150,
+    });
+    const release = reviews.holdReads();
+    await openToday(new InMemoryEntryStore(), atNoon(), undefined, undefined, undefined, reviews);
+    await screen.findByText('Log a weighed food, or an estimate.');
+
+    // When the reviews are read
+    await act(async () => release());
+
+    // Then the ring card stands
+    expect(await screen.findByLabelText(/^Nothing logged yet, 2000 kcal left/)).toBeOnTheScreen();
+  });
+
+  it('says 0 kcal left on a day at exactly its budget, not over it', async () => {
+    // Given a review of 1176 kcal on the 24th, and 400 g of oats (1176 kcal) logged that day
+    const reviews = new InMemoryReviewStore();
+    await reviews.save({
+      day: '2026-11-24',
+      trendKg: 75,
+      maintenanceKcal: 1176,
+      budgetKcal: 1176,
+      proteinFloorG: 150,
+    });
+    const entries = new InMemoryEntryStore([OATS]);
+    await entries.add(weighedEntry(OATS, 400, '2026-11-24'));
+
+    // When the user opens Today
+    await openToday(entries, atNoon(), undefined, undefined, undefined, reviews);
+
+    // Then nothing is left, and the day is not over
+    expect(await screen.findByLabelText(/^In progress, 0 kcal left/)).toBeOnTheScreen();
+  });
+
+  it('says the kcal left and the day’s verdict once the day is held to a review', async () => {
+    // Given a review of 2000 kcal and 150 g on the 24th, and 400 g of oats (1176 kcal) logged that day
+    const reviews = new InMemoryReviewStore();
+    await reviews.save({
+      day: '2026-11-24',
+      trendKg: 75,
+      maintenanceKcal: 2000,
+      budgetKcal: 2000,
+      proteinFloorG: 150,
+    });
+    const entries = new InMemoryEntryStore([OATS]);
+    await entries.add(weighedEntry(OATS, 400, '2026-11-24'));
+
+    // When the user opens Today
+    await openToday(entries, atNoon(), undefined, undefined, undefined, reviews);
+
+    // Then the ring card says what is left, and where the day stands, as one
+    expect(await screen.findByLabelText(/^In progress, 824 kcal left/)).toBeOnTheScreen();
+    expect(screen.getByText('824')).toBeOnTheScreen();
+    expect(screen.getByText('kcal left')).toBeOnTheScreen();
+  });
+});
+
+describe('Today’s ring past the budget', () => {
+  it('says how far over, and over budget past the tolerance', async () => {
+    // Given a review of 1000 kcal on the 24th, and 400 g of oats (1176 kcal) logged that day
+    const reviews = new InMemoryReviewStore();
+    await reviews.save({
+      day: '2026-11-24',
+      trendKg: 75,
+      maintenanceKcal: 1000,
+      budgetKcal: 1000,
+      proteinFloorG: 150,
+    });
+    const entries = new InMemoryEntryStore([OATS]);
+    await entries.add(weighedEntry(OATS, 400, '2026-11-24'));
+
+    // When the user opens Today
+    await openToday(entries, atNoon(), undefined, undefined, undefined, reviews);
+
+    // Then it says 176 kcal over, and over budget
+    expect(await screen.findByLabelText(/^Over budget, 176 kcal over/)).toBeOnTheScreen();
+    expect(screen.getByText('kcal over')).toBeOnTheScreen();
+  });
+});
+
+describe('Today’s ring on an empty day', () => {
+  it('says nothing is logged yet in place of a verdict, with the whole budget left', async () => {
+    // Given a review of 2000 kcal on the 24th, and nothing logged that day
+    const reviews = new InMemoryReviewStore();
+    await reviews.save({
+      day: '2026-11-24',
+      trendKg: 75,
+      maintenanceKcal: 2000,
+      budgetKcal: 2000,
+      proteinFloorG: 150,
+    });
+
+    // When the user opens Today
+    await openToday(new InMemoryEntryStore(), atNoon(), undefined, undefined, undefined, reviews);
+
+    // Then it says so, never In progress
+    expect(await screen.findByLabelText(/^Nothing logged yet, 2000 kcal left/)).toBeOnTheScreen();
+    expect(screen.queryByText('In progress')).not.toBeOnTheScreen();
+  });
+});
+
+describe('Today’s ring on a day of estimates', () => {
+  it('says about over what is left when nothing in the day was weighed', async () => {
+    // Given a review of 2000 kcal on the 24th, and two estimates of 100 kcal that day
+    const reviews = new InMemoryReviewStore();
+    await reviews.save({
+      day: '2026-11-24',
+      trendKg: 75,
+      maintenanceKcal: 2000,
+      budgetKcal: 2000,
+      proteinFloorG: 150,
+    });
+    const entries = await withLunches('pub lunch', 'cake');
+
+    // When the user opens Today
+    await openToday(entries, atNoon(), undefined, undefined, undefined, reviews);
+
+    // Then the figure is said to be about, as an estimate is
+    expect(await screen.findByLabelText(/^In progress, about 1800 kcal left/)).toBeOnTheScreen();
+    expect(screen.getByText('about')).toBeOnTheScreen();
+  });
+});
+
+describe('Today before its first review', () => {
+  it('has no ring on a day before the first review, only the totals card', async () => {
+    // Given the first review dated the 25th, and Today the 24th
+    const reviews = new InMemoryReviewStore();
+    await reviews.save({
+      day: '2026-11-25',
+      trendKg: 75,
+      maintenanceKcal: 2000,
+      budgetKcal: 2000,
+      proteinFloorG: 150,
+    });
+
+    // When the user opens Today
+    await openToday(new InMemoryEntryStore(), atNoon(), undefined, undefined, undefined, reviews);
+
+    // Then epic 1's totals card stands, never a budget
+    expect(await screen.findByLabelText(/today, nothing logged yet$/)).toBeOnTheScreen();
+    expect(screen.queryByText('kcal left')).not.toBeOnTheScreen();
   });
 });
 

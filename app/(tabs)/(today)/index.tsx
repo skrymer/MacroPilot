@@ -4,6 +4,7 @@ import { FlatList, View } from 'react-native';
 
 import { dayWords } from '@/components/dayWords';
 import { CardSlice } from '@/components/CardSlice';
+import { DayRing, type Standing } from '@/components/DayRing';
 import { DeletableRow } from '@/components/DeletableRow';
 import { EmptyLine } from '@/components/EmptyLine';
 import { entryFigures, entryWords, tallyWords, totalsWords } from '@/components/entryWords';
@@ -19,14 +20,17 @@ import { Unreadable } from '@/components/Unreadable';
 import { useDelete } from '@/components/useDelete';
 import { useFailedInView } from '@/components/useFailedInView';
 import { totalsOf, type Totals as DayTotals } from '@/domain/dailyLog';
+import { reviewFor, type Review } from '@/domain/review';
 import { missingForSetup } from '@/domain/setup';
 import { shownName } from '@/domain/shownName';
+import { againstBudget, dayVerdict, type Verdict } from '@/domain/verdict';
 import { weighInOn, type WeighIn } from '@/domain/weighIn';
 import { useToday } from '@/lifecycle/useToday';
 import type { LoggedEntry } from '@/storage/EntryStore';
 import { useEntryStore } from '@/storage/EntryStoreContext';
 import { useReading } from '@/storage/useReading';
 import { useProfile } from '@/storage/useProfile';
+import { useReviews } from '@/storage/useReviews';
 import { useWeighIns } from '@/storage/useWeighIns';
 
 const PROTEIN_SET = { ...FIGURE_SET, weighed: 'font-language text-ink-mid' };
@@ -53,6 +57,75 @@ function Totals({
         {count === 0 ? (
           <Text className="font-language text-label text-ink-mid">Nothing logged yet</Text>
         ) : null}
+      </View>
+      <View className="mt-grid-2">{children}</View>
+    </View>
+  );
+}
+
+/**
+ * How each verdict is shown: its words and their ink, and where the day stands against its budget
+ * alone, the hue its arc takes and, past the budget, its figure (`ink` there; within, the figure is
+ * set as any figure is).
+ */
+const VERDICT = {
+  'over budget': { words: 'Over budget', ink: 'text-over', standing: 'over' },
+  'slightly over': { words: 'Slightly over', ink: 'text-slightly-over', standing: 'slightly-over' },
+  'on target': { words: 'On target', ink: 'text-within', standing: 'within' },
+  'in progress': { words: 'In progress', ink: 'text-ink-mid', standing: 'within' },
+} as const satisfies Record<Verdict, { words: string; ink: string; standing: Standing }>;
+
+/** An empty day is an empty track, and says so rather than that it is in progress. */
+const NOTHING_LOGGED = { words: 'Nothing logged yet', ink: 'text-ink-mid' };
+
+/**
+ * The day card once the day is held to a review: what is left of the budget or how far past it, and
+ * the day's verdict in words, read out as one; the card's last row is the caller's.
+ */
+function RingCard({
+  totals,
+  count,
+  review,
+  children,
+}: {
+  totals: DayTotals;
+  count: number;
+  review: Review;
+  children: ReactNode;
+}) {
+  const { kcal, over, share } = againstBudget(totals.calories, review.budgetKcal);
+  const centre = String(Math.round(kcal));
+  const unit = over ? 'kcal over' : 'kcal left';
+  const judged = VERDICT[dayVerdict(totals, review)];
+  const verdict = count === 0 ? NOTHING_LOGGED : judged;
+  // The arc, the figure and the verdict say one thing: where the day stands (DESIGN.md, *The axes*).
+  const { standing } = judged;
+  // A day of estimates alone is set lighter and says so (DESIGN.md, *Figures*).
+  const about = totals.estimated;
+  const kind = about ? 'estimated' : 'weighed';
+  return (
+    <View className="rounded-card bg-surface p-grid-2">
+      <View
+        accessible
+        accessibilityLabel={`${verdict.words}, ${about ? 'about ' : ''}${centre} ${unit}`}
+        className="items-center"
+      >
+        <DayRing share={share} standing={standing}>
+          {about ? <Text className="font-language text-label text-ink-mid">about</Text> : null}
+          <Text
+            className={`text-figure ${
+              standing === 'within'
+                ? FIGURE_SET[kind]
+                : `${about ? 'font-estimated' : 'font-weighed'} ${judged.ink}`
+            }`}
+          >
+            {centre}
+          </Text>
+          <Text className="font-language text-label text-ink-mid">{unit}</Text>
+        </DayRing>
+        <Text className={`mt-grid-1 text-center font-language-bold text-body ${verdict.ink}`}>
+          {verdict.words}
+        </Text>
       </View>
       <View className="mt-grid-2">{children}</View>
     </View>
@@ -147,6 +220,9 @@ export default function Today() {
   const { found, readAgain } = useReading(list);
   const { weighIns, readAgain: readWeighInsAgain } = useWeighIns();
   const { profile } = useProfile();
+  const { reviews, readAgain: readReviewsAgain } = useReviews();
+  // The review this day is held to: the latest dated on or before it.
+  const heldTo = Array.isArray(reviews) ? reviewFor(reviews, day) : undefined;
   const weighedToday = Array.isArray(weighIns) ? weighInOn(weighIns, day) : undefined;
   // An entry can be written after the user has come here from its form.
   const [logged] = useLogged();
@@ -174,6 +250,12 @@ export default function Today() {
   const shown = all ? listed : listed.slice(-LAST);
   const asksForRest = listed.length > LAST;
   const faultInView = useFailedInView(shown, deletion.fault);
+  const weightRow =
+    weighIns === 'unreadable' ? (
+      <Unreadable words="Couldn’t load your weight" onRetry={readWeighInsAgain} />
+    ) : Array.isArray(weighIns) ? (
+      <WeightRow weighIn={weighedToday} onLog={() => router.navigate('/log-weight')} />
+    ) : null;
   return (
     <FlatList
       {...faultInView.list}
@@ -224,6 +306,9 @@ export default function Today() {
           {found === 'unreadable' ? (
             <Unreadable words="Couldn’t load today’s summary" onRetry={readAgain} />
           ) : null}
+          {reviews === 'unreadable' ? (
+            <Unreadable words="Couldn’t load your targets" onRetry={readReviewsAgain} />
+          ) : null}
           {Array.isArray(profile) && Array.isArray(weighIns) ? (
             <SetupLine
               missing={missingForSetup(profile[0], weighIns)}
@@ -231,14 +316,17 @@ export default function Today() {
               onWeighIn={() => router.navigate('/log-weight')}
             />
           ) : null}
-          {Array.isArray(found) ? (
-            <Totals totals={totals} count={listed.length}>
-              {weighIns === 'unreadable' ? (
-                <Unreadable words="Couldn’t load your weight" onRetry={readWeighInsAgain} />
-              ) : Array.isArray(weighIns) ? (
-                <WeightRow weighIn={weighedToday} onLog={() => router.navigate('/log-weight')} />
-              ) : null}
-            </Totals>
+          {/* Not before the targets are read, or a day held to one shows first as one without. */}
+          {Array.isArray(found) && reviews !== 'unread' ? (
+            heldTo ? (
+              <RingCard totals={totals} count={listed.length} review={heldTo}>
+                {weightRow}
+              </RingCard>
+            ) : (
+              <Totals totals={totals} count={listed.length}>
+                {weightRow}
+              </Totals>
+            )
           ) : null}
           {listed.length > 0 ? (
             <DayHeading day={day} count={listed.length} totals={totals} />

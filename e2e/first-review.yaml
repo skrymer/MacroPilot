@@ -1,0 +1,26 @@
+# From a fresh install to the first review: details saved on Profile and a weight logged on Today set
+# the calorie budget, and Today's day card becomes the ring with its verdict, today's weigh-in still its
+# last row. A man of 181 cm, 30 (the picker opens thirty years back), 82 kg: (10 × 82 + 6.25 × 181 −
+# 5 × 30 + 5) × 1.4 = 2528.75, so 2529 kcal left. The happy path of setting the targets (ADR 0011).
+appId: com.skrymer.macropilot
+---
+- runFlow: steps/start.yaml
+- assertVisible: 'Add your details and log your weight to see your calorie budget'
+- openLink: 'macropilot://details'
+- tapOn: 'Male'
+- tapOn: 'Birth date, Choose a date'
+- tapOn: 'OK'
+- tapOn: 'Height \(cm\)'
+- inputText: '181'
+- tapOn: 'Save profile'
+- extendedWaitUntil:
+    visible: 'Sex, Male'
+    timeout: 10000
+- openLink: 'macropilot://log-weight'
+- inputText: '82'
+- tapOn: 'Save weight'
+- extendedWaitUntil:
+    visible: 'Nothing logged yet, 2529 kcal left'
+    timeout: 10000
+- assertVisible: 'Weight today, 82.0 kilograms'
+- assertNotVisible: '.*to see your calorie budget'
