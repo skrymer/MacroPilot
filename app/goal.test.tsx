@@ -108,6 +108,26 @@ describe('The goal form', () => {
     expect(screen.getByDisplayValue('0.5')).toBeOnTheScreen();
   });
 
+  it('keeps what was typed when the save fails, and says so above the button', async () => {
+    // Given the form filled over a goal store that cannot be written
+    const stores = await setUp();
+    stores.goals.unwritable = true;
+    await openApp('/goal', stores);
+    const user = userEvent.setup();
+    await user.type(await screen.findByLabelText('Target weight (kg)'), '75');
+    await user.type(screen.getByLabelText('Rate (kg a week)'), '0,5');
+
+    // When the user sets it
+    await user.press(screen.getByRole('button', { name: 'Set goal' }));
+
+    // Then the form stays, filled, and says it was not set
+    expect(
+      await screen.findByText('Could not set goal. What you typed is still here.'),
+    ).toBeOnTheScreen();
+    expect(screen.getByLabelText('Target weight (kg)')).toHaveDisplayValue('75');
+    expect(screen.getByLabelText('Rate (kg a week)')).toHaveDisplayValue('0,5');
+  });
+
   it('re-runs today’s review, so today’s budget drops by the goal’s deficit at once', async () => {
     // Given Setup complete, and the form with a goal of 75 kg at 0.5 kg a week (550 kcal a day)
     const stores = await setUp();
