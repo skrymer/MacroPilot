@@ -32,6 +32,19 @@ if [ -n "$transcript" ] && [ -n "$id" ]; then
   fi
 fi
 
+# A refactor window open in the file's own checkout (refactor.mjs) lets a production write through
+# unjudged: its close checks the refactor with the tests, the types and the lint, and rolls it back
+# on any failure. A test is judged as ever, and so is everything once the window is 30 minutes old.
+# REFACTOR_NOW, in seconds since the epoch, stands in for the clock in tests.
+window="$(git -C "$root" rev-parse --path-format=absolute --git-path refactor-window 2>/dev/null)"
+if [ -n "$file" ] && [ -f "$window" ] && [[ ! "$(basename "$file")" =~ \.test\. ]]; then
+  opened="$(jq -r --arg root "$root" 'select(.root == $root) | .openedAt' "$window" 2>/dev/null)"
+  if [ -n "$opened" ] && [ $((${REFACTOR_NOW:-$(date +%s)} - opened)) -lt 1800 ]; then
+    echo "The refactor window let $file through unjudged; refactor.mjs close checks it." >&2
+    exit 0
+  fi
+fi
+
 cd "$root" || exit 2
 if [ ! -x node_modules/.bin/probity ]; then
   echo "No probity in $root, so $file cannot be judged: run npm ci there." >&2
