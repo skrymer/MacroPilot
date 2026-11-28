@@ -19,8 +19,10 @@ import { Text } from '@/components/Text';
 import { TextAction } from '@/components/TextAction';
 import { Unreadable } from '@/components/Unreadable';
 import { useDelete } from '@/components/useDelete';
+import { SuspendedCard } from '@/components/SuspendedCard';
 import { useFailedInView } from '@/components/useFailedInView';
 import { totalsOf, type Totals as DayTotals } from '@/domain/dailyLog';
+import { isSuspended } from '@/domain/goal';
 import { reviewFor, type Review } from '@/domain/review';
 import { missingForSetup } from '@/domain/setup';
 import { shownName } from '@/domain/shownName';
@@ -29,6 +31,7 @@ import { weighInOn, type WeighIn } from '@/domain/weighIn';
 import { useToday } from '@/lifecycle/useToday';
 import type { LoggedEntry } from '@/storage/EntryStore';
 import { useEntryStore } from '@/storage/EntryStoreContext';
+import { useGoal } from '@/storage/useGoal';
 import { useReading } from '@/storage/useReading';
 import { useProfile } from '@/storage/useProfile';
 import { useReviews } from '@/storage/useReviews';
@@ -235,6 +238,10 @@ export default function Today() {
   const { reviews, readAgain: readReviewsAgain } = useReviews();
   // The review this day is held to: the latest dated on or before it.
   const heldTo = Array.isArray(reviews) ? reviewFor(reviews, day) : undefined;
+  const { goal } = useGoal();
+  // A running Goal whose deficit the maintenance today is held to cannot carry: none is taken.
+  const running = Array.isArray(goal) ? goal[0] : undefined;
+  const suspended = heldTo !== undefined && isSuspended(running, heldTo.maintenanceKcal);
   const weighedToday = Array.isArray(weighIns) ? weighInOn(weighIns, day) : undefined;
   // An entry can be written after the user has come here from its form.
   const [logged] = useLogged();
@@ -327,6 +334,10 @@ export default function Today() {
               onProfile={() => router.navigate('/profile')}
               onWeighIn={() => router.navigate('/log-weight')}
             />
+          ) : null}
+          {/* It speaks of the budget below, so it stands only where the ring does. */}
+          {suspended && Array.isArray(found) ? (
+            <SuspendedCard onEase={() => router.navigate('/profile')} />
           ) : null}
           {/* Not before the targets are read, or a day held to one shows first as one without. */}
           {Array.isArray(found) && reviews !== 'unread' ? (

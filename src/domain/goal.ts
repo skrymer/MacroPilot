@@ -57,5 +57,12 @@ export const isTarget = (targetKg: number, trendKg: number) => targetKg > 0 && t
 export const leavesFood = (rateKgPerWeek: number, maintenanceKcal: number) =>
   dailyDeficit(rateKgPerWeek) < maintenanceKcal;
 
+/**
+ * Whether a running Goal's deficit is a Suspended Deficit at a maintenance, in kcal a day: there is a
+ * Goal, and the maintenance cannot carry its deficit. No Goal, nothing suspended.
+ */
+export const isSuspended = (goal: Goal | undefined, maintenanceKcal: number) =>
+  goal !== undefined && !leavesFood(goal.rateKgPerWeek, maintenanceKcal);
+
 /** The kcal a day a rate of loss takes, in kg a week. */
 export const dailyDeficit = (rateKgPerWeek: number) => (rateKgPerWeek * KCAL_PER_KG) / DAYS_A_WEEK;

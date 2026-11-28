@@ -1,4 +1,4 @@
-import { dailyDeficit, isRate, isTarget, leavesFood, newGoal, ratePast } from './goal';
+import { dailyDeficit, isRate, isSuspended, isTarget, leavesFood, newGoal, ratePast } from './goal';
 
 describe('newGoal', () => {
   it('starts from the trend weight on the day it is set', () => {
@@ -58,6 +58,21 @@ describe('newGoal', () => {
 
     // Then it is refused
     expect(setting).toThrow('A rate whose deficit reaches maintenance leaves nothing to eat');
+  });
+});
+
+describe('isSuspended', () => {
+  it('suspends a running Goal whose deficit reaches the maintenance, and nothing without a Goal', () => {
+    // Given a Goal of 1.4 kg a week, a deficit of 1540 kcal a day
+    const goal = { setOn: '2026-11-20', startKg: 50, targetKg: 45, rateKgPerWeek: 1.4 };
+
+    // When it is judged at maintenances either side of its deficit, and with no Goal
+    const judged = [1539, 1540, 1541].map((maintenance) => isSuspended(goal, maintenance));
+    const without = isSuspended(undefined, 1000);
+
+    // Then it is suspended up to and at its deficit, not past it; and never without a Goal
+    expect(judged).toEqual([true, true, false]);
+    expect(without).toBe(false);
   });
 });
 
