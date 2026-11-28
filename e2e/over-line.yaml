@@ -1,0 +1,40 @@
+# With Setup complete (a man of 181 cm, 30, 82 kg: a budget of 2528.75 kcal), the grams form says how far
+# past it the entry being typed would put the day: 800 g of oats at 330 kcal per 100 g is 2640 kcal, about
+# 111 kcal over, within the tenth, so slightly over. The line never stops the entry: Log entry logs it in
+# one press. The happy path of the over line on a weighed entry (ADR 0011).
+appId: com.skrymer.macropilot
+---
+- runFlow: steps/start.yaml
+- openLink: 'macropilot://details'
+- tapOn: 'Male'
+- tapOn: 'Birth date, Choose a date'
+- tapOn: 'OK'
+- tapOn: 'Height \(cm\)'
+- inputText: '181'
+- tapOn: 'Save profile'
+- extendedWaitUntil:
+    visible: 'Sex, Male'
+    timeout: 10000
+- openLink: 'macropilot://log-weight'
+- inputText: '82'
+- tapOn: 'Save weight'
+- extendedWaitUntil:
+    visible: 'Nothing logged yet, 2529 kcal left, 164 grams of protein to go'
+    timeout: 10000
+- runFlow:
+    file: steps/add-food.yaml
+    env:
+      NAME: Oats
+      PROTEIN: '13'
+      CARBOHYDRATE: '56'
+      FAT: '6'
+- openLink: 'macropilot://log'
+- tapOn: 'Log Oats, .*'
+- inputText: '800'
+- extendedWaitUntil:
+    visible: "This puts you about 111\u00a0kcal over your 2529\u00a0kcal budget."
+    timeout: 10000
+- tapOn: 'Log entry'
+- extendedWaitUntil:
+    visible: 'Logged: Oats, 800 grams, 2640 calories, 104 grams of protein'
+    timeout: 10000

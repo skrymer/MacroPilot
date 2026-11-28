@@ -1,4 +1,4 @@
-import { againstBudget, againstFloor, dayVerdict } from './verdict';
+import { againstBudget, againstFloor, dayVerdict, overLine } from './verdict';
 
 const TARGETS = { budgetKcal: 2000, proteinFloorG: 150 };
 const day = (calories: number, protein: number | undefined) => ({
@@ -60,6 +60,28 @@ describe('dayVerdict', () => {
 
     // Then it is in progress, its protein not yet known to reach anything
     expect(verdict).toBe('in progress');
+  });
+});
+
+describe('overLine', () => {
+  it.each([
+    [1500, 500, undefined],
+    [1500, 501, { overKcal: 1, standing: 'slightly over' }],
+    [1500, 700, { overKcal: 200, standing: 'slightly over' }],
+    [1500, 700.1, { overKcal: 200.1, standing: 'over budget' }],
+    [1500, undefined, undefined],
+  ])('with %s kcal logged and %s typed, against 2000: %o', (dayKcal, entryKcal, expected) => {
+    // Given a day of dayKcal against a budget of 2000 kcal
+
+    // When an entry of entryKcal is being typed
+    const line = overLine(dayKcal, entryKcal, 2000);
+
+    // Then nothing at or under the budget; slightly over to its tenth; over budget past it
+    if (expected === undefined) expect(line).toBeUndefined();
+    else {
+      expect(line?.standing).toBe(expected.standing);
+      expect(line?.overKcal).toBeCloseTo(expected.overKcal, 10);
+    }
   });
 });
 

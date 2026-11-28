@@ -7,7 +7,6 @@ import Svg, { Circle } from 'react-native-svg';
 
 import { DayRing as BuiltRing, type Standing } from '@/components/DayRing';
 import { Failure } from '@/components/Failure';
-import { Link } from '@/components/Link';
 import { FAULT_SIGN, VALID_SIGN } from '@/components/signs';
 import { Text } from '@/components/Text';
 import { useRipple } from '@/components/useRipple';
@@ -415,14 +414,6 @@ export default function Design() {
         Food has no colour. Colour is only where your day stands against its targets.
       </Text>
       <AppearanceSwitch />
-      {__DEV__ ? (
-        <Link
-          href="/prototype/over-line"
-          className="font-language-bold text-body text-ink underline"
-        >
-          Over line prototype
-        </Link>
-      ) : null}
 
       <Section
         title="The day ring"
