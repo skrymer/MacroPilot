@@ -23,6 +23,8 @@ appId: com.skrymer.macropilot
 - extendedWaitUntil:
     visible: 'Nothing logged yet, 2529 kcal left, 164 grams of protein to go'
     timeout: 10000
+# agent-device reads protein's words by what they show, not by the ring card's label TalkBack speaks;
+# the label is the wait above, and Today's screen test pins it (ADR 0011).
 - assertVisible: "164\u00a0g protein to go"
 - assertVisible: 'Weight today, 82.0 kilograms'
 - assertNotVisible: '.*to see your calorie budget'
