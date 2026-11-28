@@ -92,4 +92,22 @@ describe('The goal form', () => {
     );
     expect(await screen.findByText(/^82\.4 → 75\.0\skg$/)).toBeOnTheScreen();
   });
+
+  it('re-runs today’s review, so today’s budget drops by the goal’s deficit at once', async () => {
+    // Given Setup complete, and the form with a goal of 75 kg at 0.5 kg a week (550 kcal a day)
+    const stores = await setUp();
+    await openApp('/goal', stores);
+    const user = userEvent.setup();
+    await user.type(await screen.findByLabelText('Target weight (kg)'), '75');
+    await user.type(screen.getByLabelText('Rate (kg a week)'), '0,5');
+
+    // When the user sets it
+    await user.press(screen.getByRole('button', { name: 'Set goal' }));
+
+    // Then today's review is run again, its budget 550 kcal under maintenance
+    await waitFor(async () => {
+      const [today] = await stores.reviews.list();
+      expect(today?.budgetKcal).toBeCloseTo((today?.maintenanceKcal ?? 0) - 550, 6);
+    });
+  });
 });

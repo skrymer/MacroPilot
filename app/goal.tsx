@@ -10,6 +10,7 @@ import { FormPage } from '@/components/FormPage';
 import { goalForm } from '@/components/goalForm';
 import { Text } from '@/components/Text';
 import { useFirstFault } from '@/components/useFirstFault';
+import { useRunReview } from '@/components/useRunReview';
 import { useSave } from '@/components/useSave';
 import { newGoal } from '@/domain/goal';
 import { reviewFor } from '@/domain/review';
@@ -26,6 +27,7 @@ const FIELDS = ['targetKg', 'rateKgPerWeek'] as const;
 function GoalForm({ trendKg, maintenanceKcal }: { trendKg: number; maintenanceKcal: number }) {
   const router = useRouter();
   const goals = useGoalStore();
+  const runReview = useRunReview();
   const today = useToday();
   const {
     control,
@@ -43,6 +45,7 @@ function GoalForm({ trendKg, maintenanceKcal }: { trendKg: number; maintenanceKc
     form: { handleSubmit, setError },
     write: async (said) => {
       await goals.save(newGoal(said, { trendKg, maintenanceKcal }, today));
+      await runReview(today, false, true);
     },
     failed: 'Could not set goal. What you typed is still here.',
     leave,
