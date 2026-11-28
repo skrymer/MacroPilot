@@ -188,7 +188,6 @@ export default defineConfig({
         'eslint-rules/**/*.{js,ts}',
         'eslint.config.js',
         '!app/design.tsx',
-        '!app/prototype/**',
       ],
       rules: [enforceTdd({ maxEvents: 20, instructions: testFirstRules })],
     },
