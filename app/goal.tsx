@@ -16,11 +16,12 @@ import { useFirstFault } from '@/components/useFirstFault';
 import { useRunReview } from '@/components/useRunReview';
 import { useSave } from '@/components/useSave';
 import { type Goal, newGoal } from '@/domain/goal';
-import { reviewFor } from '@/domain/review';
+import { newReview, reviewFor } from '@/domain/review';
 import { trendWeight } from '@/domain/trend';
 import { useToday } from '@/lifecycle/useToday';
 import { useGoalStore } from '@/storage/GoalStoreContext';
 import { useGoal } from '@/storage/useGoal';
+import { useProfile } from '@/storage/useProfile';
 import { useReviews } from '@/storage/useReviews';
 import { useWeighIns } from '@/storage/useWeighIns';
 
@@ -120,6 +121,7 @@ export default function GoalPage() {
   const { weighIns, readAgain: readWeighInsAgain } = useWeighIns();
   const { reviews, readAgain: readReviewsAgain } = useReviews();
   const { goal, readAgain } = useGoal();
+  const { profile } = useProfile();
   if (goal === 'unreadable' || weighIns === 'unreadable' || reviews === 'unreadable') {
     const retry = () => {
       void readAgain();
@@ -132,11 +134,17 @@ export default function GoalPage() {
       </InPlaceOfTheForm>
     );
   }
-  if (!Array.isArray(weighIns) || !Array.isArray(reviews) || !Array.isArray(goal)) return null;
+  if (
+    !Array.isArray(weighIns) ||
+    !Array.isArray(reviews) ||
+    !Array.isArray(goal) ||
+    !Array.isArray(profile)
+  )
+    return null;
   const trendKg = trendWeight(weighIns);
-  // The maintenance today is held to: a Goal is refused when its deficit would reach it.
-  const heldTo = reviewFor(reviews, today);
-  if (trendKg === undefined || heldTo === undefined) {
+  const [details] = profile;
+  // There is a review only once Setup is complete.
+  if (trendKg === undefined || details === undefined || reviewFor(reviews, today) === undefined) {
     return (
       <InPlaceOfTheForm>
         <Text className="font-language text-body text-ink-mid">
@@ -145,5 +153,8 @@ export default function GoalPage() {
       </InPlaceOfTheForm>
     );
   }
-  return <GoalForm trendKg={trendKg} maintenanceKcal={heldTo.maintenanceKcal} set={goal[0]} />;
+  // A Goal is refused when its deficit would reach the maintenance the review it sets off will take,
+  // today's, and not an older review's.
+  const { maintenanceKcal } = newReview(details, weighIns, today);
+  return <GoalForm trendKg={trendKg} maintenanceKcal={maintenanceKcal} set={goal[0]} />;
 }

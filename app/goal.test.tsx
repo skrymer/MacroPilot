@@ -288,6 +288,32 @@ describe('The goal form', () => {
     ).toBeOnTheScreen();
   });
 
+  it('judges the rate against today’s maintenance, which the re-run review sets, not an older one', async () => {
+    // Given a review of 1600 kcal kept from before, while today's figures give 2534.35 kcal
+    const stores = await setUp();
+    await stores.reviews.save({
+      day: '2026-11-28',
+      trendKg: 82.4,
+      maintenanceKcal: 1600,
+      budgetKcal: 1600,
+      proteinFloorG: 164.8,
+    });
+    await openApp('/goal', stores);
+    const user = userEvent.setup();
+    await user.type(await screen.findByLabelText('Target weight (kg)'), '75');
+    await user.type(screen.getByLabelText('Rate (kg a week)'), '1,5');
+
+    // When the user sets 1.5 kg a week, a deficit of 1650 kcal a day
+    await user.press(screen.getByRole('button', { name: 'Set goal' }));
+
+    // Then it is kept, and today's budget is today's maintenance less it
+    await waitFor(async () => expect((await stores.goals.read())?.rateKgPerWeek).toBe(1.5));
+    await waitFor(async () => {
+      const [today] = await stores.reviews.list();
+      expect(today?.budgetKcal).toBeCloseTo(2534.35 - 1650, 6);
+    });
+  });
+
   it('re-runs today’s review, so today’s budget drops by the goal’s deficit at once', async () => {
     // Given Setup complete, and the form with a goal of 75 kg at 0.5 kg a week (550 kcal a day)
     const stores = await setUp();
