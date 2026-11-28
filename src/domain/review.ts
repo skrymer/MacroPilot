@@ -28,7 +28,7 @@ export const reviewFor = (reviews: readonly Review[], day: string): Review | und
 /**
  * The review to run now, if one is due: none before Setup; the first once Setup completes, whichever
  * came second; and today's again when today's weigh-in has been replaced. A change of height or birth
- * date runs none (ADR 0012).
+ * date runs none (ADR 0012), and neither do details whose seeded maintenance is not above 0.
  */
 export function reviewDue({
   profile,
