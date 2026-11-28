@@ -338,7 +338,10 @@ export default function Today() {
               onWeighIn={() => router.navigate('/log-weight')}
             />
           ) : null}
-          {suspended ? <SuspendedCard onEase={() => router.navigate('/profile')} /> : null}
+          {/* It speaks of the budget below, so it stands only where the ring does. */}
+          {suspended && Array.isArray(found) ? (
+            <SuspendedCard onEase={() => router.navigate('/profile')} />
+          ) : null}
           {/* Not before the targets are read, or a day held to one shows first as one without. */}
           {Array.isArray(found) && reviews !== 'unread' ? (
             heldTo ? (

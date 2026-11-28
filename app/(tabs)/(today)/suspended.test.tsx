@@ -89,6 +89,19 @@ describe('Today, while the Goal’s deficit is suspended', () => {
     expect(await screen.findByText('No deficit is being applied')).toBeOnTheScreen();
   });
 
+  it('says nothing of the budget below when there is no ring, the day unread', async () => {
+    // Given the Goal's deficit suspended, and today's entries that cannot be read
+    const stores = await aDay(1.4);
+    stores.entries.unreadable = true;
+
+    // When the user opens Today
+    await openToday(stores);
+
+    // Then the day's failure is said, and no card speaks of a budget below
+    await screen.findByText('Couldn’t load today’s summary');
+    expect(screen.queryByText('No deficit is being applied')).not.toBeOnTheScreen();
+  });
+
   it('opens Profile from Ease your goal', async () => {
     // Given the card on Today, the Goal's deficit suspended
     await openToday(await aDay(1.4));
