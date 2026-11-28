@@ -78,6 +78,12 @@ const run = (tool, args) => {
   return status === 0;
 };
 
+/**
+ * Runs the named tests by their paths. Jest otherwise takes each as a pattern, and an Expo Router
+ * group's parentheses, `app/(tabs)/…`, make one that matches no file: the run passes on the rest.
+ */
+const jest = (tests) => run('jest', [...tests, '--runTestsByPath']);
+
 const readState = () => (existsSync(STATE) ? JSON.parse(readFileSync(STATE, 'utf8')) : undefined);
 
 /** The files, by path, whose blob differs between the snapshot and now. */
@@ -115,7 +121,7 @@ const open = (tests) => {
     refuse(
       `Refused: a window opens only on committed tests, and these differ from HEAD:\n${changed.map((p) => `  ${p}`).join('\n')}\nCommit them first.`,
     );
-  if (!run('jest', tests)) refuse('Refused: the tests that cover the code must pass first.');
+  if (!jest(tests)) refuse('Refused: the tests that cover the code must pass first.');
   const snapshot = gitPath('refactor-window-snapshot');
   writeFileSync(snapshot, [...hashes(true)].map(([p, blob]) => `${p}\t${blob}\n`).join(''));
   rmSync(RESTORED, { force: true });
@@ -137,7 +143,7 @@ const close = () => {
   const changed = changes(before, hashes(false));
   const linted = changed.filter((p) => existsSync(path.join(root, p)));
   const failed = [
-    run('jest', state.tests) ? undefined : `the tests (${state.tests.join(' ')})`,
+    jest(state.tests) ? undefined : `the tests (${state.tests.join(' ')})`,
     run('tsc', ['--noEmit', '-p', '.']) ? undefined : 'the type check',
     linted.length === 0 || run('eslint', linted) ? undefined : `ESLint on ${linted.join(' ')}`,
   ].filter(Boolean);

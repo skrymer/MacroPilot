@@ -128,6 +128,17 @@ describe('refactor.mjs open', () => {
     expect(refactor(root, ['status']).stdout).toContain('open');
   });
 
+  it('hands Jest the tests as paths, so a route’s parentheses are not a pattern that matches none', () => {
+    // Given a clean checkout whose tests pass
+    const root = checkout();
+
+    // When a window is opened
+    const { stderr } = refactor(root, ['open', 'src/a.test.ts']);
+
+    // Then Jest was told to run them by path
+    expect(stderr).toContain('with src/a.test.ts --runTestsByPath');
+  });
+
   it('refuses a second window while one is open', () => {
     // Given an open window
     const root = checkout();
