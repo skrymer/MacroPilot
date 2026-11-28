@@ -190,6 +190,71 @@ describe('The goal form', () => {
     expect(screen.queryByLabelText('Target weight (kg)')).not.toBeOnTheScreen();
   });
 
+  it('reads again on Retry, and shows the form once the goal can be read', async () => {
+    // Given the form opened over a goal store that could not be read, and since can be
+    const stores = await setUp();
+    stores.goals.unreadable = true;
+    await openApp('/goal', stores);
+    const user = userEvent.setup();
+    const retry = await screen.findByRole('button', { name: 'Retry' });
+    stores.goals.unreadable = false;
+
+    // When the user retries
+    await user.press(retry);
+
+    // Then the form is shown
+    expect(await screen.findByLabelText('Target weight (kg)')).toBeOnTheScreen();
+  });
+
+  it('goes back to Profile on Cancel when opened before there can be a goal', async () => {
+    // Given the goal form opened before any weight is logged
+    const stores = {
+      ...(await setUp()),
+      weighIns: new InMemoryWeighInStore(),
+      reviews: new InMemoryReviewStore(),
+    };
+    await openApp('/goal', stores);
+    const user = userEvent.setup();
+    const cancel = await screen.findByRole('button', { name: 'Cancel' });
+
+    // When the user cancels
+    await user.press(cancel);
+
+    // Then Profile is shown
+    expect(await screen.findByLabelText('Sex, Male')).toBeOnTheScreen();
+  });
+
+  it('says what Setup needs when a weight is logged but there is no review yet', async () => {
+    // Given a weight logged today but no review, as before the details are saved
+    const stores = { ...(await setUp()), reviews: new InMemoryReviewStore() };
+
+    // When the goal form is opened, as by a link
+    await openApp('/goal', stores);
+
+    // Then it says what to do first, and offers no field
+    await waitFor(() =>
+      expect(
+        screen.queryByText('Save your details and log your weight on Today to set a goal.'),
+      ).toBeOnTheScreen(),
+    );
+    expect(screen.queryByLabelText('Target weight (kg)')).not.toBeOnTheScreen();
+  });
+
+  it('goes back to Profile on Cancel when the goal could not be read', async () => {
+    // Given the goal form opened over a goal store that cannot be read
+    const stores = await setUp();
+    stores.goals.unreadable = true;
+    await openApp('/goal', stores);
+    const user = userEvent.setup();
+    const cancel = await screen.findByRole('button', { name: 'Cancel' });
+
+    // When the user cancels
+    await user.press(cancel);
+
+    // Then Profile is shown
+    expect(await screen.findByLabelText('Sex, Male')).toBeOnTheScreen();
+  });
+
   it('asks for a target and a rate when they are left blank, and sets nothing', async () => {
     // Given the form with nothing typed
     const stores = await setUp();

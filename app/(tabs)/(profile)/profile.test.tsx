@@ -123,6 +123,28 @@ describe('Profile’s goal card', () => {
     expect(screen.getByRole('button', { name: 'Change goal' })).toBeOnTheScreen();
   });
 
+  it('reads the goal again on Retry, and shows the card once it can be read', async () => {
+    // Given Profile opened over a goal store that could not be read, and since can be
+    const profile = new InMemoryProfileStore();
+    await profile.save({ sex: 'male', born: '1996-11-28', heightCm: 181, countsCalories: true });
+    const weighIns = new InMemoryWeighInStore();
+    await weighIns.save({ day: '2026-11-28', kg: 82 });
+    const reviews = new InMemoryReviewStore();
+    await reviews.save(REVIEW);
+    const goals = new InMemoryGoalStore();
+    goals.unreadable = true;
+    await openProfile(profile, weighIns, reviews, goals);
+    const user = userEvent.setup();
+    const retry = await screen.findByRole('button', { name: 'Retry' });
+    goals.unreadable = false;
+
+    // When the user retries
+    await user.press(retry);
+
+    // Then the card offers to set a goal
+    expect(await screen.findByRole('button', { name: 'Set a goal' })).toBeOnTheScreen();
+  });
+
   it('says the goal could not be read, with a way to try again, and still shows the details', async () => {
     // Given Setup complete over a goal store that cannot be read
     const profile = new InMemoryProfileStore();
