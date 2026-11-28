@@ -48,6 +48,25 @@ export function againstFloor(
  */
 export const keptGrams = (grams: number) => Math.round(grams * 1e6) / 1e6;
 
+/**
+ * Where the day would stand with an entry being typed, once that passes the budget: how far past it,
+ * unrounded, and which standing it would reach. Nothing under the budget, or with no figure typed.
+ */
+export function overLine(
+  dayKcal: number,
+  entryKcal: number | undefined,
+  budgetKcal: number,
+): { overKcal: number; standing: 'slightly over' | 'over budget' } | undefined {
+  if (entryKcal === undefined) return undefined;
+  const projected = dayKcal + entryKcal;
+  const { kcal, over } = againstBudget(projected, budgetKcal);
+  if (!over) return undefined;
+  return {
+    overKcal: kcal,
+    standing: projected > budgetKcal * (1 + TOLERANCE) ? 'over budget' : 'slightly over',
+  };
+}
+
 /** Judges a day's totals against the targets of the review it is held to. */
 export function dayVerdict(
   totals: Totals,
