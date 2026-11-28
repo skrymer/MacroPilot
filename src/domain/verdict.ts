@@ -59,12 +59,14 @@ export function overLine(
 ): { overKcal: number; standing: 'slightly over' | 'over budget' } | undefined {
   if (entryKcal === undefined) return undefined;
   const projected = dayKcal + entryKcal;
-  const { kcal, over } = againstBudget(projected, budgetKcal);
-  if (!over) return undefined;
-  return {
-    overKcal: kcal,
-    standing: projected > budgetKcal * (1 + TOLERANCE) ? 'over budget' : 'slightly over',
-  };
+  const standing = pastBudget(projected, budgetKcal);
+  return standing && { overKcal: againstBudget(projected, budgetKcal).kcal, standing };
+}
+
+/** How far past its budget a day's calories are: within its tenth, beyond it, or not past it at all. */
+function pastBudget(calories: number, budgetKcal: number) {
+  if (!againstBudget(calories, budgetKcal).over) return undefined;
+  return calories > budgetKcal * (1 + TOLERANCE) ? 'over budget' : 'slightly over';
 }
 
 /** Judges a day's totals against the targets of the review it is held to. */
@@ -72,9 +74,8 @@ export function dayVerdict(
   totals: Totals,
   targets: { budgetKcal: number; proteinFloorG: number },
 ): Verdict {
-  const { over } = againstBudget(totals.calories, targets.budgetKcal);
-  if (over && totals.calories > targets.budgetKcal * (1 + TOLERANCE)) return 'over budget';
-  if (over) return 'slightly over';
+  const past = pastBudget(totals.calories, targets.budgetKcal);
+  if (past) return past;
   if (againstFloor(totals, targets.proteinFloorG).standing === 'met') return 'on target';
   return 'in progress';
 }
