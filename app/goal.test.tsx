@@ -68,4 +68,28 @@ describe('The goal form', () => {
     expect(screen.getByLabelText('Target weight (kg)')).toBeOnTheScreen();
     expect(screen.getByLabelText('Rate (kg a week)')).toBeOnTheScreen();
   });
+
+  it('sets the goal, from the trend weight, and Profile shows it', async () => {
+    // Given Setup complete, and the form opened from Profile with a target and a rate typed
+    const stores = await setUp();
+    await openApp('/profile', stores);
+    const user = userEvent.setup();
+    await user.press(await screen.findByRole('button', { name: 'Set a goal' }));
+    await user.type(await screen.findByLabelText('Target weight (kg)'), '75');
+    await user.type(screen.getByLabelText('Rate (kg a week)'), '0,5');
+
+    // When the user sets it
+    await user.press(screen.getByRole('button', { name: 'Set goal' }));
+
+    // Then it is kept, from 82.4 kg today, and Profile shows it
+    await waitFor(async () =>
+      expect(await stores.goals.read()).toEqual({
+        setOn: '2026-11-28',
+        startKg: 82.4,
+        targetKg: 75,
+        rateKgPerWeek: 0.5,
+      }),
+    );
+    expect(await screen.findByText(/^82\.4 → 75\.0\skg$/)).toBeOnTheScreen();
+  });
 });

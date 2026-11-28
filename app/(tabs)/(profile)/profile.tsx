@@ -3,18 +3,23 @@ import { ScrollView, View } from 'react-native';
 
 import { Button } from '@/components/Button';
 import { dateWords } from '@/components/DateField';
-import { cm, kcal, spokenCm } from '@/components/figures';
+import { cm, kcal, kg, spokenCm } from '@/components/figures';
 import { Hairline } from '@/components/Hairline';
 import { Notice } from '@/components/Notice';
 import { SEXES, TRACKING, wordsOf } from '@/components/profileWords';
 import { Text } from '@/components/Text';
 import { Unreadable } from '@/components/Unreadable';
+import { dailyDeficit } from '@/domain/goal';
 import type { Profile as Details } from '@/domain/profile';
 import { reviewFor } from '@/domain/review';
 import { useToday } from '@/lifecycle/useToday';
+import { useGoal } from '@/storage/useGoal';
 import { useProfile } from '@/storage/useProfile';
 import { useReviews } from '@/storage/useReviews';
 import { useWeighIns } from '@/storage/useWeighIns';
+
+/** Joins a figure to its unit, so a line never breaks between them. */
+const NBSP = String.fromCharCode(0xa0);
 
 /** A label and what it holds, read out as one row of a card. */
 function Detail({ label, value, spoken }: { label: string; value: string; spoken?: string }) {
@@ -36,9 +41,11 @@ function GoalCard() {
   const today = useToday();
   const { weighIns } = useWeighIns();
   const { reviews } = useReviews();
-  if (!Array.isArray(weighIns) || !Array.isArray(reviews)) return null;
+  const { goal: found } = useGoal();
+  if (!Array.isArray(weighIns) || !Array.isArray(reviews) || !Array.isArray(found)) return null;
   // The review today is held to, which there is only once Setup is complete.
   const heldTo = reviewFor(reviews, today);
+  const [goal] = found;
   return (
     <>
       <Text accessibilityRole="header" className="font-language-bold text-body text-ink">
@@ -49,6 +56,18 @@ function GoalCard() {
           <Text className="font-language text-body text-ink-mid">
             Save your details and log your weight on Today to set a goal.
           </Text>
+        ) : goal ? (
+          <>
+            <View>
+              <Text className="font-weighed text-title text-ink">
+                {`${goal.startKg.toFixed(1)} → ${kg(goal.targetKg)}`}
+              </Text>
+              <Text className="font-language text-label text-ink-mid">
+                {`${goal.rateKgPerWeek}${NBSP}kg a week, ${kcal(dailyDeficit(goal.rateKgPerWeek))} a day under maintenance`}
+              </Text>
+            </View>
+            <Button label="Change goal" onPress={() => router.navigate('/goal')} secondary />
+          </>
         ) : (
           <>
             <Text className="font-language text-body text-ink-mid">

@@ -10,17 +10,27 @@ import { FormPage } from '@/components/FormPage';
 import { goalForm } from '@/components/goalForm';
 import { Text } from '@/components/Text';
 import { useFirstFault } from '@/components/useFirstFault';
+import { useSave } from '@/components/useSave';
+import { newGoal } from '@/domain/goal';
+import { reviewFor } from '@/domain/review';
 import { trendWeight } from '@/domain/trend';
+import { useToday } from '@/lifecycle/useToday';
+import { useGoalStore } from '@/storage/GoalStoreContext';
+import { useReviews } from '@/storage/useReviews';
 import { useWeighIns } from '@/storage/useWeighIns';
 
 /** The goal form's fields, in the order a fault among them is shown. */
 const FIELDS = ['targetKg', 'rateKgPerWeek'] as const;
 
 /** The form, from the Trend Weight a Goal starts at. */
-function GoalForm({ trendKg }: { trendKg: number }) {
+function GoalForm({ trendKg, maintenanceKcal }: { trendKg: number; maintenanceKcal: number }) {
   const router = useRouter();
+  const goals = useGoalStore();
+  const today = useToday();
   const {
     control,
+    handleSubmit,
+    setError,
     formState: { errors, isSubmitted },
   } = useForm({
     mode: 'onTouched',
@@ -28,14 +38,23 @@ function GoalForm({ trendKg }: { trendKg: number }) {
     defaultValues: { targetKg: '', rateKgPerWeek: '' },
   });
   const leave = () => router.dismissTo('/profile');
-  const { scroll, onLayoutOf } = useFirstFault(FIELDS);
+  const { scroll, onLayoutOf, show } = useFirstFault(FIELDS);
+  const save = useSave({
+    form: { handleSubmit, setError },
+    write: async (said) => {
+      await goals.save(newGoal(said, { trendKg, maintenanceKcal }, today));
+    },
+    failed: 'Could not set goal. What you typed is still here.',
+    leave,
+    onRefused: show,
+  });
   return (
     <FormPage
       title="Set a goal"
       onCancel={leave}
       fault={formFault({ errors, isSubmitted })}
       action="Set goal"
-      onAction={() => undefined}
+      onAction={save}
       scroll={scroll}
     >
       {/* Shown and never typed: a Goal starts from the trend when it is set. */}
@@ -68,8 +87,14 @@ function GoalForm({ trendKg }: { trendKg: number }) {
 
 /** The goal form: a target weight and a rate, from the Trend Weight. */
 export default function Goal() {
+  const today = useToday();
   const { weighIns } = useWeighIns();
-  if (!Array.isArray(weighIns)) return null;
+  const { reviews } = useReviews();
+  if (!Array.isArray(weighIns) || !Array.isArray(reviews)) return null;
   const trendKg = trendWeight(weighIns);
-  return trendKg === undefined ? null : <GoalForm trendKg={trendKg} />;
+  // The maintenance today is held to: a Goal is refused when its deficit would reach it.
+  const heldTo = reviewFor(reviews, today);
+  return trendKg === undefined || heldTo === undefined ? null : (
+    <GoalForm trendKg={trendKg} maintenanceKcal={heldTo.maintenanceKcal} />
+  );
 }
