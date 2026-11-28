@@ -11,6 +11,7 @@ import { Text } from '@/components/Text';
 import { Unreadable } from '@/components/Unreadable';
 import type { Profile as Details } from '@/domain/profile';
 import { useProfile } from '@/storage/useProfile';
+import { useWeighIns } from '@/storage/useWeighIns';
 
 /** A label and what it holds, read out as one row of a card. */
 function Detail({ label, value, spoken }: { label: string; value: string; spoken?: string }) {
@@ -26,10 +27,29 @@ function Detail({ label, value, spoken }: { label: string; value: string; spoken
   );
 }
 
+/** The Goal, above the details: what Setup needs before there can be one. */
+function GoalCard() {
+  const { weighIns } = useWeighIns();
+  if (!Array.isArray(weighIns)) return null;
+  return (
+    <>
+      <Text accessibilityRole="header" className="font-language-bold text-body text-ink">
+        Goal
+      </Text>
+      <View className="rounded-card bg-surface p-grid-2">
+        <Text className="font-language text-body text-ink-mid">
+          Save your details and log your weight on Today to set a goal.
+        </Text>
+      </View>
+    </>
+  );
+}
+
 function Saved({ details }: { details: Details }) {
   const router = useRouter();
   return (
     <>
+      <GoalCard />
       <Text accessibilityRole="header" className="font-language-bold text-body text-ink">
         Your details
       </Text>

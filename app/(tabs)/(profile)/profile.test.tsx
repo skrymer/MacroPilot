@@ -3,14 +3,22 @@ import { renderRouter } from 'expo-router/testing-library';
 import type { ReactNode } from 'react';
 
 import { TestProviders } from '@/components/TestProviders';
+import { InMemoryGoalStore } from '@/storage/InMemoryGoalStore';
 import { InMemoryProfileStore } from '@/storage/InMemoryProfileStore';
+import { InMemoryReviewStore } from '@/storage/InMemoryReviewStore';
+import { InMemoryWeighInStore } from '@/storage/InMemoryWeighInStore';
 
 import TabsLayout from '../_layout';
 import ProfileStack from './_layout';
 import Profile from './profile';
 
-/** Opens the app on Profile, over `profile`. */
-const openProfile = (profile: InMemoryProfileStore) =>
+/** Opens the app on Profile, over `profile`, and the weigh-ins, reviews and Goal given. */
+const openProfile = (
+  profile: InMemoryProfileStore,
+  weighIns?: InMemoryWeighInStore,
+  reviews?: InMemoryReviewStore,
+  goals?: InMemoryGoalStore,
+) =>
   renderRouter(
     {
       '(tabs)/_layout': TabsLayout,
@@ -24,10 +32,30 @@ const openProfile = (profile: InMemoryProfileStore) =>
     {
       initialUrl: '/profile',
       wrapper: ({ children }: { children: ReactNode }) => (
-        <TestProviders profile={profile}>{children}</TestProviders>
+        <TestProviders profile={profile} weighIns={weighIns} reviews={reviews} goals={goals}>
+          {children}
+        </TestProviders>
       ),
     },
   );
+
+describe('Profile’s goal card', () => {
+  it('says what to do before Setup, and offers no way to set a goal', async () => {
+    // Given details saved and no weight logged
+    const profile = new InMemoryProfileStore();
+    await profile.save({ sex: 'male', born: '1984-03-14', heightCm: 181, countsCalories: true });
+
+    // When the user opens Profile
+    await openProfile(profile, new InMemoryWeighInStore());
+
+    // Then the goal card says what Setup needs, with no button
+    await screen.findByLabelText('Sex, Male');
+    expect(
+      screen.queryByText('Save your details and log your weight on Today to set a goal.'),
+    ).toBeOnTheScreen();
+    expect(screen.queryByRole('button', { name: 'Set a goal' })).not.toBeOnTheScreen();
+  });
+});
 
 describe('Profile', () => {
   it('says what to add before there are any details, and never shows an empty form', async () => {
