@@ -223,6 +223,24 @@ describe('pixels.mjs', () => {
     expect(output).not.toContain('#');
   });
 
+  it('holds a point to the DESIGN.md token it names, and fails on one that is not it', () => {
+    // Given a screen whose top left is red and bottom right white, and a gap that should show the track
+    const screen = stage(device('@e1 [group] "Today"'));
+
+    // When the white is held to the surface and the red to the track, light and dark
+    const { status, output } = screen.run(PIXELS, [
+      'card=1,1:surface',
+      'gap=0,0:line',
+      'gap-dark=0,0:line@dark',
+    ]);
+
+    // Then the first passes and the others are faults naming what they had to be, as the run on #129 needed
+    expect(status).toBe(1);
+    expect(output).toContain('card 1,1 #ffffff PASS (surface)');
+    expect(output).toContain('gap 0,0 #ff0000 FAULT required #e2e8e5 (line)');
+    expect(output).toContain('gap-dark 0,0 #ff0000 FAULT required #28342f (line, dark)');
+  });
+
   it('refuses a point off the screen', () => {
     // Given a screen two pixels wide
 
