@@ -1,8 +1,10 @@
 import { useNavigation, useRouter } from 'expo-router';
+import { SymbolView } from 'expo-symbols';
 import { useCallback, useEffect, useEffectEvent, useState, type ReactNode } from 'react';
 import { FlatList, View } from 'react-native';
 
 import { dayWords } from '@/components/dayWords';
+import { Button } from '@/components/Button';
 import { CardSlice } from '@/components/CardSlice';
 import { DayRing, type Standing } from '@/components/DayRing';
 import { DeletableRow } from '@/components/DeletableRow';
@@ -20,7 +22,9 @@ import { TextAction } from '@/components/TextAction';
 import { Unreadable } from '@/components/Unreadable';
 import { useDelete } from '@/components/useDelete';
 import { useFailedInView } from '@/components/useFailedInView';
+import { useTint } from '@/components/useTint';
 import { totalsOf, type Totals as DayTotals } from '@/domain/dailyLog';
+import { leavesFood } from '@/domain/goal';
 import { reviewFor, type Review } from '@/domain/review';
 import { missingForSetup } from '@/domain/setup';
 import { shownName } from '@/domain/shownName';
@@ -29,6 +33,7 @@ import { weighInOn, type WeighIn } from '@/domain/weighIn';
 import { useToday } from '@/lifecycle/useToday';
 import type { LoggedEntry } from '@/storage/EntryStore';
 import { useEntryStore } from '@/storage/EntryStoreContext';
+import { useGoal } from '@/storage/useGoal';
 import { useReading } from '@/storage/useReading';
 import { useProfile } from '@/storage/useProfile';
 import { useReviews } from '@/storage/useReviews';
@@ -235,6 +240,14 @@ export default function Today() {
   const { reviews, readAgain: readReviewsAgain } = useReviews();
   // The review this day is held to: the latest dated on or before it.
   const heldTo = Array.isArray(reviews) ? reviewFor(reviews, day) : undefined;
+  const { goal } = useGoal();
+  const tint = useTint();
+  // A running Goal whose deficit the maintenance today is held to cannot carry: none is taken.
+  const running = Array.isArray(goal) ? goal[0] : undefined;
+  const suspended =
+    heldTo !== undefined &&
+    running !== undefined &&
+    !leavesFood(running.rateKgPerWeek, heldTo.maintenanceKcal);
   const weighedToday = Array.isArray(weighIns) ? weighInOn(weighIns, day) : undefined;
   // An entry can be written after the user has come here from its form.
   const [logged] = useLogged();
@@ -327,6 +340,28 @@ export default function Today() {
               onProfile={() => router.navigate('/profile')}
               onWeighIn={() => router.navigate('/log-weight')}
             />
+          ) : null}
+          {suspended ? (
+            <View className="items-center gap-grid-1 rounded-card bg-surface p-grid-2">
+              <SymbolView
+                name={{ ios: 'pause.circle', android: 'pause_circle' }}
+                size={32}
+                tintColor={tint['ink-mid']}
+              />
+              <Text className="text-center font-language-bold text-body text-ink">
+                No deficit is being applied
+              </Text>
+              <Text className="text-center font-language text-label text-ink-mid">
+                Your goal’s rate needs more of a daily deficit than your maintenance can give, so
+                MacroPilot isn’t applying one. Your calorie budget below is your full maintenance —
+                you’re holding steady, not losing.
+              </Text>
+              <Button
+                label="Ease your goal"
+                onPress={() => router.navigate('/profile')}
+                secondary
+              />
+            </View>
           ) : null}
           {/* Not before the targets are read, or a day held to one shows first as one without. */}
           {Array.isArray(found) && reviews !== 'unread' ? (
