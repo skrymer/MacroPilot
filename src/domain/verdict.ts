@@ -19,19 +19,25 @@ export function againstBudget(calories: number, budgetKcal: number) {
 }
 
 /**
- * A day's Known protein against its Protein Floor, in g: how much is still to go, and the share of
- * the floor reached, at most all of it.
+ * A day's Known protein against its Protein Floor, in g: still to go, or at least what is known when
+ * some entries left it out; and the share of the floor reached, at most all of it.
  */
-export function againstFloor(totals: Pick<Totals, 'protein' | 'proteinStated'>, floorG: number) {
+export type AgainstFloor =
+  | { standing: 'to go' | 'at least'; grams: number; share: number }
+  | { standing: 'met' | 'not stated'; share: number };
+
+export function againstFloor(
+  totals: Pick<Totals, 'protein' | 'proteinStated'>,
+  floorG: number,
+): AgainstFloor {
   // Protein nobody stated is not known to be anything; it is never 0 g.
   const protein = totals.protein;
   if (protein === undefined) return { standing: 'not stated', share: 0 };
   if (protein >= floorG) return { standing: 'met', share: 1 };
+  const share = protein / floorG;
   // What some entries left out is not known, so how much is still to go is not either.
-  if (totals.proteinStated === 'some') {
-    return { standing: 'at least', grams: protein, share: protein / floorG };
-  }
-  return { standing: 'to go', grams: floorG - protein, share: protein / floorG };
+  if (totals.proteinStated === 'some') return { standing: 'at least', grams: protein, share };
+  return { standing: 'to go', grams: floorG - protein, share };
 }
 
 /** Judges a day's totals against the targets of the review it is held to. */
@@ -42,7 +48,6 @@ export function dayVerdict(
   const { over } = againstBudget(totals.calories, targets.budgetKcal);
   if (over && totals.calories > targets.budgetKcal * (1 + TOLERANCE)) return 'over budget';
   if (over) return 'slightly over';
-  // Protein not stated is not yet known to reach anything; it is never 0 g.
-  if (totals.protein !== undefined && totals.protein >= targets.proteinFloorG) return 'on target';
+  if (againstFloor(totals, targets.proteinFloorG).standing === 'met') return 'on target';
   return 'in progress';
 }
