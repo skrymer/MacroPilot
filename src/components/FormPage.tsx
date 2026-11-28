@@ -15,6 +15,7 @@ export function FormPage({
   title,
   onCancel,
   fault,
+  line,
   action,
   onAction,
   scroll,
@@ -24,6 +25,8 @@ export function FormPage({
   onCancel: () => void;
   /** Why the form was not kept, said above the button. */
   fault?: string;
+  /** What the entry would do to the day, said above the button and never stopping it. */
+  line?: ReactNode;
   action: string;
   onAction: () => void;
   scroll?: Ref<ComponentRef<typeof ScrollView>>;
@@ -59,6 +62,7 @@ export function FormPage({
         {/* Out of the scroll view, so that the keyboard never hides them. */}
         <View className="gap-grid-1 px-page py-grid-1">
           {fault ? <Failure words={fault} /> : null}
+          {line}
           <Button label={action} onPress={onAction} />
         </View>
       </KeyboardAvoidingView>
