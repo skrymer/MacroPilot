@@ -167,4 +167,24 @@ describe('newReview', () => {
     // Then the budget is 550 kcal under maintenance
     expect(review.budgetKcal).toBeCloseTo(review.maintenanceKcal - 550, 10);
   });
+
+  it('suspends the Goal’s deficit when maintenance no longer carries it: the budget is maintenance', () => {
+    // Given a woman of 150 cm, 86, weighed at 40 kg (maintenance 1045.1 kcal), and a Goal of
+    // 1.5 kg a week, a deficit of 1650 kcal a day
+    const profile = {
+      sex: 'female',
+      born: '1940-11-28',
+      heightCm: 150,
+      countsCalories: true,
+    } as const;
+    const weighIns = [{ day: '2026-11-28', kg: 40 }];
+    const goal = { setOn: '2026-11-01', startKg: 45, targetKg: 38, rateKgPerWeek: 1.5 };
+
+    // When the review is run on 28 November 2026
+    const review = newReview(profile, weighIns, '2026-11-28', goal);
+
+    // Then no deficit is taken, and the budget is maintenance, never 0 or less
+    expect(review.maintenanceKcal).toBeCloseTo(1045.1, 10);
+    expect(review.budgetKcal).toBe(review.maintenanceKcal);
+  });
 });

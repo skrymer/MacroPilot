@@ -1,4 +1,4 @@
-import { dailyDeficit, type Goal } from './goal';
+import { dailyDeficit, type Goal, leavesFood } from './goal';
 import { seedMaintenance } from './maintenance';
 import type { Profile } from './profile';
 import { trendWeight } from './trend';
@@ -76,7 +76,11 @@ export function newReview(
   const trendKg = trendWeight(weighIns);
   if (trendKg === undefined) throw new Error('A review needs a weigh-in');
   const maintenanceKcal = seedMaintenance(profile, trendKg, day);
-  const deficit = goal === undefined ? 0 : dailyDeficit(goal.rateKgPerWeek);
+  // A deficit maintenance no longer carries is suspended: no budget is set at 0 or below.
+  const deficit =
+    goal === undefined || !leavesFood(goal.rateKgPerWeek, maintenanceKcal)
+      ? 0
+      : dailyDeficit(goal.rateKgPerWeek);
   return {
     day,
     trendKg,
