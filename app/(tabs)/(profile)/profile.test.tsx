@@ -123,6 +123,31 @@ describe('Profile’s goal card', () => {
     expect(screen.getByRole('button', { name: 'Change goal' })).toBeOnTheScreen();
   });
 
+  it('shows a rate typed with many decimals to two places, as the reference app does', async () => {
+    // Given Setup complete, and a goal at 0.123456789 kg a week (136 kcal a day)
+    const profile = new InMemoryProfileStore();
+    await profile.save({ sex: 'male', born: '1996-11-28', heightCm: 181, countsCalories: true });
+    const weighIns = new InMemoryWeighInStore();
+    await weighIns.save({ day: '2026-11-28', kg: 82 });
+    const reviews = new InMemoryReviewStore();
+    await reviews.save(REVIEW);
+    const goals = new InMemoryGoalStore();
+    await goals.save({
+      setOn: '2026-11-28',
+      startKg: 82,
+      targetKg: 75,
+      rateKgPerWeek: 0.123456789,
+    });
+
+    // When the user opens Profile
+    await openProfile(profile, weighIns, reviews, goals);
+
+    // Then the rate reads 0.12 kg a week
+    expect(
+      await screen.findByText(/^0\.12\skg a week, 136\skcal a day under maintenance$/),
+    ).toBeOnTheScreen();
+  });
+
   it('reads the goal again on Retry, and shows the card once it can be read', async () => {
     // Given Profile opened over a goal store that could not be read, and since can be
     const profile = new InMemoryProfileStore();
