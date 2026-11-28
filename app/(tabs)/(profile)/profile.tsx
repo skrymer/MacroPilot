@@ -68,7 +68,7 @@ function GoalCard() {
                 {`${goal.startKg.toFixed(1)} → ${kg(goal.targetKg)}`}
               </Text>
               <Text className="font-language text-label text-ink-mid">
-                {`${kgAWeek(goal.rateKgPerWeek)},${kcal(dailyDeficit(goal.rateKgPerWeek))} a day under maintenance`}
+                {`${kgAWeek(goal.rateKgPerWeek)}, ${kcal(dailyDeficit(goal.rateKgPerWeek))} a day under maintenance`}
               </Text>
             </View>
             <Button label="Change goal" onPress={() => router.navigate('/goal')} secondary />
