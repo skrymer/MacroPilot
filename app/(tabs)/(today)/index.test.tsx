@@ -118,6 +118,30 @@ describe('Today’s setup line', () => {
 });
 
 describe('Today’s ring', () => {
+  it('says how much protein is still to go, under the verdict and to a screen reader', async () => {
+    // Given a review with a floor of 150 g on the 24th, and 400 g of oats (52 g protein) that day
+    const reviews = new InMemoryReviewStore();
+    await reviews.save({
+      day: '2026-11-24',
+      trendKg: 75,
+      maintenanceKcal: 2000,
+      budgetKcal: 2000,
+      proteinFloorG: 150,
+    });
+    const entries = new InMemoryEntryStore([OATS]);
+    await entries.add(weighedEntry(OATS, 400, '2026-11-24'));
+
+    // When the user opens Today
+    await openToday(entries, atNoon(), undefined, undefined, undefined, reviews);
+
+    // Then 98 g are to go, in words and in what is read out
+    await screen.findByText('In progress');
+    expect(screen.queryByText(/^98\sg protein to go$/)).toBeOnTheScreen();
+    expect(
+      screen.getByLabelText('In progress, 824 kcal left, 98 grams of protein to go'),
+    ).toBeOnTheScreen();
+  });
+
   it('says kcal over on a day less than a calorie past its budget, as its verdict does', async () => {
     // Given a review of 1175.7 kcal on the 24th, and 400 g of oats (1176 kcal) logged that day
     const reviews = new InMemoryReviewStore();

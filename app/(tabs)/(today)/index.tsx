@@ -12,6 +12,7 @@ import { kg, spokenKg } from '@/components/figures';
 import { FIGURE_SET } from '@/components/figureSet';
 import { Hairline } from '@/components/Hairline';
 import { useLogged } from '@/components/LoggedContext';
+import { proteinWords } from '@/components/proteinWords';
 import { Row } from '@/components/Row';
 import { ShowAll } from '@/components/ShowAll';
 import { Text } from '@/components/Text';
@@ -23,7 +24,7 @@ import { totalsOf, type Totals as DayTotals } from '@/domain/dailyLog';
 import { reviewFor, type Review } from '@/domain/review';
 import { missingForSetup } from '@/domain/setup';
 import { shownName } from '@/domain/shownName';
-import { againstBudget, dayVerdict, type Verdict } from '@/domain/verdict';
+import { againstBudget, againstFloor, dayVerdict, type Verdict } from '@/domain/verdict';
 import { weighInOn, type WeighIn } from '@/domain/weighIn';
 import { useToday } from '@/lifecycle/useToday';
 import type { LoggedEntry } from '@/storage/EntryStore';
@@ -103,14 +104,17 @@ function RingCard({
   // A day of estimates alone is set lighter and says so (DESIGN.md, *Figures*).
   const about = totals.estimated;
   const kind = about ? 'estimated' : 'weighed';
+  // Protein's standing in words, never in hue alone (DESIGN.md, *Signature: the rings*).
+  const floor = againstFloor(totals, review.proteinFloorG);
+  const protein = proteinWords(floor, review.proteinFloorG);
   return (
     <View className="rounded-card bg-surface p-grid-2">
       <View
         accessible
-        accessibilityLabel={`${verdict.words}, ${about ? 'about ' : ''}${centre} ${unit}`}
+        accessibilityLabel={`${verdict.words}, ${about ? 'about ' : ''}${centre} ${unit}, ${protein.spoken}`}
         className="items-center"
       >
-        <DayRing share={share} standing={standing}>
+        <DayRing share={share} proteinShare={floor.share} standing={standing}>
           {about ? <Text className="font-language text-label text-ink-mid">about</Text> : null}
           <Text
             className={`text-figure ${
@@ -125,6 +129,14 @@ function RingCard({
         </DayRing>
         <Text className={`mt-grid-1 text-center font-language-bold text-body ${verdict.ink}`}>
           {verdict.words}
+        </Text>
+        {/* Protein Not stated is words in italic ink-dim, as DESIGN.md's *Figures* sets it. */}
+        <Text
+          className={`text-center text-label ${
+            floor.standing === 'not stated' ? FIGURE_SET.notStated : 'font-language text-ink-mid'
+          }`}
+        >
+          {protein.shown}
         </Text>
       </View>
       <View className="mt-grid-2">{children}</View>

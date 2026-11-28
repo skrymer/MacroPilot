@@ -296,20 +296,21 @@ const DAYS: Day[] = [
   },
 ];
 
-/** The ring Today draws, its day in the specimen's state; protein's arc is drawn with its words. */
+/** The ring Today draws, its day in the specimen's state, protein's arc and words with it. */
 const DaySpecimen = ({
   state,
   centre,
   unit,
   proteinLeft,
   calories,
+  protein,
   standing,
   text,
   figure = 'text-ink',
 }: Day) => (
   <Card>
     <View accessible accessibilityLabel={`${state}, ${centre} ${unit}, ${proteinLeft}`}>
-      <BuiltRing share={Math.min(calories, 1)} standing={standing}>
+      <BuiltRing share={Math.min(calories, 1)} proteinShare={protein} standing={standing}>
         <Text className={`font-weighed text-figure ${figure}`}>{centre}</Text>
         <Text className="font-language text-label text-ink-mid">{unit}</Text>
       </BuiltRing>
