@@ -16,7 +16,6 @@ import { useToday } from '@/lifecycle/useToday';
 import { useGoal } from '@/storage/useGoal';
 import { useProfile } from '@/storage/useProfile';
 import { useReviews } from '@/storage/useReviews';
-import { useWeighIns } from '@/storage/useWeighIns';
 
 /** Joins a figure to its unit, so a line never breaks between them. */
 const NBSP = String.fromCharCode(0xa0);
@@ -39,10 +38,9 @@ function Detail({ label, value, spoken }: { label: string; value: string; spoken
 function GoalCard() {
   const router = useRouter();
   const today = useToday();
-  const { weighIns } = useWeighIns();
   const { reviews } = useReviews();
   const { goal: found } = useGoal();
-  if (!Array.isArray(weighIns) || !Array.isArray(reviews) || !Array.isArray(found)) return null;
+  if (!Array.isArray(reviews) || !Array.isArray(found)) return null;
   // The review today is held to, which there is only once Setup is complete.
   const heldTo = reviewFor(reviews, today);
   const [goal] = found;

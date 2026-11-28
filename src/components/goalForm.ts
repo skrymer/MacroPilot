@@ -1,12 +1,6 @@
 import { z } from 'zod';
 
-import {
-  isRate,
-  isTarget,
-  leavesFood,
-  MAX_RATE_KG_A_WEEK,
-  MIN_RATE_KG_A_WEEK,
-} from '@/domain/goal';
+import { isTarget, leavesFood, MAX_RATE_KG_A_WEEK, MIN_RATE_KG_A_WEEK } from '@/domain/goal';
 
 import { optionalFigure } from './figureText';
 
@@ -31,11 +25,11 @@ export const goalForm = ({
     rateKgPerWeek: optionalFigure
       .pipe(z.number('Enter a weekly rate'))
       .refine(
-        (rate) => isRate(rate) || rate > MAX_RATE_KG_A_WEEK,
+        (rate) => rate >= MIN_RATE_KG_A_WEEK,
         `Rate must be at least ${MIN_RATE_KG_A_WEEK} kg a week`,
       )
       .refine(
-        (rate) => isRate(rate) || rate < MIN_RATE_KG_A_WEEK,
+        (rate) => rate <= MAX_RATE_KG_A_WEEK,
         `Rate must be at most ${MAX_RATE_KG_A_WEEK} kg a week`,
       )
       .refine((rate) => leavesFood(rate, maintenanceKcal), {
