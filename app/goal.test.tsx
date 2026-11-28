@@ -128,6 +128,26 @@ describe('The goal form', () => {
     expect(screen.getByLabelText('Rate (kg a week)')).toHaveDisplayValue('0,5');
   });
 
+  it('says what Setup needs when it is opened before there can be a goal', async () => {
+    // Given details saved but no weight logged, so no review
+    const stores = {
+      ...(await setUp()),
+      weighIns: new InMemoryWeighInStore(),
+      reviews: new InMemoryReviewStore(),
+    };
+
+    // When the goal form is opened, as by a link
+    await openApp('/goal', stores);
+
+    // Then it says what to do first, and offers no field
+    await waitFor(() =>
+      expect(
+        screen.queryByText('Save your details and log your weight on Today to set a goal.'),
+      ).toBeOnTheScreen(),
+    );
+    expect(screen.queryByLabelText('Target weight (kg)')).not.toBeOnTheScreen();
+  });
+
   it('re-runs today’s review, so today’s budget drops by the goal’s deficit at once', async () => {
     // Given Setup complete, and the form with a goal of 75 kg at 0.5 kg a week (550 kcal a day)
     const stores = await setUp();

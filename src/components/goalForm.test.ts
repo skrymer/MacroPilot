@@ -57,6 +57,17 @@ describe('goalForm', () => {
     expect(said).toEqual({ rateKgPerWeek: fault });
   });
 
+  it.each(['0.05', '1.5'])('takes a rate of "%s", at its limit', (typed) => {
+    // Given a rate typed at one of its limits, and a target that is fine
+    const form = { targetKg: '75', rateKgPerWeek: typed };
+
+    // When it is translated
+    const translated = goalForm(NOW).safeParse(form);
+
+    // Then it is taken as typed
+    expect(translated.data).toEqual({ targetKg: 75, rateKgPerWeek: Number(typed) });
+  });
+
   it('refuses a rate whose deficit would reach maintenance, saying both', () => {
     // Given a maintenance of 1650 kcal a day, and 1.5 kg a week typed (1650 kcal a day)
     const form = { targetKg: '75', rateKgPerWeek: '1,5' };

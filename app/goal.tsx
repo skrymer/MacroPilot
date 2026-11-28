@@ -6,6 +6,7 @@ import { View } from 'react-native';
 import { kg, spokenKg } from '@/components/figures';
 import { formFault } from '@/components/formFault';
 import { FormField } from '@/components/FormField';
+import { FormHeader } from '@/components/FormHeader';
 import { FormPage } from '@/components/FormPage';
 import { goalForm } from '@/components/goalForm';
 import { Text } from '@/components/Text';
@@ -102,6 +103,7 @@ function GoalForm({
 
 /** The goal form: a target weight and a rate, from the Trend Weight. */
 export default function GoalPage() {
+  const router = useRouter();
   const today = useToday();
   const { weighIns } = useWeighIns();
   const { reviews } = useReviews();
@@ -110,7 +112,15 @@ export default function GoalPage() {
   const trendKg = trendWeight(weighIns);
   // The maintenance today is held to: a Goal is refused when its deficit would reach it.
   const heldTo = reviewFor(reviews, today);
-  return trendKg === undefined || heldTo === undefined ? null : (
-    <GoalForm trendKg={trendKg} maintenanceKcal={heldTo.maintenanceKcal} set={goal[0]} />
-  );
+  if (trendKg === undefined || heldTo === undefined) {
+    return (
+      <View className="flex-1 bg-ground p-page">
+        <FormHeader title="Set a goal" onCancel={() => router.dismissTo('/profile')} />
+        <Text className="font-language text-body text-ink-mid">
+          Save your details and log your weight on Today to set a goal.
+        </Text>
+      </View>
+    );
+  }
+  return <GoalForm trendKg={trendKg} maintenanceKcal={heldTo.maintenanceKcal} set={goal[0]} />;
 }
