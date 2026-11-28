@@ -36,7 +36,7 @@ function GoalForm({ trendKg, maintenanceKcal }: { trendKg: number; maintenanceKc
     formState: { errors, isSubmitted },
   } = useForm({
     mode: 'onTouched',
-    resolver: zodResolver(goalForm()),
+    resolver: zodResolver(goalForm({ trendKg, maintenanceKcal })),
     defaultValues: { targetKg: '', rateKgPerWeek: '' },
   });
   const leave = () => router.dismissTo('/profile');
