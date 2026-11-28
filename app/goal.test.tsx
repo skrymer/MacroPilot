@@ -93,6 +93,21 @@ describe('The goal form', () => {
     expect(await screen.findByText(/^82\.4 → 75\.0\skg$/)).toBeOnTheScreen();
   });
 
+  it('opens filled with the goal set when it is to be changed', async () => {
+    // Given a goal of 75 kg at 0.5 kg a week set, and Profile open
+    const stores = await setUp();
+    await stores.goals.save({ setOn: '2026-11-27', startKg: 83, targetKg: 75, rateKgPerWeek: 0.5 });
+    await openApp('/profile', stores);
+    const user = userEvent.setup();
+
+    // When the user asks to change it
+    await user.press(await screen.findByRole('button', { name: 'Change goal' }));
+
+    // Then the form holds its target and rate
+    await waitFor(() => expect(screen.queryByDisplayValue('75')).toBeOnTheScreen());
+    expect(screen.getByDisplayValue('0.5')).toBeOnTheScreen();
+  });
+
   it('re-runs today’s review, so today’s budget drops by the goal’s deficit at once', async () => {
     // Given Setup complete, and the form with a goal of 75 kg at 0.5 kg a week (550 kcal a day)
     const stores = await setUp();

@@ -12,11 +12,12 @@ import { Text } from '@/components/Text';
 import { useFirstFault } from '@/components/useFirstFault';
 import { useRunReview } from '@/components/useRunReview';
 import { useSave } from '@/components/useSave';
-import { newGoal } from '@/domain/goal';
+import { type Goal, newGoal } from '@/domain/goal';
 import { reviewFor } from '@/domain/review';
 import { trendWeight } from '@/domain/trend';
 import { useToday } from '@/lifecycle/useToday';
 import { useGoalStore } from '@/storage/GoalStoreContext';
+import { useGoal } from '@/storage/useGoal';
 import { useReviews } from '@/storage/useReviews';
 import { useWeighIns } from '@/storage/useWeighIns';
 
@@ -24,7 +25,15 @@ import { useWeighIns } from '@/storage/useWeighIns';
 const FIELDS = ['targetKg', 'rateKgPerWeek'] as const;
 
 /** The form, from the Trend Weight a Goal starts at. */
-function GoalForm({ trendKg, maintenanceKcal }: { trendKg: number; maintenanceKcal: number }) {
+function GoalForm({
+  trendKg,
+  maintenanceKcal,
+  set,
+}: {
+  trendKg: number;
+  maintenanceKcal: number;
+  set?: Goal;
+}) {
   const router = useRouter();
   const goals = useGoalStore();
   const runReview = useRunReview();
@@ -37,7 +46,10 @@ function GoalForm({ trendKg, maintenanceKcal }: { trendKg: number; maintenanceKc
   } = useForm({
     mode: 'onTouched',
     resolver: zodResolver(goalForm({ trendKg, maintenanceKcal })),
-    defaultValues: { targetKg: '', rateKgPerWeek: '' },
+    // The Goal set before, to be changed, or none.
+    defaultValues: set
+      ? { targetKg: String(set.targetKg), rateKgPerWeek: String(set.rateKgPerWeek) }
+      : { targetKg: '', rateKgPerWeek: '' },
   });
   const leave = () => router.dismissTo('/profile');
   const { scroll, onLayoutOf, show } = useFirstFault(FIELDS);
@@ -89,15 +101,16 @@ function GoalForm({ trendKg, maintenanceKcal }: { trendKg: number; maintenanceKc
 }
 
 /** The goal form: a target weight and a rate, from the Trend Weight. */
-export default function Goal() {
+export default function GoalPage() {
   const today = useToday();
   const { weighIns } = useWeighIns();
   const { reviews } = useReviews();
-  if (!Array.isArray(weighIns) || !Array.isArray(reviews)) return null;
+  const { goal } = useGoal();
+  if (!Array.isArray(weighIns) || !Array.isArray(reviews) || !Array.isArray(goal)) return null;
   const trendKg = trendWeight(weighIns);
   // The maintenance today is held to: a Goal is refused when its deficit would reach it.
   const heldTo = reviewFor(reviews, today);
   return trendKg === undefined || heldTo === undefined ? null : (
-    <GoalForm trendKg={trendKg} maintenanceKcal={heldTo.maintenanceKcal} />
+    <GoalForm trendKg={trendKg} maintenanceKcal={heldTo.maintenanceKcal} set={goal[0]} />
   );
 }
