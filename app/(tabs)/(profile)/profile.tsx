@@ -3,7 +3,7 @@ import { ScrollView, View } from 'react-native';
 
 import { Button } from '@/components/Button';
 import { dateWords } from '@/components/DateField';
-import { cm, kcal, kg, spokenCm } from '@/components/figures';
+import { cm, kcal, kg, kgAWeek, spokenCm } from '@/components/figures';
 import { Hairline } from '@/components/Hairline';
 import { Notice } from '@/components/Notice';
 import { SEXES, TRACKING, wordsOf } from '@/components/profileWords';
@@ -16,9 +16,6 @@ import { useToday } from '@/lifecycle/useToday';
 import { useGoal } from '@/storage/useGoal';
 import { useProfile } from '@/storage/useProfile';
 import { useReviews } from '@/storage/useReviews';
-
-/** Joins a figure to its unit, so a line never breaks between them. */
-const NBSP = String.fromCharCode(0xa0);
 
 /** A label and what it holds, read out as one row of a card. */
 function Detail({ label, value, spoken }: { label: string; value: string; spoken?: string }) {
@@ -71,7 +68,7 @@ function GoalCard() {
                 {`${goal.startKg.toFixed(1)} → ${kg(goal.targetKg)}`}
               </Text>
               <Text className="font-language text-label text-ink-mid">
-                {`${goal.rateKgPerWeek}${NBSP}kg a week, ${kcal(dailyDeficit(goal.rateKgPerWeek))} a day under maintenance`}
+                {`${kgAWeek(goal.rateKgPerWeek)},${kcal(dailyDeficit(goal.rateKgPerWeek))} a day under maintenance`}
               </Text>
             </View>
             <Button label="Change goal" onPress={() => router.navigate('/goal')} secondary />

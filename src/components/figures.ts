@@ -12,6 +12,9 @@ export const cm = (height: number) => `${height}${String.fromCharCode(0xa0)}cm`;
 /** A weight to a tenth of a kilo, as a scale shows it: `82.0 kg`. */
 export const kg = (weight: number) => `${weight.toFixed(1)}${String.fromCharCode(0xa0)}kg`;
 
+/** A Goal's rate, as it was typed: `0.5 kg a week`. */
+export const kgAWeek = (rate: number) => `${rate}${String.fromCharCode(0xa0)}kg a week`;
+
 /** The same, as a screen reader says it. */
 export const spokenKg = (weight: number) => `${weight.toFixed(1)} kilograms`;
 
