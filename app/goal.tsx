@@ -106,14 +106,18 @@ function GoalForm({
 export default function GoalPage() {
   const router = useRouter();
   const today = useToday();
-  const { weighIns } = useWeighIns();
+  const { weighIns, readAgain: readWeighInsAgain } = useWeighIns();
   const { reviews } = useReviews();
   const { goal, readAgain } = useGoal();
-  if (goal === 'unreadable') {
+  if (goal === 'unreadable' || weighIns === 'unreadable') {
+    const retry = () => {
+      void readAgain();
+      void readWeighInsAgain();
+    };
     return (
       <View className="flex-1 bg-ground p-page">
         <FormHeader title="Set a goal" onCancel={() => router.dismissTo('/profile')} />
-        <Unreadable words="Couldn’t load your goal" onRetry={() => void readAgain()} />
+        <Unreadable words="Couldn’t load your goal" onRetry={retry} />
       </View>
     );
   }
