@@ -5,8 +5,10 @@ import { ClockProvider } from '@/lifecycle/ClockContext';
 import { ScriptedClock } from '@/lifecycle/ScriptedClock';
 import { EntryStoreProvider } from '@/storage/EntryStoreContext';
 import { FoodStoreProvider } from '@/storage/FoodStoreContext';
+import { GoalStoreProvider } from '@/storage/GoalStoreContext';
 import { InMemoryEntryStore } from '@/storage/InMemoryEntryStore';
 import { InMemoryFoodStore } from '@/storage/InMemoryFoodStore';
+import { InMemoryGoalStore } from '@/storage/InMemoryGoalStore';
 import { InMemoryProfileStore } from '@/storage/InMemoryProfileStore';
 import { InMemoryReviewStore } from '@/storage/InMemoryReviewStore';
 import { InMemoryWeighInStore } from '@/storage/InMemoryWeighInStore';
@@ -30,6 +32,7 @@ export function TestProviders({
   profile,
   weighIns,
   reviews,
+  goals,
   ask,
   children,
 }: {
@@ -39,6 +42,7 @@ export function TestProviders({
   profile?: InMemoryProfileStore;
   weighIns?: InMemoryWeighInStore;
   reviews?: InMemoryReviewStore;
+  goals?: InMemoryGoalStore;
   ask?: ScriptedAsk;
   children: ReactNode;
 }) {
@@ -48,6 +52,7 @@ export function TestProviders({
   const [noProfile] = useState(() => new InMemoryProfileStore());
   const [noWeighIns] = useState(() => new InMemoryWeighInStore());
   const [noReviews] = useState(() => new InMemoryReviewStore());
+  const [noGoal] = useState(() => new InMemoryGoalStore());
   const [unanswered] = useState(() => new ScriptedAsk());
   // The phone's two stores are tables of one database.
   useEffect(() => (foods ?? noFoods).loggedIn(entries ?? noEntries));
@@ -58,12 +63,16 @@ export function TestProviders({
           <ProfileStoreProvider store={profile ?? noProfile}>
             <WeighInStoreProvider store={weighIns ?? noWeighIns}>
               <ReviewStoreProvider store={reviews ?? noReviews}>
-                <AskProvider ask={ask ?? unanswered}>
-                  <LoggedProvider>
-                    {/* The root's, as `app/_layout.tsx` gives it: a swipe is seen only under it. */}
-                    <GestureHandlerRootView style={{ flex: 1 }}>{children}</GestureHandlerRootView>
-                  </LoggedProvider>
-                </AskProvider>
+                <GoalStoreProvider store={goals ?? noGoal}>
+                  <AskProvider ask={ask ?? unanswered}>
+                    <LoggedProvider>
+                      {/* The root's, as `app/_layout.tsx` gives it: a swipe is seen only under it. */}
+                      <GestureHandlerRootView style={{ flex: 1 }}>
+                        {children}
+                      </GestureHandlerRootView>
+                    </LoggedProvider>
+                  </AskProvider>
+                </GoalStoreProvider>
               </ReviewStoreProvider>
             </WeighInStoreProvider>
           </ProfileStoreProvider>

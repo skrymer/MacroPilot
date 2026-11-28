@@ -55,6 +55,13 @@ const SCHEMA = `
     budget_kcal REAL NOT NULL,
     protein_floor_g REAL NOT NULL
   );
+  CREATE TABLE IF NOT EXISTS goal (
+    id INTEGER PRIMARY KEY CHECK (id = 1),
+    set_on TEXT NOT NULL,
+    start_kg REAL NOT NULL,
+    target_kg REAL NOT NULL,
+    rate_kg_a_week REAL NOT NULL
+  );
 `;
 
 /** Made on every call rather than once, so a call after one that failed can succeed. */

@@ -66,6 +66,27 @@ describe('reviewDue', () => {
     // Then none is
     expect(due).toBeUndefined();
   });
+
+  it('runs today’s again when a Goal is set, with the Goal’s deficit', () => {
+    // Given yesterday's review, and a Goal of 0.5 kg a week (550 kcal a day) set today
+    const reviews = [{ ...REVIEW, day: '2026-11-27' }];
+    const weighIns = [{ day: '2026-11-27', kg: 82 }];
+    const goal = { setOn: '2026-11-28', startKg: 82, targetKg: 75, rateKgPerWeek: 0.5 };
+
+    // When it is asked whether a review is due, the Goal just set
+    const due = reviewDue({
+      profile: PROFILE,
+      weighIns,
+      reviews,
+      today: '2026-11-28',
+      goal,
+      goalSet: true,
+    });
+
+    // Then today's runs, its budget 550 kcal under maintenance
+    expect(due?.day).toBe('2026-11-28');
+    expect(due?.budgetKcal).toBeCloseTo((due?.maintenanceKcal ?? 0) - 550, 10);
+  });
 });
 
 const REVIEW = { trendKg: 82, maintenanceKcal: 2400, budgetKcal: 2400, proteinFloorG: 164 };
@@ -133,5 +154,37 @@ describe('newReview', () => {
 
     // Then it is refused, rather than set from no weight
     expect(running).toThrow('A review needs a weigh-in');
+  });
+
+  it('sets the budget at maintenance less the Goal’s daily deficit', () => {
+    // Given a man of 181 cm, 42, weighed at 82 kg, and a Goal of 0.5 kg a week (550 kcal a day)
+    const weighIns = [{ day: '2026-11-28', kg: 82 }];
+    const goal = { setOn: '2026-11-28', startKg: 82, targetKg: 75, rateKgPerWeek: 0.5 };
+
+    // When the review is run on 28 November 2026
+    const review = newReview(PROFILE, weighIns, '2026-11-28', goal);
+
+    // Then the budget is 550 kcal under maintenance
+    expect(review.budgetKcal).toBeCloseTo(review.maintenanceKcal - 550, 10);
+  });
+
+  it('suspends the Goal’s deficit when maintenance no longer carries it: the budget is maintenance', () => {
+    // Given a woman of 150 cm, 86, weighed at 40 kg (maintenance 1045.1 kcal), and a Goal of
+    // 1.5 kg a week, a deficit of 1650 kcal a day
+    const profile = {
+      sex: 'female',
+      born: '1940-11-28',
+      heightCm: 150,
+      countsCalories: true,
+    } as const;
+    const weighIns = [{ day: '2026-11-28', kg: 40 }];
+    const goal = { setOn: '2026-11-01', startKg: 45, targetKg: 38, rateKgPerWeek: 1.5 };
+
+    // When the review is run on 28 November 2026
+    const review = newReview(profile, weighIns, '2026-11-28', goal);
+
+    // Then no deficit is taken, and the budget is maintenance, never 0 or less
+    expect(review.maintenanceKcal).toBeCloseTo(1045.1, 10);
+    expect(review.budgetKcal).toBe(review.maintenanceKcal);
   });
 });

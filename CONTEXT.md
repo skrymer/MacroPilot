@@ -81,8 +81,11 @@ The dated decision of what a day's targets are: a **Calorie Budget** and a **Pro
 _Avoid_: recalculation, check-in
 
 **Calorie Budget**:
-The kcal a day may take: maintenance less the **Goal**'s daily deficit.
+The kcal a day may take: maintenance less the **Goal**'s daily deficit. A Goal is refused when its deficit would reach today's maintenance; when a later review's maintenance falls to or under a running Goal's deficit, the deficit is a **Suspended Deficit** and the budget is maintenance, never 0 or less.
 _Avoid_: limit, allowance, target calories
+
+**Suspended Deficit**:
+A running **Goal**'s daily deficit that a **Weekly Review**'s maintenance no longer carries. It is not taken, so that review's **Calorie Budget** is maintenance; it applies again at a review whose maintenance carries it.
 
 **Protein Floor**:
 The protein a day should reach at least: 2 g per kg of **Trend Weight**.

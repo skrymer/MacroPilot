@@ -1,0 +1,47 @@
+# From the first review to a Goal: with Setup complete (a man of 181 cm, 30, 82 kg, so a maintenance of
+# 2528.75 kcal), Profile's goal card says the budget is maintenance and Set a goal opens the form as
+# every form opens, starting from the trend. 75 kg at 0.5 kg a week is 0.5 × 7700 / 7 = 550 kcal a day
+# under maintenance; set, Profile shows it, and Today's budget is 2528.75 − 550 = 1978.75, so 1979 kcal
+# left, at once. The happy path of setting a Goal (ADR 0011).
+appId: com.skrymer.macropilot
+---
+- runFlow: steps/start.yaml
+- openLink: 'macropilot://details'
+- tapOn: 'Male'
+- tapOn: 'Birth date, Choose a date'
+- tapOn: 'OK'
+- tapOn: 'Height \(cm\)'
+- inputText: '181'
+- tapOn: 'Save profile'
+- extendedWaitUntil:
+    visible: 'Sex, Male'
+    timeout: 10000
+- openLink: 'macropilot://log-weight'
+- inputText: '82'
+- tapOn: 'Save weight'
+- extendedWaitUntil:
+    visible: 'Nothing logged yet, 2529 kcal left, 164 grams of protein to go'
+    timeout: 10000
+- tapOn:
+    text: 'Profile'
+    rightOf: 'Foods'
+- assertVisible: "You’re maintaining: your budget is your maintenance, 2529\u00a0kcal a day."
+- tapOn: 'Set a goal'
+# A form, opened as every form is, its title beside the X.
+- assertVisible:
+    text: 'Set a goal'
+    rightOf: 'Cancel'
+- assertVisible: 'Starting weight, 82.0 kilograms'
+- tapOn: 'Target weight \(kg\)'
+- inputText: '75'
+- tapOn: 'Rate \(kg a week\)'
+- inputText: '0.5'
+- tapOn: 'Set goal'
+- extendedWaitUntil:
+    visible: "82.0 → 75.0\u00a0kg"
+    timeout: 10000
+- assertVisible: "0.5\u00a0kg a week, 550\u00a0kcal a day under maintenance"
+- tapOn: 'Today'
+- extendedWaitUntil:
+    visible: 'Nothing logged yet, 1979 kcal left, 164 grams of protein to go'
+    timeout: 10000
