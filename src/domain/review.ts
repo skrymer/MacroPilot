@@ -45,8 +45,10 @@ export function reviewDue({
   replacedToday?: boolean;
 }): Review | undefined {
   if (profile === undefined || weighIns.length === 0) return undefined;
-  if (reviews.length === 0 || replacedToday) return newReview(profile, weighIns, today);
-  return undefined;
+  if (reviews.length > 0 && !replacedToday) return undefined;
+  // A maintenance not above 0 is no measurement of anyone: no targets are set from it.
+  const review = newReview(profile, weighIns, today);
+  return review.maintenanceKcal > 0 ? review : undefined;
 }
 
 /** The protein a day should reach at least, per kg of Trend Weight. */
