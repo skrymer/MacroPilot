@@ -1,5 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'expo-router';
+import type { ReactNode } from 'react';
 import { useForm } from 'react-hook-form';
 import { View } from 'react-native';
 
@@ -102,9 +103,19 @@ function GoalForm({
   );
 }
 
+/** In place of the form, under its header: why there is no form to fill. */
+function InPlaceOfTheForm({ children }: { children: ReactNode }) {
+  const router = useRouter();
+  return (
+    <View className="flex-1 bg-ground p-page">
+      <FormHeader title="Set a goal" onCancel={() => router.dismissTo('/profile')} />
+      {children}
+    </View>
+  );
+}
+
 /** The goal form: a target weight and a rate, from the Trend Weight. */
 export default function GoalPage() {
-  const router = useRouter();
   const today = useToday();
   const { weighIns, readAgain: readWeighInsAgain } = useWeighIns();
   const { reviews, readAgain: readReviewsAgain } = useReviews();
@@ -116,10 +127,9 @@ export default function GoalPage() {
       void readReviewsAgain();
     };
     return (
-      <View className="flex-1 bg-ground p-page">
-        <FormHeader title="Set a goal" onCancel={() => router.dismissTo('/profile')} />
+      <InPlaceOfTheForm>
         <Unreadable words="Couldn’t load your goal" onRetry={retry} />
-      </View>
+      </InPlaceOfTheForm>
     );
   }
   if (!Array.isArray(weighIns) || !Array.isArray(reviews) || !Array.isArray(goal)) return null;
@@ -128,12 +138,11 @@ export default function GoalPage() {
   const heldTo = reviewFor(reviews, today);
   if (trendKg === undefined || heldTo === undefined) {
     return (
-      <View className="flex-1 bg-ground p-page">
-        <FormHeader title="Set a goal" onCancel={() => router.dismissTo('/profile')} />
+      <InPlaceOfTheForm>
         <Text className="font-language text-body text-ink-mid">
           Save your details and log your weight on Today to set a goal.
         </Text>
-      </View>
+      </InPlaceOfTheForm>
     );
   }
   return <GoalForm trendKg={trendKg} maintenanceKcal={heldTo.maintenanceKcal} set={goal[0]} />;
